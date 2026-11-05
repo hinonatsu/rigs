@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #08090B;
+    color: #F1F5F9;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+}
+
+/* Custom slim scrollbar for dark cyber instrument aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08090B;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222731;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00D2FF;
+}
