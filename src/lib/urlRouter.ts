@@ -31,7 +31,7 @@ export function parseUrlState(): {
   if (typeof window === 'undefined') {
     return {
       route: {
-        view: 'home',
+        view: 'garage',
         targetId: 'pe6',
         activeStep: 'reel',
       },
@@ -69,7 +69,7 @@ export function parseUrlState(): {
       }
     : presetFallback;
 
-  let view: PageView = 'home';
+  let view: PageView = 'garage';
   if (rawView === 'garage' || rawView === 'builder') {
     view = 'garage';
   } else if (rawView === 'checkout' || rawView === 'spec') {
@@ -97,11 +97,6 @@ export function buildUrlString(route: RouteState, rig: RigState): string {
   if (typeof window === 'undefined') return '';
   const url = new URL(window.location.href);
   const params = new URLSearchParams();
-
-  if (route.view === 'home') {
-    url.search = '';
-    return url.toString();
-  }
 
   params.set('view', route.view);
   params.set('target', route.targetId);

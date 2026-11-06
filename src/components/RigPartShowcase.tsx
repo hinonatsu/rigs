@@ -1,335 +1,698 @@
-import React, { useState } from 'react';
-import { AnyRigPart } from '../data/rigCatalog';
+import React, { useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, Plus, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { AnyRigPart, RigState, TargetFishProfile } from '../data/rigCatalog';
+
+export type StudioTheme = 'day' | 'night';
 
 interface RigPartShowcaseProps {
   part: AnyRigPart;
   isSelected?: boolean;
-  size?: 'sm' | 'md' | 'lg' | 'checkout';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'checkout' | 'swatch';
+  theme?: StudioTheme;
+}
+
+const LOCAL_FALLBACK_MAP: Record<string, string> = {
+  'reel-stella-14000xg': './images/gear/reel-stella-14000xg.jpg',
+  'reel-saltiga-14000xh': './images/gear/reel-saltiga-14000xh.jpg',
+  'reel-stella-18000hg': './images/gear/reel-stella-18000hg.jpg',
+  'reel-saltiga-20000h': './images/gear/reel-saltiga-20000h.jpg',
+  'rod-aquila-82-36': './images/gear/rod-aquila-82-36.jpg',
+  'rod-explosion-865hf': './images/gear/rod-explosion-865hf.jpg',
+  'rod-ultimo-83m': './images/gear/rod-ultimo-83m.jpg',
+  'rod-bigtuna-83': './images/gear/rod-bigtuna-83.jpg',
+  'line-varivas-smp-pe6': './images/gear/line-varivas-smp-pe6.jpg',
+  'line-ygk-oddport-pe8': './images/gear/line-ygk-oddport-pe8.jpg',
+  'line-varivas-six-pe10': './images/gear/line-varivas-six-pe10.jpg',
+  'lure-cbone-ryan-200': './images/gear/lure-cbone-ryan-200.jpg',
+  'lure-carpenter-gamma-90': './images/gear/lure-carpenter-gamma-90.jpg',
+  'lure-cbone-bazoo-200': './images/gear/lure-cbone-bazoo-200.jpg',
+  'lure-cbone-zorro-240': './images/gear/lure-cbone-zorro-240.jpg',
+};
+
+export function resolvePartStudioImage(part: AnyRigPart, useFallback = false): string {
+  if (useFallback && LOCAL_FALLBACK_MAP[part.id]) {
+    return LOCAL_FALLBACK_MAP[part.id];
+  }
+  return part.image || LOCAL_FALLBACK_MAP[part.id] || '';
 }
 
 /**
- * 透過PNG製品画像（Product Studio PNG）の配置を前提とした
- * 広大な余白（Whitespace）とアンビエント照明を備えたハードウェア・ショーケースステージ
+ * Tesla / Apple スタイルのクリーンな白スタジオ背景を活かしたプロダクト・ショーケース
+ * 白背景スタジオ写真に mix-blend-multiply を適用することで、金属光沢・シルバー・ホログラムを一切損なわずに背景へ溶け込ませる
  */
 export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
   part,
   isSelected = false,
   size = 'md',
+  theme = 'day',
 }) => {
-  const [imgError, setImgError] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
 
-  const hasRealProductPng =
-    !imgError && Boolean(part.image) && !part.image.includes('placehold.co');
+  useEffect(() => {
+    setUseFallback(false);
+  }, [part.id, part.image]);
+
+  const imgSrc = resolvePartStudioImage(part, useFallback);
+
+  if (size === 'swatch') {
+    return (
+      <div className="relative w-full h-full rounded-full bg-white overflow-hidden flex items-center justify-center p-1.5">
+        <img
+          src={imgSrc}
+          alt={part.shortName}
+          loading="lazy"
+          onError={() => {
+            if (!useFallback) setUseFallback(true);
+          }}
+          className="w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-110"
+        />
+      </div>
+    );
+  }
 
   const sizeClass =
-    size === 'sm'
-      ? 'w-20 h-20 p-2.5 shrink-0'
+    size === 'xs'
+      ? 'w-14 h-14 p-1.5 shrink-0 rounded-xl'
+      : size === 'sm'
+      ? 'w-20 h-20 p-2 shrink-0 rounded-xl'
       : size === 'checkout'
-      ? 'w-24 h-24 sm:w-28 sm:h-28 p-3 shrink-0'
+      ? 'w-24 h-24 sm:w-28 sm:h-28 p-2.5 shrink-0 rounded-2xl'
       : size === 'lg'
-      ? 'w-full h-48 sm:h-56 p-6'
-      : 'w-full h-36 p-5';
+      ? 'w-full h-52 sm:h-64 p-5 rounded-2xl'
+      : 'w-full h-36 sm:h-40 p-3.5 rounded-xl';
+
+  const containerStyle =
+    theme === 'day'
+      ? isSelected
+        ? 'bg-white border border-[#171A20]/15 shadow-sm'
+        : 'bg-white border border-black/5'
+      : isSelected
+      ? 'bg-white border-2 border-[#00E5FF] shadow-[0_0_20px_rgba(0,229,255,0.25)]'
+      : 'bg-white/95 border border-white/15';
 
   return (
     <div
-      className={`relative rounded-xl bg-[#151515]/90 border overflow-hidden flex items-center justify-center transition-all duration-300 ${sizeClass} ${
-        isSelected
-          ? 'border-[#00E5FF]/50 shadow-[inset_0_0_28px_rgba(0,229,255,0.14)]'
-          : 'border-white/5 group-hover:border-[#00E5FF]/30'
+      className={`relative overflow-hidden flex items-center justify-center transition-all duration-300 ${sizeClass} ${containerStyle}`}
+      style={{
+        background:
+          'radial-gradient(circle at 50% 50%, #FFFFFF 65%, #F6F7F9 100%)',
+      }}
+    >
+      <img
+        src={imgSrc}
+        alt={part.name}
+        loading="lazy"
+        onError={() => {
+          if (!useFallback) setUseFallback(true);
+        }}
+        className="relative z-10 w-full h-full object-contain mix-blend-multiply transition-transform duration-500 ease-out group-hover:scale-105"
+      />
+    </div>
+  );
+};
+
+// ============================================================================
+// Tesla Model 3 風 メイン・スタジオ・コンフィギュレーター・ステージ
+// （引き出し線＋[＋]コールアウト ＆ 下部 < ● ○ ○ ○ ○ > カルーセル搭載）
+// ============================================================================
+
+export interface CalloutItem {
+  id: string;
+  label: string;
+  subLabel?: string;
+  positionClass: string;
+  lineDirection: 'top' | 'bottom';
+  lineHeightClass?: string;
+  featureIndex: number;
+}
+
+interface TeslaHeroConfiguratorStageProps {
+  rig: RigState;
+  target: TargetFishProfile;
+  theme: StudioTheme;
+  activeSlide: number;
+  onChangeSlide: (slideIndex: number) => void;
+  onOpenFeatureModal: (featureIndex?: number) => void;
+  isAllCompatible: boolean;
+}
+
+export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProps> = ({
+  rig,
+  target,
+  theme,
+  activeSlide,
+  onChangeSlide,
+  onOpenFeatureModal,
+  isAllCompatible,
+}) => {
+  const [rodFallback, setRodFallback] = useState(false);
+  const [reelFallback, setReelFallback] = useState(false);
+  const [lineFallback, setLineFallback] = useState(false);
+  const [lureFallback, setLureFallback] = useState(false);
+
+  const reel = rig.reel!;
+  const rod = rig.rod!;
+  const line = rig.line!;
+  const lure = rig.lure!;
+
+  useEffect(() => {
+    setRodFallback(false);
+  }, [rod.id]);
+
+  useEffect(() => {
+    setReelFallback(false);
+  }, [reel.id]);
+
+  useEffect(() => {
+    setLineFallback(false);
+  }, [line.id]);
+
+  useEffect(() => {
+    setLureFallback(false);
+  }, [lure.id]);
+
+  const totalSlides = 5;
+  const slideLabels = [
+    'ロッド × リール 統合ビュー',
+    `リール単体 (${reel.shortName})`,
+    `ロッド単体 (${rod.shortName})`,
+    'ライン ＆ ルアー 構成',
+    `ターゲット (${target.fishName.split(' ')[0]})`,
+  ];
+
+  const handlePrev = () => {
+    onChangeSlide((activeSlide - 1 + totalSlides) % totalSlides);
+  };
+
+  const handleNext = () => {
+    onChangeSlide((activeSlide + 1) % totalSlides);
+  };
+
+  const isDay = theme === 'day';
+
+  return (
+    <div
+      className={`relative w-full h-full flex flex-col justify-between select-none transition-colors duration-300 ${
+        isDay ? 'bg-white text-[#171A20]' : 'bg-[#111215] text-white'
       }`}
     >
-      {/* Apple / Tesla 風のスタジオ・スポットライト背景（透過PNGを引き立てる余白と光源） */}
-      <div
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${
-          isSelected ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'
-        }`}
-        style={{
-          background:
-            'radial-gradient(circle at 50% 52%, rgba(0, 229, 255, 0.16) 0%, rgba(0, 229, 255, 0.04) 45%, transparent 75%)',
-        }}
-      />
-
-      {/* 微細な精密グリッドライン */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.12]"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.12) 1px, transparent 1px)',
-          backgroundSize: '20px 20px',
-        }}
-      />
-
-      {/* 製品ビジュアル本体（実製品画像がある場合は白背景自動透過フィルタ付きimg、フォールバック時は透過スタジオCADレンダー） */}
-      <svg className="sr-only" aria-hidden="true" width="0" height="0">
-        <defs>
-          <filter id="rigs-showcase-transparent" colorInterpolationFilters="sRGB">
-            <feColorMatrix
-              type="matrix"
-              values="0 0 0 0 0
-                      0 0 0 0 0
-                      0 0 0 0 0
-                      -0.3333 -0.3333 -0.3333 1 0"
-              result="invertedLuma"
-            />
-            <feComponentTransfer in="invertedLuma" result="alphaMask">
-              <feFuncA
-                type="table"
-                tableValues="0 0.15 0.85 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"
-              />
-            </feComponentTransfer>
-            <feComposite in="SourceGraphic" in2="alphaMask" operator="in" />
-          </filter>
-        </defs>
-      </svg>
-
-      {hasRealProductPng ? (
-        <img
-          src={part.image}
-          alt={part.name}
-          loading="lazy"
-          onError={() => setImgError(true)}
-          style={{
-            filter:
-              'url(#rigs-showcase-transparent) drop-shadow(0 14px 20px rgba(0, 0, 0, 0.85))',
-          }}
-          className="relative z-10 w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
-        />
-      ) : (
-        <div className="relative z-10 w-full h-full flex items-center justify-center transition-transform duration-500 ease-out group-hover:scale-105 drop-shadow-[0_14px_20px_rgba(0,0,0,0.85)]">
-          {part.category === 'reel' && (
-            <svg
-              viewBox="0 0 180 110"
-              className="w-full h-full max-h-full"
-              role="img"
-              aria-label={part.shortName}
-            >
-              <defs>
-                <linearGradient id={`metal-${part.id}`} x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#64748B" />
-                  <stop offset="50%" stopColor="#1E293B" />
-                  <stop offset="100%" stopColor="#0F172A" />
-                </linearGradient>
-                <linearGradient id={`spool-${part.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.9" />
-                  <stop offset="50%" stopColor="#0F172A" stopOpacity="0.95" />
-                  <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.9" />
-                </linearGradient>
-              </defs>
-              {/* Reel Foot & Stem */}
-              <path
-                d="M72 12 L118 12 L112 18 L98 18 L94 46 L82 46 L86 18 L76 18 Z"
-                fill={`url(#metal-${part.id})`}
-                stroke="#94A3B8"
-                strokeWidth="1.2"
-              />
-              {/* Main Hagane/Monocoque Body */}
-              <path
-                d="M66 44 C66 34, 112 34, 118 50 C122 66, 108 84, 88 84 C70 84, 64 68, 66 44 Z"
-                fill={`url(#metal-${part.id})`}
-                stroke="#E2E8F0"
-                strokeWidth="1.5"
-              />
-              {/* Rotor Arms */}
-              <path
-                d="M50 30 L66 38 L66 72 L50 80"
-                fill="none"
-                stroke="#00E5FF"
-                strokeWidth="1.8"
-              />
-              {/* Deep Saltwater Spool */}
-              <rect
-                x="22"
-                y="26"
-                width="28"
-                height="58"
-                rx="3"
-                fill={`url(#spool-${part.id})`}
-                stroke="#E2E8F0"
-                strokeWidth="1.4"
-              />
-              <line
-                x1="27"
-                y1="26"
-                x2="27"
-                y2="84"
-                stroke="#00E5FF"
-                strokeWidth="2.2"
-              />
-              {/* Power Handle & Round Metal Knob */}
-              <line x1="90" y1="60" x2="136" y2="82" stroke="#E2E8F0" strokeWidth="2.4" />
-              <circle
-                cx="146"
-                cy="86"
-                r="11"
-                fill={`url(#metal-${part.id})`}
-                stroke="#00E5FF"
-                strokeWidth="1.8"
-              />
-            </svg>
-          )}
-
-          {part.category === 'rod' && (
-            <svg
-              viewBox="0 0 220 90"
-              className="w-full h-full max-h-full"
-              role="img"
-              aria-label={part.shortName}
-            >
-              {/* EVA Rear Grip & Heavy Reel Seat */}
-              <rect
-                x="8"
-                y="46"
-                width="46"
-                height="8"
-                rx="2"
-                fill="#1E293B"
-                stroke="#94A3B8"
-                strokeWidth="1.2"
-              />
-              <rect
-                x="54"
-                y="44"
-                width="18"
-                height="12"
-                rx="1.5"
-                fill="#0F172A"
-                stroke="#00E5FF"
-                strokeWidth="1.5"
-              />
-              <rect
-                x="72"
-                y="46"
-                width="26"
-                height="7.5"
-                rx="1.5"
-                fill="#1E293B"
-                stroke="#94A3B8"
-                strokeWidth="1.2"
-              />
-              {/* Carbon Blank */}
-              <polygon
-                points="98,47.5 212,49 212,51 98,52.5"
-                fill="#E2E8F0"
-              />
-              {/* Double-Foot Ocean Guides */}
-              {[116, 142, 166, 188, 208].map((gx, idx) => (
-                <g key={gx}>
-                  <path
-                    d={`M${gx - 3.5} 48 L${gx} ${36 + idx * 1.4} L${gx + 3.5} 48`}
-                    fill="none"
-                    stroke="#94A3B8"
-                    strokeWidth="1.2"
-                  />
-                  <circle
-                    cx={gx}
-                    cy={35 + idx * 1.4}
-                    r={Math.max(2, 4.2 - idx * 0.45)}
-                    fill="none"
-                    stroke="#00E5FF"
-                    strokeWidth="1.4"
-                  />
-                </g>
-              ))}
-            </svg>
-          )}
-
-          {part.category === 'line' && (
-            <svg
-              viewBox="0 0 180 100"
-              className="w-full h-full max-h-full"
-              role="img"
-              aria-label={part.shortName}
-            >
-              {/* Spool Outer Rim */}
-              <circle
-                cx="90"
-                cy="50"
-                r="36"
-                fill="#1E293B"
-                stroke="#00E5FF"
-                strokeWidth="2"
-              />
-              {/* Braided PE Line Winding */}
-              <circle
-                cx="90"
-                cy="50"
-                r="27"
-                fill="none"
-                stroke="#00E5FF"
-                strokeOpacity="0.55"
-                strokeWidth="6"
-                strokeDasharray="5 2"
-              />
-              {/* Inner Core */}
-              <circle
-                cx="90"
-                cy="50"
-                r="13"
-                fill="#151515"
-                stroke="#E2E8F0"
-                strokeWidth="1.5"
-              />
-            </svg>
-          )}
-
-          {part.category === 'lure' && (
-            <svg
-              viewBox="0 0 210 90"
-              className="w-full h-full max-h-full"
-              role="img"
-              aria-label={part.shortName}
-            >
-              <defs>
-                <linearGradient id={`lure-foil-${part.id}`} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.85" />
-                  <stop offset="50%" stopColor="#E2E8F0" stopOpacity="0.95" />
-                  <stop offset="100%" stopColor="#1E293B" stopOpacity="0.9" />
-                </linearGradient>
-              </defs>
-              {/* Aerodynamic Diving Pencil Body */}
-              <path
-                d="M20 44 C52 24, 136 25, 182 44 C136 60, 52 61, 20 44 Z"
-                fill={`url(#lure-foil-${part.id})`}
-                stroke="#00E5FF"
-                strokeWidth="1.8"
-              />
-              {/* Lateral Hologram Line & Eye */}
-              <line
-                x1="34"
-                y1="44"
-                x2="172"
-                y2="44"
-                stroke="#151515"
-                strokeWidth="1"
-                strokeDasharray="4 2"
-              />
-              <circle cx="38" cy="40" r="3.5" fill="#151515" stroke="#00E5FF" strokeWidth="1.5" />
-              {/* Heavy Wire Hooks */}
-              <circle cx="98" cy="56" r="2.5" fill="none" stroke="#E2E8F0" strokeWidth="1.4" />
-              <circle cx="184" cy="44" r="2.5" fill="none" stroke="#E2E8F0" strokeWidth="1.4" />
-              <path d="M98 58 L98 72 L105 66" fill="none" stroke="#00E5FF" strokeWidth="1.8" />
-              <path d="M184 46 L190 60 L196 54" fill="none" stroke="#00E5FF" strokeWidth="1.8" />
-            </svg>
-          )}
-        </div>
-      )}
-
-      {/* 右下：Oswald フォントによる主要スペック刻印（小サイズ時は非表示でノイズ排除） */}
-      {size !== 'sm' && size !== 'checkout' && (
-        <div className="pointer-events-none absolute bottom-2.5 right-3 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#151515]/80 backdrop-blur-sm border border-white/10">
-          <span className="font-oswald text-[11px] font-semibold tracking-wider text-[#00E5FF]">
-            {part.category === 'reel'
-              ? `#${part.sizeClass} // ${part.weightG}g`
-              : part.category === 'rod'
-              ? `${part.lengthFt.replace('フィート', "'").replace('インチ', '"')} // ${part.weightG}g`
-              : part.category === 'line'
-              ? `PE#${part.peNumber} // ${part.strengthLb}lb`
-              : `${part.lengthMm}mm // ${part.totalWeightG}g`}
+      {/* 上部微細ステータスラベル（PCのみ控えめに表示） */}
+      <div className="hidden sm:flex items-center justify-between px-6 pt-4 z-20">
+        <div className="flex items-center gap-2.5">
+          <span
+            className={`text-[11px] font-medium tracking-widest uppercase px-3 py-1 rounded-full ${
+              isDay
+                ? 'bg-[#F4F4F4] text-[#5C5E62]'
+                : 'bg-white/10 text-white/70'
+            }`}
+          >
+            {slideLabels[activeSlide]}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full ${
+              isAllCompatible
+                ? isDay
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                : isDay
+                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+            }`}
+          >
+            {isAllCompatible ? (
+              <>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>物理バランス100%適合</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>番手バランス要確認</span>
+              </>
+            )}
           </span>
         </div>
-      )}
+
+        {/* スライドクイックピル */}
+        <div className="flex items-center gap-1.5">
+          {(['SET', 'REEL', 'ROD', 'RIG', 'FISH'] as const).map((tab, idx) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => onChangeSlide(idx)}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-oswald tracking-wider transition-all ${
+                activeSlide === idx
+                  ? isDay
+                    ? 'bg-[#171A20] text-white font-semibold'
+                    : 'bg-[#00E5FF] text-[#111215] font-bold'
+                  : isDay
+                  ? 'text-[#5C5E62] hover:bg-[#F4F4F4]'
+                  : 'text-white/50 hover:bg-white/10'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* =================================================================
+          中央：巨大スタジオ・フォトキャンバス ＋ Tesla風「引き出し線＋[＋]」コールアウト
+         ================================================================= */}
+      <div className="relative flex-1 min-h-[270px] sm:min-h-[440px] lg:min-h-[520px] w-full flex items-center justify-center px-4 sm:px-10 py-2 overflow-hidden">
+        {/* Nightモード時のスタジオ・スポットライト・ステージ（白背景写真を美しく浮かび上がらせる純白スタジオポディウム） */}
+        <div
+          className={`relative w-full max-w-[920px] h-full min-h-[250px] sm:min-h-[400px] lg:min-h-[470px] rounded-3xl flex items-center justify-center transition-all duration-500 ${
+            isDay
+              ? 'bg-white'
+              : 'bg-white text-[#171A20] shadow-[0_0_90px_rgba(0,229,255,0.12),0_25px_60px_rgba(0,0,0,0.85)] border border-white/20'
+          }`}
+          style={{
+            background:
+              'radial-gradient(circle at 50% 50%, #FFFFFF 70%, #F7F8FA 100%)',
+          }}
+        >
+          {/* ---------------- SLIDE 0: ロッド × リール 統合スタジオビュー ---------------- */}
+          {activeSlide === 0 && (
+            <div className="relative w-full h-full flex items-center justify-center py-6 sm:py-12">
+              {/* Tesla風 コールアウト1（左上：ロッド特性） */}
+              <div className="hidden sm:flex flex-col items-start absolute top-6 left-[8%] lg:left-[10%] z-30">
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(0)}
+                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41] tracking-tight">
+                    {rod.propertyTags[0] || `${rod.lengthFt} 高反発ブランクス`}
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-sm border border-black/5">
+                    <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
+                  </span>
+                </button>
+                <div className="w-[1px] h-14 lg:h-20 bg-[#D0D1D2] ml-1 mt-1" />
+              </div>
+
+              {/* Tesla風 コールアウト2（右上：リール最大ドラグ＆機構） */}
+              <div className="hidden sm:flex flex-col items-start absolute top-6 right-[8%] lg:right-[12%] z-30">
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(1)}
+                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41] tracking-tight">
+                    最大ドラグ {reel.dragMaxKg}kg・{reel.propertyTags[0]}
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-sm border border-black/5">
+                    <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
+                  </span>
+                </button>
+                <div className="w-[1px] h-12 lg:h-16 bg-[#D0D1D2] ml-1 mt-1" />
+              </div>
+
+              {/* メイン・デュアルフォトコンポジット（左〜中央：ロッド、中央〜右：大型リール） */}
+              <div className="relative z-10 w-full max-w-[780px] h-[220px] sm:h-[320px] lg:h-[370px] flex items-center justify-center">
+                {/* 背景〜左側に伸びるキャスティングロッド写真 */}
+                <div
+                  onClick={() => onChangeSlide(2)}
+                  title="クリックしてロッド単体を拡大"
+                  className="w-[58%] sm:w-[60%] h-full flex items-center justify-center cursor-pointer group -mr-8 sm:-mr-14 z-10"
+                >
+                  <img
+                    src={resolvePartStudioImage(rod, rodFallback)}
+                    alt={rod.name}
+                    onError={() => {
+                      if (!rodFallback) setRodFallback(true);
+                    }}
+                    className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+
+                {/* 手前右側に鎮座するフラッグシップ・スピニングリール写真 */}
+                <div
+                  onClick={() => onChangeSlide(1)}
+                  title="クリックしてリール単体を拡大"
+                  className="w-[52%] sm:w-[50%] h-[92%] flex items-center justify-center cursor-pointer group z-20"
+                >
+                  <img
+                    src={resolvePartStudioImage(reel, reelFallback)}
+                    alt={reel.name}
+                    onError={() => {
+                      if (!reelFallback) setReelFallback(true);
+                    }}
+                    className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+              </div>
+
+              {/* Tesla風 コールアウト3（左下：適合ルアー＆ドラグ耐荷重） */}
+              <div className="hidden sm:flex flex-col items-start absolute bottom-5 left-[10%] lg:left-[14%] z-30">
+                <div className="w-[1px] h-10 lg:h-14 bg-[#D0D1D2] ml-1 mb-1.5" />
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(2)}
+                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41] tracking-tight">
+                    適合ルアー MAX {rod.lureMaxG}g (耐荷重 {rod.dragMaxKg}kg)
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-sm border border-black/5">
+                    <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
+                  </span>
+                </button>
+              </div>
+
+              {/* Tesla風 コールアウト4（右下：巻上スピード＆スプール糸巻量） */}
+              <div className="hidden sm:flex flex-col items-start absolute bottom-5 right-[8%] lg:right-[12%] z-30">
+                <div className="w-[1px] h-10 lg:h-14 bg-[#D0D1D2] ml-1 mb-1.5" />
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(3)}
+                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41] tracking-tight">
+                    1回転 {reel.retrieveCm}cm・PE{reel.peCapacityNum}号-{reel.peCapacityMeter}m
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-sm border border-black/5">
+                    <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ---------------- SLIDE 1: リール単体 スタジオ・クローズアップ ---------------- */}
+          {activeSlide === 1 && (
+            <div className="relative w-full h-full flex items-center justify-center py-6 sm:py-10">
+              <div className="hidden sm:flex flex-col items-start absolute top-6 left-[12%] z-30">
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(1)}
+                  className="group flex items-center gap-2 text-left"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
+                    PE{reel.peCapacityNum}号-{reel.peCapacityMeter}m フル格納スプール
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] text-[#171A20] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+                <div className="w-[1px] h-16 bg-[#D0D1D2] ml-1 mt-1" />
+              </div>
+
+              <div className="hidden sm:flex flex-col items-start absolute top-6 right-[12%] z-30">
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(1)}
+                  className="group flex items-center gap-2 text-left"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
+                    {reel.propertyTags[0]} (自重 {reel.weightG}g)
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] text-[#171A20] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+                <div className="w-[1px] h-16 bg-[#D0D1D2] ml-1 mt-1" />
+              </div>
+
+              <div className="w-[240px] sm:w-[360px] lg:w-[420px] h-[220px] sm:h-[320px] lg:h-[370px] flex items-center justify-center">
+                <img
+                  src={resolvePartStudioImage(reel, reelFallback)}
+                  alt={reel.name}
+                  onError={() => {
+                    if (!reelFallback) setReelFallback(true);
+                  }}
+                  className="w-full h-full object-contain mix-blend-multiply transition-all duration-500"
+                />
+              </div>
+
+              <div className="hidden sm:flex flex-col items-start absolute bottom-6 left-[15%] z-30">
+                <div className="w-[1px] h-12 bg-[#D0D1D2] ml-1 mb-1" />
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(1)}
+                  className="group flex items-center gap-2 text-left"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
+                    最大ドラグ力 {reel.dragMaxKg}kg (実用 {reel.practicalDragKg}kg)
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] text-[#171A20] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+              </div>
+
+              <div className="hidden sm:flex flex-col items-start absolute bottom-6 right-[14%] z-30">
+                <div className="w-[1px] h-12 bg-[#D0D1D2] ml-1 mb-1" />
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(3)}
+                  className="group flex items-center gap-2 text-left"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
+                    ギア比 {reel.gearRatio} 高速回収
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] text-[#171A20] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ---------------- SLIDE 2: ロッド単体 スタジオ・クローズアップ ---------------- */}
+          {activeSlide === 2 && (
+            <div className="relative w-full h-full flex items-center justify-center py-6 sm:py-10">
+              <div className="hidden sm:flex flex-col items-start absolute top-6 left-[12%] z-30">
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(0)}
+                  className="group flex items-center gap-2 text-left"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
+                    全長 {rod.lengthFt} (自重 {rod.weightG}g)
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] text-[#171A20] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+                <div className="w-[1px] h-16 bg-[#D0D1D2] ml-1 mt-1" />
+              </div>
+
+              <div className="hidden sm:flex flex-col items-start absolute top-6 right-[12%] z-30">
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(2)}
+                  className="group flex items-center gap-2 text-left"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
+                    適合ルアー {rod.lureMinG}〜{rod.lureMaxG}g
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] text-[#171A20] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+                <div className="w-[1px] h-16 bg-[#D0D1D2] ml-1 mt-1" />
+              </div>
+
+              <div className="w-[280px] sm:w-[460px] lg:w-[540px] h-[220px] sm:h-[320px] lg:h-[370px] flex items-center justify-center">
+                <img
+                  src={resolvePartStudioImage(rod, rodFallback)}
+                  alt={rod.name}
+                  onError={() => {
+                    if (!rodFallback) setRodFallback(true);
+                  }}
+                  className="w-full h-full object-contain mix-blend-multiply transition-all duration-500"
+                />
+              </div>
+
+              <div className="hidden sm:flex flex-col items-start absolute bottom-6 left-[14%] z-30">
+                <div className="w-[1px] h-12 bg-[#D0D1D2] ml-1 mb-1" />
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(0)}
+                  className="group flex items-center gap-2 text-left"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
+                    最大ドラグ負荷 {rod.dragMaxKg}kg (45°)
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] text-[#171A20] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+              </div>
+
+              <div className="hidden sm:flex flex-col items-start absolute bottom-6 right-[14%] z-30">
+                <div className="w-[1px] h-12 bg-[#D0D1D2] ml-1 mb-1" />
+                <button
+                  type="button"
+                  onClick={() => onOpenFeatureModal(2)}
+                  className="group flex items-center gap-2 text-left"
+                >
+                  <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
+                    適合ライン PE {rod.minPe}〜{rod.maxPe}号
+                  </span>
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] text-[#171A20] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ---------------- SLIDE 3: ライン ＆ ルアー ペアビュー ---------------- */}
+          {activeSlide === 3 && (
+            <div className="relative w-full h-full flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 py-6 px-6">
+              <div className="flex flex-col items-center text-center max-w-[260px]">
+                <div className="w-36 h-36 sm:w-52 sm:h-52 flex items-center justify-center">
+                  <img
+                    src={resolvePartStudioImage(line, lineFallback)}
+                    alt={line.name}
+                    onError={() => {
+                      if (!lineFallback) setLineFallback(true);
+                    }}
+                    className="w-full h-full object-contain mix-blend-multiply"
+                  />
+                </div>
+                <span className="text-[11px] font-oswald tracking-widest text-[#5C5E62] uppercase mt-2">
+                  PE LINE & SHOCK LEADER
+                </span>
+                <div className="text-sm font-semibold text-[#171A20] mt-0.5">
+                  {line.shortName}
+                </div>
+                <div className="text-xs text-[#5C5E62] mt-0.5">
+                  ＋ {line.pairedLeaderSpec}
+                </div>
+              </div>
+
+              <div className="hidden sm:block w-[1px] h-48 bg-black/10" />
+
+              <div className="flex flex-col items-center text-center max-w-[280px]">
+                <div className="w-40 h-36 sm:w-60 sm:h-52 flex items-center justify-center">
+                  <img
+                    src={resolvePartStudioImage(lure, lureFallback)}
+                    alt={lure.name}
+                    onError={() => {
+                      if (!lureFallback) setLureFallback(true);
+                    }}
+                    className="w-full h-full object-contain mix-blend-multiply"
+                  />
+                </div>
+                <span className="text-[11px] font-oswald tracking-widest text-[#5C5E62] uppercase mt-2">
+                  OFFSHORE PLUG & HOOK
+                </span>
+                <div className="text-sm font-semibold text-[#171A20] mt-0.5">
+                  {lure.shortName}
+                </div>
+                <div className="text-xs text-[#5C5E62] mt-0.5">
+                  本体 {lure.bodyWeightG}g ＋ {lure.hookSpec} (+{lure.hookRingWeightG}g)
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ---------------- SLIDE 4: ターゲット魚 ＆ 実戦海域 ---------------- */}
+          {activeSlide === 4 && (
+            <div className="relative w-full h-full min-h-[240px] sm:min-h-[380px] rounded-2xl overflow-hidden m-3 sm:m-6">
+              <img
+                src={target.heroImage}
+                alt={target.fishName}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 text-white space-y-2">
+                <span className="inline-block px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-oswald tracking-wider">
+                  {target.badge} // MAX {target.initialRunLoadKg}kg LOAD
+                </span>
+                <h3 className="text-lg sm:text-2xl font-bold tracking-tight">
+                  {target.fishName}
+                </h3>
+                <p className="text-xs sm:text-sm text-white/85 max-w-2xl leading-relaxed">
+                  {target.fishHabit}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* =================================================================
+          下部：Tesla Model 3 スタイル カルーセルコントロール (< ● ○ ○ ○ ○ >)
+         ================================================================= */}
+      <div className="relative z-20 px-6 pb-3 sm:pb-6 flex items-center justify-between">
+        {/* 左下：Teslaの左下の四角いアイコンボタン位置（スペック・機能詳細モーダル起動） */}
+        <button
+          type="button"
+          onClick={() => onOpenFeatureModal(0)}
+          title="機能・物理適合テレメトリーを表示"
+          className={`hidden sm:flex w-10 h-9 rounded-md items-center justify-center transition-colors ${
+            isDay
+              ? 'bg-[#8E8E93]/80 hover:bg-[#171A20] text-white'
+              : 'bg-white/15 hover:bg-white/25 text-white'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+        </button>
+
+        {/* 中央：< [ ● ○ ○ ○ ○ ] > */}
+        <div className="mx-auto flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="前のスライド"
+            className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
+              isDay
+                ? 'bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]'
+                : 'bg-white/10 hover:bg-white/20 text-white'
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2.2]" />
+          </button>
+
+          <div
+            className={`h-9 px-4 rounded-md flex items-center gap-2.5 ${
+              isDay ? 'bg-[#F4F4F4]' : 'bg-white/10'
+            }`}
+          >
+            {Array.from({ length: totalSlides }).map((_, idx) => {
+              const isCurrent = activeSlide === idx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => onChangeSlide(idx)}
+                  aria-label={`スライド ${idx + 1}: ${slideLabels[idx]}`}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                    isCurrent
+                      ? isDay
+                        ? 'bg-[#171A20] scale-110'
+                        : 'bg-white scale-110'
+                      : isDay
+                      ? 'bg-[#B5B6B8] hover:bg-[#757678]'
+                      : 'bg-white/30 hover:bg-white/60'
+                  }`}
+                />
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="次のスライド"
+            className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
+              isDay
+                ? 'bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]'
+                : 'bg-white/10 hover:bg-white/20 text-white'
+            }`}
+          >
+            <ChevronRight className="w-4 h-4 stroke-[2.2]" />
+          </button>
+        </div>
+
+        {/* 右側バランス用ダミースペーサー */}
+        <div className="hidden sm:block w-10" />
+      </div>
     </div>
   );
 };

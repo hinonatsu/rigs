@@ -1,23 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  ArrowLeft,
   ArrowRight,
   Check,
   ChevronDown,
-  Crosshair,
+  ChevronLeft,
+  ChevronRight,
   ExternalLink,
-  Flame,
-  Gauge,
-  Info,
-  Link2,
-  Lock,
+  Globe,
+  Moon,
   RotateCcw,
   ShieldCheck,
-  ShoppingBag,
   Sparkles,
-  Truck,
-  Zap,
+  Sun,
+  X,
 } from 'lucide-react';
 import { buildAmazonAffiliateUrl } from '../config/amazonAssociate';
 import {
@@ -35,7 +31,6 @@ import {
   RIG_PRESETS,
   RigState,
   ROD_CATALOG,
-  STEP_META,
   TargetId,
 } from '../data/rigCatalog';
 import {
@@ -46,7 +41,12 @@ import {
   RouteState,
 } from '../lib/urlRouter';
 import { TargetSelectHomeView } from './CatalogAndHubViews';
-import { RigPartShowcase } from './RigPartShowcase';
+import {
+  resolvePartStudioImage,
+  RigPartShowcase,
+  StudioTheme,
+  TeslaHeroConfiguratorStage,
+} from './RigPartShowcase';
 import { SpecCheckoutView } from './SpecCheckoutView';
 
 export type {
@@ -65,10 +65,20 @@ export const TackleBuilder: React.FC = () => {
   const [rig, setRig] = useState<RigState>(initialParsed.rig);
   const [headerUrlCopied, setHeaderUrlCopied] = useState(false);
 
-  // プログレッシブ・ディスクロージャー（段階的開示）用の開閉ステート
-  const [showNarrativeDetail, setShowNarrativeDetail] = useState(false);
-  const [showTargetHabit, setShowTargetHabit] = useState(false);
-  const [showCombatRadar, setShowCombatRadar] = useState(false);
+  // Day (白スタジオ: Tesla標準) / Night (ダークスタジオ) テーマ切り替え
+  const [theme, setTheme] = useState<StudioTheme>('day');
+
+  // メインフォトステージのカルーセルスライド番号 (0: ロッド×リール統合, 1: リール単体, 2: ロッド単体, 3: ライン&ルアー, 4: ターゲット魚)
+  const [activeSlide, setActiveSlide] = useState<number>(0);
+
+  // Tesla風「機能を表示する (コールアウト [＋])」モーダル
+  const [featureModalIndex, setFeatureModalIndex] = useState<number | null>(null);
+
+  // Tesla風「タックル仕様を比較する ＞」モーダル
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState<boolean>(false);
+
+  // フッター価格内訳ドロワー
+  const [isPriceBreakdownOpen, setIsPriceBreakdownOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -79,11 +89,6 @@ export const TackleBuilder: React.FC = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-
-  // スロットやパーツが切り替わったら詳細長文は再び折りたたむ（情報過多の防止）
-  useEffect(() => {
-    setShowNarrativeDetail(false);
-  }, [route.activeStep, rig]);
 
   const targetProfile = useMemo(
     () => getTargetProfile(route.targetId),
@@ -120,6 +125,7 @@ export const TackleBuilder: React.FC = () => {
 
   const handleSelectTarget = (targetId: TargetId, destination: 'garage' | 'checkout') => {
     const presetRig = getPresetRigState(targetId);
+    setActiveSlide(0);
     navigateTo(
       {
         view: destination,
@@ -130,20 +136,56 @@ export const TackleBuilder: React.FC = () => {
     );
   };
 
-  const handleSelectStep = (step: PartCategory) => {
-    const nextRoute: RouteState = {
-      ...route,
-      view: 'garage',
-      activeStep: step,
-    };
-    setRoute(nextRoute);
-    syncUrlInPlace(nextRoute, rig);
-  };
-
-  const handleEquipOption = (part: AnyRigPart) => {
+  const handleEquipOption = (part: AnyRigPart, preferredSlide?: number) => {
     const nextRig: RigState = {
       ...rig,
       [part.category]: part,
+    };
+    const nextRoute: RouteState = {
+      ...route,
+      activeStep: part.category,
+    };
+    setRig(nextRig);
+    setRoute(nextRoute);
+    if (typeof preferredSlide === 'number') {
+      setActiveSlide(preferredSlide);
+    }
+    syncUrlInPlace(nextRoute, nextRig);
+  };
+
+  // リールまたはロッドの番手変更時に、適合するライン＆ルアーへワンタップで同期するヘルパー
+  const handleAutoSyncLineAndLure = () => {
+    const currentReel = rig.reel ?? recommendedRig.reel!;
+    const currentRod = rig.rod ?? recommendedRig.rod!;
+
+    // リール番手に適合するロッドが選ばれていなければ適合ロッドへ
+    const matchedRod = currentRod.compatibleReelSizes.includes(currentReel.sizeClass)
+      ? currentRod
+      : ROD_CATALOG.find((r) => r.compatibleReelSizes.includes(currentReel.sizeClass)) ??
+        currentRod;
+
+    // リールのPE容量と一致するラインを選択
+    const matchedLine =
+      LINE_CATALOG.find((l) => l.peNumber === currentReel.peCapacityNum) ??
+      rig.line ??
+      recommendedRig.line!;
+
+    // ロッドの許容重量とライン号数に適合するルアーを選択
+    const matchedLure =
+      LURE_CATALOG.find(
+        (lu) =>
+          lu.totalWeightG >= matchedRod.lureMinG &&
+          lu.totalWeightG <= matchedRod.lureMaxG &&
+          matchedLine.peNumber >= lu.minPe
+      ) ??
+      rig.lure ??
+      recommendedRig.lure!;
+
+    const nextRig: RigState = {
+      reel: currentReel,
+      rod: matchedRod,
+      line: matchedLine,
+      lure: matchedLure,
     };
     setRig(nextRig);
     syncUrlInPlace(route, nextRig);
@@ -152,6 +194,7 @@ export const TackleBuilder: React.FC = () => {
   const handleResetToRecommended = () => {
     const presetRig = getPresetRigState(route.targetId);
     setRig(presetRig);
+    setActiveSlide(0);
     syncUrlInPlace(route, presetRig);
   };
 
@@ -188,25 +231,6 @@ export const TackleBuilder: React.FC = () => {
   const basePartForStep = recommendedRig[activeStep]!;
   const equippedPartForStep = rig[activeStep] ?? basePartForStep;
 
-  const stepCatalog = useMemo((): AnyRigPart[] => {
-    const raw =
-      activeStep === 'reel'
-        ? REEL_CATALOG
-        : activeStep === 'rod'
-        ? ROD_CATALOG
-        : activeStep === 'line'
-        ? LINE_CATALOG
-        : LURE_CATALOG;
-
-    return [...raw].sort((a, b) => {
-      if (a.id === basePartForStep.id) return -1;
-      if (b.id === basePartForStep.id) return 1;
-      const aCompat = checkPartCompatibility(a, rig).compatible ? 1 : 0;
-      const bCompat = checkPartCompatibility(b, rig).compatible ? 1 : 0;
-      return bCompat - aCompat;
-    });
-  }, [activeStep, basePartForStep.id, rig]);
-
   const comparisonReport = useMemo(
     () =>
       comparePartAgainstRecommended(
@@ -218,14 +242,6 @@ export const TackleBuilder: React.FC = () => {
     [basePartForStep, equippedPartForStep, targetProfile, rig]
   );
 
-  const currentStepIndex = CATEGORY_ORDER.indexOf(activeStep);
-  const nextStep: PartCategory | null =
-    currentStepIndex < CATEGORY_ORDER.length - 1
-      ? CATEGORY_ORDER[currentStepIndex + 1]
-      : null;
-  const prevStep: PartCategory | null =
-    currentStepIndex > 0 ? CATEGORY_ORDER[currentStepIndex - 1] : null;
-
   const customizedSlotsCount = useMemo(() => {
     return CATEGORY_ORDER.filter((cat) => rig[cat]?.id !== recommendedRig[cat]?.id).length;
   }, [rig, recommendedRig]);
@@ -236,805 +252,1210 @@ export const TackleBuilder: React.FC = () => {
     setTimeout(() => setHeaderUrlCopied(false), 2500);
   };
 
+  const isDay = theme === 'day' && route.view === 'garage';
+
+  // フィーチャーモーダル用の4大ハイライト定義
+  const featureHighlights = useMemo(() => {
+    const reel = rig.reel!;
+    const rod = rig.rod!;
+    const line = rig.line!;
+    const lure = rig.lure!;
+    return [
+      {
+        tag: 'ROD ARCHITECTURE // ブランクス設計',
+        title: `${rod.brand} ${rod.shortName}`,
+        subtitle: rod.subCode,
+        description: rod.description,
+        image: resolvePartStudioImage(rod),
+        metrics: rod.specs,
+      },
+      {
+        tag: 'REEL DRAG & POWERTRAIN // リール制動機構',
+        title: `${reel.brand} ${reel.shortName}`,
+        subtitle: reel.subCode,
+        description: reel.description,
+        image: resolvePartStudioImage(reel),
+        metrics: reel.specs,
+      },
+      {
+        tag: 'PHYSICAL SYNERGY // ルアー＆ロッド物理適合',
+        title: `実戦ルアー総重量 ${lure.totalWeightG}g × ロッド上限 ${rod.lureMaxG}g`,
+        subtitle: `${lure.shortName} (${lure.hookSpec})`,
+        description: `${lure.description} 選択中のロッド「${rod.shortName}（許容 ${rod.lureMinG}〜${rod.lureMaxG}g）」と組み合わせた際のブランクス負荷率は ${Math.round(
+          (lure.totalWeightG / rod.lureMaxG) * 100
+        )}% です。`,
+        image: resolvePartStudioImage(lure),
+        metrics: lure.specs,
+      },
+      {
+        tag: 'LINE CAPACITY & RETRIEVE // 糸巻量＆高速回収',
+        title: `${line.shortName} × 1回転 ${reel.retrieveCm}cm`,
+        subtitle: line.subCode,
+        description: line.description,
+        image: resolvePartStudioImage(line),
+        metrics: line.specs,
+      },
+    ];
+  }, [rig]);
+
   return (
-    <div className="min-h-dvh bg-[#151515] text-white font-sans font-light antialiased selection:bg-[#00E5FF] selection:text-[#151515] flex flex-col justify-between">
-      {/* ==================== 上部常駐：ミニマル・グラスモーフィズムナビゲーション ==================== */}
-      <header className="sticky top-0 z-30 shrink-0 bg-[#151515]/85 backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 lg:px-12 py-4">
-        <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
-          {/* 左：ブランドロゴ ＆ 3フェーズ進行ピル */}
+    <div
+      className={`min-h-dvh font-sans antialiased flex flex-col justify-between transition-colors duration-300 ${
+        isDay
+          ? 'bg-white text-[#171A20] selection:bg-[#3E6AE1] selection:text-white'
+          : 'bg-[#151515] text-white selection:bg-[#00E5FF] selection:text-[#151515]'
+      }`}
+    >
+      {/* ==================== 上部ヘッダー：Tesla Minimal Navigation ==================== */}
+      <header
+        className={`sticky top-0 z-30 shrink-0 px-4 sm:px-8 lg:px-12 py-3.5 transition-colors duration-300 ${
+          isDay
+            ? 'bg-white/95 backdrop-blur-md border-b border-black/5'
+            : 'bg-[#151515]/90 backdrop-blur-xl border-b border-white/10'
+        }`}
+      >
+        <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-4">
+          {/* 左：Tesla ワイドレタースペーシング風ブランドロゴ */}
           <div className="flex items-center gap-8">
             <button
               type="button"
-              onClick={() => navigateTo({ view: 'home' })}
-              className="flex items-center gap-2.5 text-left group"
+              onClick={() => navigateTo({ view: 'garage' })}
+              className="flex items-center gap-2 text-left group"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.8)]" />
-              <span className="font-oswald text-lg font-bold tracking-[0.28em] text-white group-hover:text-[#00E5FF] transition-colors">
-                RIGs
+              <span
+                className={`font-oswald text-lg sm:text-xl font-bold tracking-[0.42em] transition-colors ${
+                  isDay
+                    ? 'text-[#171A20] group-hover:text-[#3E6AE1]'
+                    : 'text-white group-hover:text-[#00E5FF]'
+                }`}
+              >
+                R I G s
               </span>
             </button>
 
-            <nav aria-label="進行フェーズ" className="flex items-center gap-2">
+            <nav aria-label="画面切り替え" className="hidden md:flex items-center gap-1">
               {(
                 [
-                  { id: 'home' as PageView, num: '01', label: 'TARGET' },
-                  { id: 'garage' as PageView, num: '02', label: 'CONFIGURATOR' },
-                  { id: 'checkout' as PageView, num: '03', label: 'CHECKOUT' },
+                  { id: 'garage' as PageView, label: 'コンフィギュレーター' },
+                  { id: 'home' as PageView, label: 'ターゲット魚種から選ぶ' },
+                  { id: 'checkout' as PageView, label: '完成仕様書・注文' },
                 ] as const
-              ).map((phase, idx) => {
+              ).map((phase) => {
                 const isActive = route.view === phase.id;
-                const isDisabled = route.view === 'home' && phase.id !== 'home';
                 return (
-                  <React.Fragment key={phase.id}>
-                    {idx > 0 && <span className="text-white/20 text-xs">/</span>}
-                    <button
-                      type="button"
-                      disabled={isDisabled}
-                      onClick={() => navigateTo({ view: phase.id })}
-                      className={`px-4 py-1.5 rounded-full text-xs transition-all duration-300 flex items-center gap-2 ${
-                        isActive
-                          ? 'bg-[#00E5FF] text-[#151515] font-bold shadow-[0_0_15px_rgba(0,229,255,0.4)]'
-                          : isDisabled
-                          ? 'bg-transparent text-white/25 cursor-not-allowed'
-                          : 'bg-[#222222]/80 text-white/70 hover:text-white border border-white/10'
-                      }`}
-                    >
-                      <span className="font-oswald tracking-wider">{phase.num}</span>
-                      <span className="font-oswald tracking-widest">{phase.label}</span>
-                    </button>
-                  </React.Fragment>
+                  <button
+                    key={phase.id}
+                    type="button"
+                    onClick={() => navigateTo({ view: phase.id })}
+                    className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      isActive
+                        ? isDay
+                          ? 'bg-[#F4F4F4] text-[#171A20] font-semibold'
+                          : 'bg-white/15 text-white font-semibold'
+                        : isDay
+                        ? 'text-[#5C5E62] hover:text-[#171A20] hover:bg-[#F4F4F4]/60'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {phase.label}
+                  </button>
                 );
               })}
             </nav>
           </div>
 
-          {/* 右：スリム化したターゲットスイッチャー ＆ セカンダリ共有ボタン */}
-          {route.view === 'home' ? (
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#222222]/80 border border-white/10 text-xs text-white/60">
-              <Crosshair className="w-3.5 h-3.5 text-[#00E5FF]" />
-              <span className="font-oswald tracking-wider">SELECT TARGET</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#222222]/90 backdrop-blur-md border border-[#00E5FF]/40">
-                <img
-                  src={targetProfile.heroImage}
-                  alt={targetProfile.fishName}
-                  className="w-6 h-6 rounded-full object-cover border border-[#00E5FF]/60 shrink-0"
-                />
-                <select
-                  value={route.targetId}
-                  onChange={(e) =>
-                    handleSelectTarget(
-                      e.target.value as TargetId,
-                      route.view === 'checkout' ? 'checkout' : 'garage'
-                    )
-                  }
-                  aria-label="ターゲット魚種を切り替え"
-                  className="bg-transparent text-xs font-light text-white focus:outline-none cursor-pointer"
-                >
-                  {RIG_PRESETS.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-[#222222] text-white">
-                      {t.fishName} ({t.badge})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+          {/* 右：Day/Night スタジオ切替 ＆ URL共有 ＆ 🌐 JP */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {route.view === 'garage' && (
               <button
                 type="button"
-                onClick={handleCopyShareUrl}
-                className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-transparent border border-white/15 hover:border-[#00E5FF] text-xs font-light text-white/80 hover:text-white transition-all duration-300"
-                title="現在の装備URLをコピー"
+                onClick={() => setTheme((prev) => (prev === 'day' ? 'night' : 'day'))}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  isDay
+                    ? 'bg-[#F4F4F4] hover:bg-[#E8E8EA] text-[#171A20]'
+                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/15'
+                }`}
+                title="白スタジオ(Day) / ダークスタジオ(Night) を切り替え"
               >
-                {headerUrlCopied ? (
+                {theme === 'day' ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-[#00E5FF]" />
-                    <span className="text-[#00E5FF]">COPIED</span>
+                    <Sun className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="hidden sm:inline">白スタジオ</span>
                   </>
                 ) : (
                   <>
-                    <Link2 className="w-3.5 h-3.5 text-[#00E5FF]" />
-                    <span>SHARE</span>
+                    <Moon className="w-3.5 h-3.5 text-[#00E5FF]" />
+                    <span className="hidden sm:inline">ダークスタジオ</span>
                   </>
                 )}
               </button>
-            </div>
-          )}
+            )}
+
+            <button
+              type="button"
+              onClick={handleCopyShareUrl}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                isDay
+                  ? 'text-[#171A20] hover:bg-[#F4F4F4]'
+                  : 'text-white/80 hover:bg-white/10'
+              }`}
+              title="現在のカスタム構成URLをコピー"
+            >
+              {headerUrlCopied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-emerald-600 font-semibold">COPIED</span>
+                </>
+              ) : (
+                <>
+                  <Globe className="w-4 h-4" />
+                  <span>JP</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* ==================== 中央メインステージ（広大な余白 Whitespace） ==================== */}
-      <main className="flex-1 min-h-0 max-w-[1600px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-10 flex flex-col">
-        {/* -------------------- 【画面1】ホーム：ターゲット選択 -------------------- */}
+      {/* ==================== メインステージ ==================== */}
+      <main className="flex-1 min-h-0 w-full flex flex-col">
+        {/* -------------------- 【画面1】ターゲット魚種ガイド画面 -------------------- */}
         {route.view === 'home' && (
-          <TargetSelectHomeView
-            currentTargetId={route.targetId}
-            onSelectTargetAndGoGarage={(targetId) => handleSelectTarget(targetId, 'garage')}
-            onSelectTargetAndGoCheckout={(targetId) => handleSelectTarget(targetId, 'checkout')}
-          />
+          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 flex-1 flex flex-col">
+            <TargetSelectHomeView
+              currentTargetId={route.targetId}
+              onSelectTargetAndGoGarage={(targetId) => handleSelectTarget(targetId, 'garage')}
+              onSelectTargetAndGoCheckout={(targetId) => handleSelectTarget(targetId, 'checkout')}
+            />
+          </div>
         )}
 
-        {/* -------------------- 【画面2】Tesla風スプリット・コンフィギュレーター ＆ Bento Grid -------------------- */}
+        {/* =================================================================
+            【画面2】Tesla Model 3 型 スプリット・コンフィギュレーター
+            ・左 8 cols (Sticky固定): ロッド＆リール スタジオ写真 ＋ 引き出し線コールアウト [＋] ＋ < ● ○ ○ ○ ○ >
+            ・右 4 cols (縦スクロール): ロッド・リール中心の大型セレクター ＋ ライン・ルアー丸型スウォッチ
+           ================================================================= */}
         {route.view === 'garage' && (
-          <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-            {/* =================================================================
-                左ペイン (4 cols)：Tesla風 スティッキー・ロードアウトドック
-                （長文を排除し、4スロットの現在状態と段階的開示テレメトリに集約）
-               ================================================================= */}
-            <aside className="lg:col-span-4 lg:sticky lg:top-24 flex flex-col gap-6 rounded-2xl bg-[#222222]/85 backdrop-blur-xl border border-white/10 p-6 sm:p-7 shadow-2xl">
-              {/* 1. ターゲットロックオン・コンパクトヘッダー（長文はボタンクリック時のみ段階的開示） */}
-              <div className="rounded-xl overflow-hidden bg-[#151515] border border-white/10">
-                <div className="relative h-28 w-full overflow-hidden">
-                  <img
-                    src={targetProfile.heroImage}
-                    alt={targetProfile.fishName}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#151515] via-[#151515]/50 to-transparent" />
-                  <div className="absolute top-3 left-3.5 right-3.5 flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#151515]/85 backdrop-blur-md border border-[#00E5FF]/50 text-[10px] font-oswald font-semibold text-[#00E5FF] tracking-widest">
-                      {targetProfile.badge}
+          <div className="max-w-[1680px] w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 items-start">
+            {/* -----------------------------------------------------------------
+                左ペイン (PC: 8 cols Sticky / モバイル: 上部固定フォトステージ)
+               ----------------------------------------------------------------- */}
+            <div
+              className={`lg:col-span-8 lg:sticky lg:top-[57px] lg:h-[calc(100dvh-137px)] w-full flex flex-col justify-between z-20 ${
+                isDay
+                  ? 'bg-white border-b lg:border-b-0 border-black/5'
+                  : 'bg-[#111215] border-b lg:border-b-0 border-white/10'
+              }`}
+            >
+              <TeslaHeroConfiguratorStage
+                rig={rig}
+                target={targetProfile}
+                theme={theme}
+                activeSlide={activeSlide}
+                onChangeSlide={(idx) => setActiveSlide(idx)}
+                onOpenFeatureModal={(featIdx) => setFeatureModalIndex(featIdx ?? 0)}
+                isAllCompatible={isAllSelectedCompatible}
+              />
+            </div>
+
+            {/* -----------------------------------------------------------------
+                右ペイン (PC: 4 cols 縦スクロール / モバイル: 下部ストリーム)
+               ----------------------------------------------------------------- */}
+            <div className="lg:col-span-4 w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 pb-28">
+              {/* 1. モバイル専用：添付画像2枚目の「機能を表示する ＞」枠ボックス */}
+              <div
+                className={` sm:hidden rounded-xl border-2 p-2.5 ${
+                  isDay ? 'border-[#171A20] bg-white' : 'border-white/30 bg-[#1C1D21]'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => setFeatureModalIndex(0)}
+                  className={`w-full rounded-lg px-4 py-3 flex items-center justify-between text-sm font-medium transition-colors ${
+                    isDay
+                      ? 'bg-[#F4F4F4] text-[#171A20] hover:bg-[#E8E8EA]'
+                      : 'bg-white/10 text-white hover:bg-white/15'
+                  }`}
+                >
+                  <span>機能を表示する</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 2. ターゲットクラス切替 ＆「タックル仕様を比較する ＞」カード */}
+              <div
+                className={`rounded-2xl p-5 sm:p-6 space-y-4 transition-colors ${
+                  isDay
+                    ? 'bg-[#F4F4F4] text-[#171A20]'
+                    : 'bg-[#1C1D21] text-white border border-white/10'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span
+                      className={`text-[11px] font-oswald tracking-widest uppercase block ${
+                        isDay ? 'text-[#5C5E62]' : 'text-white/50'
+                      }`}
+                    >
+                      TARGET CLASS // 推奨基準クラス
                     </span>
-                    <div className="flex items-center gap-2">
-                      {customizedSlotsCount > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleResetToRecommended}
-                          className="px-2.5 py-0.5 rounded-full bg-[#151515]/90 border border-white/20 text-[10px] text-white/80 hover:text-[#00E5FF] flex items-center gap-1 transition-colors"
-                        >
-                          <RotateCcw className="w-2.5 h-2.5" />
-                          <span>RESET</span>
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setShowTargetHabit((prev) => !prev)}
-                        className="px-2.5 py-0.5 rounded-full bg-[#151515]/90 border border-white/20 text-[10px] text-[#00E5FF] hover:border-[#00E5FF] flex items-center gap-1 transition-colors"
-                        title="ターゲットの習性・ベイト情報を表示"
-                      >
-                        <Info className="w-3 h-3" />
-                        <span>習性データ</span>
-                      </button>
-                    </div>
+                    <h2 className="text-base font-bold mt-0.5">
+                      ターゲット魚種・海域クラス
+                    </h2>
                   </div>
-                  <div className="absolute bottom-2.5 left-4 right-4 flex items-baseline justify-between gap-2">
-                    <div className="text-xs sm:text-sm font-medium text-white truncate">
-                      {targetProfile.fishName}
-                    </div>
-                    <span className="font-oswald text-xs text-[#00E5FF] shrink-0">
-                      MAX {targetProfile.initialRunLoadKg}kg LOAD
-                    </span>
-                  </div>
+                  {customizedSlotsCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleResetToRecommended}
+                      className={`text-xs font-medium px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
+                        isDay
+                          ? 'bg-white text-[#5C5E62] hover:text-[#171A20] shadow-sm'
+                          : 'bg-white/10 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>推奨に戻す</span>
+                    </button>
+                  )}
                 </div>
 
-                {/* 段階的開示：クリックした時のみ表示される習性・捕食ベイト情報 */}
-                {showTargetHabit && (
-                  <div className="p-4 border-t border-white/10 bg-[#151515] space-y-2 text-xs font-light text-white/80">
-                    <p className="leading-relaxed">{targetProfile.fishHabit}</p>
-                    <div className="text-[11px] text-[#00E5FF] font-normal">
-                      ★ 捕食ベイト: {targetProfile.baitSizeMm}
+                {/* Teslaのグレード選択枠スタイル */}
+                <div className="grid grid-cols-3 gap-2">
+                  {RIG_PRESETS.map((preset) => {
+                    const isSelectedTarget = route.targetId === preset.id;
+                    const shortLabel =
+                      preset.id === 'pe6'
+                        ? 'PE6 近海'
+                        : preset.id === 'pe8'
+                        ? 'PE8 大型'
+                        : 'PE10 遠征';
+                    const subFish =
+                      preset.id === 'pe6'
+                        ? 'ヒラマサ・キハダ'
+                        : preset.id === 'pe8'
+                        ? 'クロマグロ・オオマサ'
+                        : '100kg超マグロ・GT';
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => handleSelectTarget(preset.id, 'garage')}
+                        className={`rounded-xl p-2.5 text-left transition-all ${
+                          isSelectedTarget
+                            ? isDay
+                              ? 'bg-white border-2 border-[#171A20] shadow-sm'
+                              : 'bg-[#26282E] border-2 border-[#00E5FF]'
+                            : isDay
+                            ? 'bg-white/60 border border-black/10 hover:bg-white'
+                            : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="font-oswald text-xs font-bold tracking-wider">
+                          {shortLabel}
+                        </div>
+                        <div
+                          className={`text-[10px] truncate mt-0.5 ${
+                            isDay ? 'text-[#5C5E62]' : 'text-white/60'
+                          }`}
+                        >
+                          {subFish}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 添付画像の「車両を比較する ＞」と同一デザインの白ボタン行 */}
+                <button
+                  type="button"
+                  onClick={() => setIsCompareModalOpen(true)}
+                  className={`w-full rounded-xl px-4 py-3.5 flex items-center justify-between text-xs sm:text-sm font-medium transition-all ${
+                    isDay
+                      ? 'bg-white hover:bg-[#FAFAFA] text-[#171A20] shadow-sm'
+                      : 'bg-white/10 hover:bg-white/15 text-white'
+                  }`}
+                >
+                  <span>タックル仕様を比較する</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
+                {/* 番手不一致がある場合のワンタップ自動最適化アシスト */}
+                {!isAllSelectedCompatible && (
+                  <div
+                    className={`rounded-xl p-3.5 flex items-center justify-between gap-3 ${
+                      isDay
+                        ? 'bg-amber-50 border border-amber-200 text-amber-900'
+                        : 'bg-amber-500/15 border border-amber-500/30 text-amber-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-xs">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                      <span>選択中のリール番手とライン/ロッドに不一致があります</span>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleAutoSyncLineAndLure}
+                      className="shrink-0 px-3 py-1.5 rounded-lg bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-medium transition-colors"
+                    >
+                      自動最適化
+                    </button>
                   </div>
                 )}
               </div>
 
-              {/* 2. 4つの装備スロット（透過PNGサムネイルステージ ＆ Oswald価格 ＆ 発光State） */}
-              <div className="space-y-3.5">
-                <div className="flex items-center justify-between text-[11px] px-1">
-                  <span className="font-oswald tracking-widest text-white/60 uppercase">
-                    LOADOUT SLOTS (4 ITEMS)
-                  </span>
-                  <span className="font-oswald text-[#00E5FF] tracking-wider">
-                    {customizedSlotsCount === 0
-                      ? 'RECOMMENDED SPEC'
-                      : `${customizedSlotsCount} CUSTOMIZED`}
-                  </span>
-                </div>
-
-                {CATEGORY_ORDER.map((cat) => {
-                  const meta = STEP_META[cat];
-                  const item = rig[cat]!;
-                  const baseItem = recommendedRig[cat]!;
-                  const isActive = activeStep === cat;
-                  const isCustom = item.id !== baseItem.id;
-                  const { compatible } = checkPartCompatibility(item, rig);
-
-                  return (
+              {/* =================================================================
+                  3. 【主役セクション 1】リール (REEL) — 大型スタジオフォト選択
+                 ================================================================= */}
+              <section
+                aria-label="リール選択"
+                className={`rounded-2xl p-5 sm:p-6 space-y-5 transition-colors ${
+                  isDay
+                    ? 'bg-[#F4F4F4] text-[#171A20]'
+                    : 'bg-[#1C1D21] text-white border border-white/10'
+                }`}
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+                      リール
+                    </h2>
                     <button
-                      key={cat}
                       type="button"
-                      onClick={() => handleSelectStep(cat)}
-                      className={`group w-full rounded-xl p-3.5 text-left transition-all duration-300 ease-out hover:scale-105 flex items-center gap-3.5 ${
-                        isActive
-                          ? 'bg-[#151515] border border-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.4)]'
-                          : 'bg-[#151515]/75 border border-white/10 hover:border-[#00E5FF]/50'
+                      onClick={() => setActiveSlide(1)}
+                      className={`text-xs font-medium underline underline-offset-4 ${
+                        isDay
+                          ? 'text-[#5C5E62] hover:text-[#171A20]'
+                          : 'text-white/60 hover:text-white'
                       }`}
                     >
-                      {/* 透過PNG対応ミニビジュアルステージ */}
-                      <RigPartShowcase part={item} isSelected={isActive} size="sm" />
+                      単体写真を拡大
+                    </button>
+                  </div>
 
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-oswald text-xs font-bold tracking-wider text-[#00E5FF]">
-                            {meta.stepNum} {meta.label}
-                          </span>
+                  {/* Tesla風：選択中モデル名（左） ＆ 価格（右） */}
+                  <div className="flex items-baseline justify-between gap-2 pt-1">
+                    <div className="text-sm sm:text-base font-medium">
+                      {rig.reel?.brand} {rig.reel?.shortName}
+                    </div>
+                    <div className="font-oswald text-base sm:text-lg font-semibold tabular-nums shrink-0">
+                      ¥{rig.reel?.price.toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div
+                    className={`text-xs ${
+                      isDay ? 'text-[#5C5E62]' : 'text-white/60'
+                    }`}
+                  >
+                    {rig.reel?.sizeClass}番 ・ 最大ドラグ {rig.reel?.dragMaxKg}kg ・ 自重{' '}
+                    {rig.reel?.weightG}g ・ 1回転 {rig.reel?.retrieveCm}cm
+                  </div>
+                </div>
+
+                {/* リール大型ビジュアルセレクター (2×2 グリッド) */}
+                <div className="grid grid-cols-2 gap-3">
+                  {REEL_CATALOG.map((reelItem) => {
+                    const isSelected = rig.reel?.id === reelItem.id;
+                    const isBase = recommendedRig.reel?.id === reelItem.id;
+                    return (
+                      <button
+                        key={reelItem.id}
+                        type="button"
+                        onClick={() =>
+                          handleEquipOption(
+                            reelItem,
+                            activeSlide === 2 || activeSlide === 3 ? 0 : activeSlide
+                          )
+                        }
+                        className={`group relative rounded-xl p-3 text-left transition-all flex flex-col justify-between ${
+                          isSelected
+                            ? isDay
+                              ? 'bg-white ring-2 ring-[#171A20] shadow-md'
+                              : 'bg-[#26282E] ring-2 ring-[#00E5FF] shadow-lg'
+                            : isDay
+                            ? 'bg-white/80 hover:bg-white border border-black/5'
+                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1.5">
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                              isCustom
-                                ? 'bg-[#00E5FF] text-[#151515] font-bold'
-                                : 'bg-white/10 text-white/60'
+                            className={`font-oswald text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              isSelected
+                                ? isDay
+                                  ? 'bg-[#171A20] text-white'
+                                  : 'bg-[#00E5FF] text-[#111215]'
+                                : isDay
+                                ? 'bg-[#F4F4F4] text-[#5C5E62]'
+                                : 'bg-white/10 text-white/70'
                             }`}
                           >
-                            {isCustom ? 'CUSTOM' : 'BASE'}
+                            #{reelItem.sizeClass}
                           </span>
-                          {!compatible && (
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                              要確認
+                          {isBase && (
+                            <span
+                              className={`text-[10px] font-medium ${
+                                isDay ? 'text-[#3E6AE1]' : 'text-[#00E5FF]'
+                              }`}
+                            >
+                              標準推奨
                             </span>
                           )}
                         </div>
-                        <div className="text-xs sm:text-sm font-normal text-white truncate">
-                          {item.shortName}
-                        </div>
-                        <div className="font-oswald text-sm font-semibold text-white/90 tabular-nums">
-                          ¥{item.price.toLocaleString()}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
 
-              {/* 3. 対ターゲット総合戦闘力（段階的開示でスッキリ収納可能） */}
-              <div className="rounded-xl bg-[#151515] border border-white/10 p-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCombatRadar((prev) => !prev)}
-                  className="w-full flex items-center justify-between text-left"
-                >
-                  <span className="text-xs font-oswald font-semibold tracking-widest text-[#00E5FF] flex items-center gap-2">
-                    <Gauge className="w-4 h-4" />
-                    <span>TOTAL COMBAT TELEMETRY</span>
-                  </span>
-                  <span className="text-[11px] text-white/60 flex items-center gap-1">
-                    <span>{showCombatRadar ? '閉じる' : '5項目展開'}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-[#00E5FF] transition-transform duration-300 ${
-                        showCombatRadar ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </span>
-                </button>
+                        <RigPartShowcase
+                          part={reelItem}
+                          isSelected={isSelected}
+                          size="md"
+                          theme={theme}
+                        />
 
-                {showCombatRadar && (
-                  <div className="mt-4 pt-4 border-t border-white/10 space-y-3.5">
-                    {combatStats.map((stat) => {
-                      const diff = stat.score - stat.baseScore;
-                      return (
-                        <div key={stat.id} className="space-y-1.5">
-                          <div className="flex items-center justify-between text-[11px]">
-                            <div className="truncate">
-                              <span className="font-oswald tracking-wider text-white">
-                                {stat.label}
-                              </span>
-                              <span className="text-white/50 ml-2 text-[10px]">
-                                {stat.subLabel}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0 tabular-nums">
-                              <span className="font-oswald text-xs font-bold text-white">
-                                {stat.score}
-                              </span>
-                              {diff !== 0 && (
-                                <span
-                                  className={`px-1.5 py-0.5 rounded font-oswald text-[10px] font-bold ${
-                                    diff > 0
-                                      ? 'bg-[#00E5FF]/20 text-[#00E5FF]'
-                                      : 'bg-amber-500/20 text-amber-300'
-                                  }`}
-                                >
-                                  {diff > 0 ? `+${diff}` : `${diff}`}
-                                </span>
-                              )}
-                            </div>
+                        <div className="mt-2.5 space-y-0.5">
+                          <div
+                            className={`text-[10px] font-medium ${
+                              isDay ? 'text-[#5C5E62]' : 'text-white/50'
+                            }`}
+                          >
+                            {reelItem.brand}
                           </div>
-                          <div className="h-1.5 rounded-full bg-[#222222] relative overflow-hidden">
-                            <div
-                              className={`h-full transition-all duration-300 ${
-                                diff > 0
-                                  ? 'bg-[#00E5FF]'
-                                  : diff < 0
-                                  ? 'bg-amber-400'
-                                  : 'bg-[#00E5FF]/80'
+                          <div className="text-xs sm:text-[13px] font-semibold truncate">
+                            {reelItem.shortName}
+                          </div>
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="font-oswald text-xs font-bold tabular-nums">
+                              ¥{reelItem.price.toLocaleString()}
+                            </span>
+                            <span
+                              className={`text-[10px] font-oswald ${
+                                isDay ? 'text-[#5C5E62]' : 'text-white/50'
                               }`}
-                              style={{ width: `${stat.score}%` }}
-                            />
-                            <div
-                              className="absolute top-0 bottom-0 w-0.5 bg-white"
-                              style={{ left: `${stat.baseScore}%` }}
-                            />
+                            >
+                              PE{reelItem.peCapacityNum}号
+                            </span>
                           </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* =================================================================
+                  4. 【主役セクション 2】ロッド (ROD) — 大型スタジオフォト選択
+                 ================================================================= */}
+              <section
+                aria-label="ロッド選択"
+                className={`rounded-2xl p-5 sm:p-6 space-y-5 transition-colors ${
+                  isDay
+                    ? 'bg-[#F4F4F4] text-[#171A20]'
+                    : 'bg-[#1C1D21] text-white border border-white/10'
+                }`}
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+                      ロッド
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSlide(2)}
+                      className={`text-xs font-medium underline underline-offset-4 ${
+                        isDay
+                          ? 'text-[#5C5E62] hover:text-[#171A20]'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                    >
+                      単体写真を拡大
+                    </button>
+                  </div>
+
+                  {/* Tesla風：選択中モデル名（左） ＆ 価格（右） */}
+                  <div className="flex items-baseline justify-between gap-2 pt-1">
+                    <div className="text-sm sm:text-base font-medium">
+                      {rig.rod?.brand} {rig.rod?.shortName}
+                    </div>
+                    <div className="font-oswald text-base sm:text-lg font-semibold tabular-nums shrink-0">
+                      ¥{rig.rod?.price.toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div
+                    className={`text-xs ${
+                      isDay ? 'text-[#5C5E62]' : 'text-white/60'
+                    }`}
+                  >
+                    {rig.rod?.lengthFt} ・ ルアー {rig.rod?.lureMinG}〜{rig.rod?.lureMaxG}g ・
+                    耐荷重 {rig.rod?.dragMaxKg}kg ・ 自重 {rig.rod?.weightG}g
+                  </div>
+                </div>
+
+                {/* ロッド大型ビジュアルセレクター (2×2 グリッド) */}
+                <div className="grid grid-cols-2 gap-3">
+                  {ROD_CATALOG.map((rodItem) => {
+                    const isSelected = rig.rod?.id === rodItem.id;
+                    const isReelMatched = rig.reel
+                      ? rodItem.compatibleReelSizes.includes(rig.reel.sizeClass)
+                      : true;
+                    return (
+                      <button
+                        key={rodItem.id}
+                        type="button"
+                        onClick={() =>
+                          handleEquipOption(
+                            rodItem,
+                            activeSlide === 1 || activeSlide === 3 ? 0 : activeSlide
+                          )
+                        }
+                        className={`group relative rounded-xl p-3 text-left transition-all flex flex-col justify-between ${
+                          isSelected
+                            ? isDay
+                              ? 'bg-white ring-2 ring-[#171A20] shadow-md'
+                              : 'bg-[#26282E] ring-2 ring-[#00E5FF] shadow-lg'
+                            : isDay
+                            ? 'bg-white/80 hover:bg-white border border-black/5'
+                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                        } ${!isReelMatched && !isSelected ? 'opacity-75' : ''}`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1.5">
+                          <span
+                            className={`font-oswald text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              isSelected
+                                ? isDay
+                                  ? 'bg-[#171A20] text-white'
+                                  : 'bg-[#00E5FF] text-[#111215]'
+                                : isDay
+                                ? 'bg-[#F4F4F4] text-[#5C5E62]'
+                                : 'bg-white/10 text-white/70'
+                            }`}
+                          >
+                            MAX {rodItem.lureMaxG}g
+                          </span>
+                          <span
+                            className={`text-[10px] font-medium ${
+                              isReelMatched
+                                ? isDay
+                                  ? 'text-emerald-700'
+                                  : 'text-emerald-400'
+                                : isDay
+                                ? 'text-amber-600'
+                                : 'text-amber-300'
+                            }`}
+                          >
+                            {isReelMatched
+                              ? `✓ ${rig.reel?.sizeClass}番適合`
+                              : `${rodItem.compatibleReelSizes.join('/')}番用`}
+                          </span>
+                        </div>
+
+                        <RigPartShowcase
+                          part={rodItem}
+                          isSelected={isSelected}
+                          size="md"
+                          theme={theme}
+                        />
+
+                        <div className="mt-2.5 space-y-0.5">
+                          <div
+                            className={`text-[10px] font-medium truncate ${
+                              isDay ? 'text-[#5C5E62]' : 'text-white/50'
+                            }`}
+                          >
+                            {rodItem.brand}
+                          </div>
+                          <div className="text-xs sm:text-[13px] font-semibold truncate">
+                            {rodItem.shortName}
+                          </div>
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="font-oswald text-xs font-bold tabular-nums">
+                              ¥{rodItem.price.toLocaleString()}
+                            </span>
+                            <span
+                              className={`text-[10px] font-oswald ${
+                                isDay ? 'text-[#5C5E62]' : 'text-white/50'
+                              }`}
+                            >
+                              PE{rodItem.minPe}-{rodItem.maxPe}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* =================================================================
+                  5. 【サブセクション】ライン ＆ ルアー — Tesla風 丸型スウォッチ (○)
+                 ================================================================= */}
+              <section
+                aria-label="ライン＆ルアー選択"
+                className={`rounded-2xl p-5 sm:p-6 space-y-6 transition-colors ${
+                  isDay
+                    ? 'bg-[#F4F4F4] text-[#171A20]'
+                    : 'bg-[#1C1D21] text-white border border-white/10'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+                    ライン ＆ ルアー
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSlide(3)}
+                    className={`text-xs font-medium underline underline-offset-4 ${
+                      isDay
+                        ? 'text-[#5C5E62] hover:text-[#171A20]'
+                        : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    写真を表示
+                  </button>
+                </div>
+
+                {/* -------- 5-A. PEライン（丸型スウォッチ選択） -------- */}
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-medium">{rig.line?.shortName}</div>
+                      <div
+                        className={`text-[11px] mt-0.5 ${
+                          isDay ? 'text-[#5C5E62]' : 'text-white/55'
+                        }`}
+                      >
+                        ＋ {rig.line?.pairedLeaderSpec}
+                      </div>
+                    </div>
+                    <div className="font-oswald text-sm sm:text-base font-semibold tabular-nums shrink-0">
+                      ¥{rig.line?.price.toLocaleString()}
+                    </div>
+                  </div>
+
+                  {/* Teslaのカラースウォッチ（丸アイコン）並び */}
+                  <div className="flex items-center gap-4 pt-1 pb-2">
+                    {LINE_CATALOG.map((lineItem) => {
+                      const isSelected = rig.line?.id === lineItem.id;
+                      const isCompat = checkPartCompatibility(lineItem, rig).compatible;
+                      return (
+                        <div key={lineItem.id} className="relative flex flex-col items-center">
+                          <button
+                            type="button"
+                            onClick={() => handleEquipOption(lineItem)}
+                            aria-label={lineItem.shortName}
+                            className={`group relative w-14 h-14 rounded-full p-0.5 transition-all duration-200 ${
+                              isSelected
+                                ? isDay
+                                  ? 'ring-2 ring-[#171A20] ring-offset-2 ring-offset-[#F4F4F4] scale-105'
+                                  : 'ring-2 ring-[#00E5FF] ring-offset-2 ring-offset-[#1C1D21] scale-105'
+                                : 'opacity-80 hover:opacity-100 hover:scale-105'
+                            }`}
+                          >
+                            <RigPartShowcase
+                              part={lineItem}
+                              isSelected={isSelected}
+                              size="swatch"
+                              theme={theme}
+                            />
+                            <span
+                              className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full font-oswald text-[10px] font-bold shadow ${
+                                isSelected
+                                  ? 'bg-[#171A20] text-white'
+                                  : 'bg-white text-[#171A20] border border-black/15'
+                              }`}
+                            >
+                              {lineItem.peNumber}号
+                            </span>
+                            {!isCompat && (
+                              <span
+                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center"
+                                title="リール番手と容量が異なります"
+                              >
+                                !
+                              </span>
+                            )}
+                          </button>
+
+                          {/* Tesla添付画像1枚目の黒い吹き出しラベル再現 */}
+                          {isSelected && (
+                            <span className="mt-2 px-2 py-0.5 rounded bg-[#222222] text-white text-[10px] font-medium whitespace-nowrap shadow-sm">
+                              PE{lineItem.peNumber}号 ({lineItem.strengthLb}lb)
+                            </span>
+                          )}
                         </div>
                       );
                     })}
                   </div>
-                )}
-              </div>
-            </aside>
-
-            {/* =================================================================
-                右ペイン (8 cols)：Bento Grid 製品セレクター ＆ スペック比較ステージ
-                （十分な製品画像スペース・Oswald数値・段階的開示）
-               ================================================================= */}
-            <section className="lg:col-span-8 flex flex-col gap-8">
-              {/* 1. アクティブスロットの洗練されたヘッダー（重複タブを排除し広大な余白を確保） */}
-              <div className="rounded-2xl bg-[#222222]/85 backdrop-blur-xl border border-white/10 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="px-3 py-0.5 rounded-full bg-[#00E5FF] text-[#151515] font-oswald text-xs font-bold tracking-widest">
-                      SLOT {STEP_META[activeStep].stepNum} // {STEP_META[activeStep].label}
-                    </span>
-                    <span className="text-xs font-light text-[#00E5FF]">
-                      {STEP_META[activeStep].combatRole}
-                    </span>
-                  </div>
-                  <h1 className="text-xl sm:text-2xl font-light text-white tracking-tight">
-                    {STEP_META[activeStep].fullTitle}
-                  </h1>
                 </div>
-                <div className="text-left sm:text-right shrink-0">
-                  <div className="text-[11px] font-light text-white/50">現在選択中のモデル</div>
-                  <div className="font-oswald text-lg font-semibold text-[#00E5FF]">
-                    {equippedPartForStep.shortName}
+
+                <div
+                  className={`h-[1px] w-full ${
+                    isDay ? 'bg-black/10' : 'bg-white/10'
+                  }`}
+                />
+
+                {/* -------- 5-B. オフショアルアー（丸型スウォッチ選択） -------- */}
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-medium">{rig.lure?.shortName}</div>
+                      <div
+                        className={`text-[11px] mt-0.5 ${
+                          isDay ? 'text-[#5C5E62]' : 'text-white/55'
+                        }`}
+                      >
+                        実戦総重量 {rig.lure?.totalWeightG}g ({rig.lure?.hookSpec})
+                      </div>
+                    </div>
+                    <div className="font-oswald text-sm sm:text-base font-semibold tabular-nums shrink-0">
+                      ¥{rig.lure?.price.toLocaleString()}
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* 2. 製品選択 Bento Grid（透過PNG用余白ステージ ＋ 極限まで削ぎ落としたテキスト ＋ ホバー開示） */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {stepCatalog.map((optionPart, idx) => {
-                  const isBase = optionPart.id === basePartForStep.id;
-                  const isEquipped = optionPart.id === equippedPartForStep.id;
-                  const { compatible, reason } = checkPartCompatibility(optionPart, rig);
-                  const priceDiff = optionPart.price - basePartForStep.price;
-
-                  return (
-                    <button
-                      key={optionPart.id}
-                      type="button"
-                      onClick={() => handleEquipOption(optionPart)}
-                      className={`group relative rounded-2xl p-6 text-left transition-all duration-300 ease-out hover:scale-105 flex flex-col justify-between gap-5 backdrop-blur-xl ${
-                        isEquipped
-                          ? 'bg-[#222222] border border-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.4)]'
-                          : compatible
-                          ? 'bg-[#222222]/80 border border-white/10 hover:border-[#00E5FF]/60 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)]'
-                          : 'bg-[#222222]/45 border border-white/5 opacity-65 hover:opacity-95'
-                      }`}
-                    >
-                      {/* 上部：ステータスバッジ ＆ 装着状態 */}
-                      <div className="flex items-center justify-between gap-2 w-full">
-                        <span
-                          className={`font-oswald text-[11px] tracking-wider font-semibold px-3 py-0.5 rounded-full ${
-                            isBase
-                              ? 'bg-[#00E5FF]/15 text-[#00E5FF] border border-[#00E5FF]/50'
-                              : compatible
-                              ? 'bg-white/10 text-white/90'
-                              : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
-                          }`}
-                        >
-                          {isBase
-                            ? '★ RECOMMENDED BASE'
-                            : compatible
-                            ? `OPTION 0${idx}`
-                            : 'OTHER CLASS'}
-                        </span>
-
-                        {isEquipped ? (
-                          <span className="px-3 py-0.5 rounded-full bg-[#00E5FF] text-[#151515] font-oswald text-[11px] font-bold tracking-wider flex items-center gap-1 shadow-[0_0_15px_rgba(0,229,255,0.4)]">
-                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                            EQUIPPED
-                          </span>
-                        ) : (
-                          <span className="font-oswald text-[11px] text-white/40 group-hover:text-[#00E5FF] transition-colors">
-                            CLICK TO EQUIP ➔
-                          </span>
-                        )}
-                      </div>
-
-                      {/* 中央：美しい製品画像（透過PNG）が入る広大なショーケース余白 */}
-                      <div className="relative w-full">
-                        <RigPartShowcase
-                          part={optionPart}
-                          isSelected={isEquipped}
-                          size="md"
-                        />
-
-                        {/* 【プログレッシブ・ディスクロージャー】ホバー時のみ浮かび上がる詳細スペックオーバーレイ */}
-                        <div
-                          aria-hidden="true"
-                          className="absolute inset-0 z-20 rounded-xl bg-[#151515]/95 backdrop-blur-md border border-[#00E5FF]/50 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between pointer-events-none"
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-oswald tracking-widest text-[#00E5FF] border-b border-white/10 pb-1.5">
-                            <span>SPEC TELEMETRY</span>
-                            <span>{compatible ? '100% MATCH' : 'CHECK SPEC'}</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 my-auto pt-1">
-                            {optionPart.specs.slice(0, 4).map((sp) => (
-                              <div
-                                key={sp.label}
-                                className="bg-[#222222] rounded-lg px-2.5 py-1.5 border border-white/5"
-                              >
-                                <div className="text-[10px] text-white/50 truncate">
-                                  {sp.label}
-                                </div>
-                                <div className="font-oswald text-xs font-semibold text-white truncate">
-                                  {sp.value}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="text-[10px] text-[#00E5FF] truncate pt-1">
-                            ✦ {reason}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 下部：最小限に削ぎ落としたブランド・製品名・Oswald 価格 */}
-                      <div className="w-full pt-2 border-t border-white/10 flex items-end justify-between gap-4">
-                        <div className="min-w-0 space-y-0.5">
-                          <div className="text-[11px] font-light text-white/50 uppercase tracking-wider">
-                            {optionPart.brand}
-                          </div>
-                          <div className="text-sm sm:text-base font-normal text-white truncate">
-                            {optionPart.shortName}
-                          </div>
-                        </div>
-
-                        <div className="text-right shrink-0">
-                          <div className="font-oswald text-xl font-bold text-white tabular-nums leading-none">
-                            ¥{optionPart.price.toLocaleString()}
-                          </div>
-                          <div
-                            className={`font-oswald text-xs mt-1 ${
-                              priceDiff === 0
-                                ? 'text-white/40'
-                                : priceDiff < 0
-                                ? 'text-[#00E5FF]'
-                                : 'text-amber-300'
+                  {/* Teslaのホイール/インテリア丸スウォッチ並び */}
+                  <div className="flex flex-wrap items-start gap-4 pt-1 pb-2">
+                    {LURE_CATALOG.map((lureItem) => {
+                      const isSelected = rig.lure?.id === lureItem.id;
+                      const isCompat = checkPartCompatibility(lureItem, rig).compatible;
+                      return (
+                        <div key={lureItem.id} className="relative flex flex-col items-center">
+                          <button
+                            type="button"
+                            onClick={() => handleEquipOption(lureItem)}
+                            aria-label={lureItem.shortName}
+                            className={`group relative w-14 h-14 rounded-full p-0.5 transition-all duration-200 ${
+                              isSelected
+                                ? isDay
+                                  ? 'ring-2 ring-[#171A20] ring-offset-2 ring-offset-[#F4F4F4] scale-105'
+                                  : 'ring-2 ring-[#00E5FF] ring-offset-2 ring-offset-[#1C1D21] scale-105'
+                                : 'opacity-80 hover:opacity-100 hover:scale-105'
                             }`}
                           >
-                            {priceDiff === 0
-                              ? 'BASE PRICE'
-                              : priceDiff > 0
-                              ? `+¥${priceDiff.toLocaleString()}`
-                              : `-¥${Math.abs(priceDiff).toLocaleString()}`}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* 3. Bento スペック比較 ＆ 段階的開示インスペクター */}
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-                {/* 左Bento (6 cols): Oswald 定量スペック差分ゲージ */}
-                <div className="xl:col-span-6 rounded-2xl bg-[#222222]/85 backdrop-blur-xl border border-white/10 p-6 sm:p-7 flex flex-col justify-between gap-6">
-                  <div className="space-y-5">
-                    <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-                      <div>
-                        <span className="font-oswald text-xs font-semibold text-[#00E5FF] tracking-widest block">
-                          QUANTITATIVE SPECS
-                        </span>
-                        <h2 className="text-sm font-normal text-white mt-0.5">
-                          {comparisonReport.isSameAsBase
-                            ? `推奨ベース「${basePartForStep.shortName}」基準値`
-                            : `推奨ベースとの定量スペック比較`}
-                        </h2>
-                      </div>
-                      <span className="font-oswald text-xs px-3 py-1 rounded-full bg-[#151515] border border-white/15 text-white/80">
-                        {comparisonReport.priceDeltaText}
-                      </span>
-                    </div>
-
-                    <div className="space-y-4">
-                      {comparisonReport.statRows.map((row) => (
-                        <div key={row.label} className="space-y-1.5">
-                          <div className="flex items-center justify-between text-xs gap-2">
-                            <span className="font-oswald tracking-wider text-white/60 truncate">
-                              {row.label}
-                            </span>
-                            <div className="flex items-center gap-2 shrink-0 tabular-nums">
-                              {comparisonReport.isSameAsBase ? (
-                                <span className="font-oswald text-sm font-bold text-white">
-                                  {row.candValText}
-                                </span>
-                              ) : (
-                                <>
-                                  <span className="font-oswald text-xs text-white/40">
-                                    {row.baseValText}
-                                  </span>
-                                  <span className="text-[#00E5FF]">➔</span>
-                                  <span className="font-oswald text-sm font-bold text-white">
-                                    {row.candValText}
-                                  </span>
-                                </>
-                              )}
-                              <span
-                                className={`font-oswald text-[11px] font-semibold px-2 py-0.5 rounded ${
-                                  row.tone === 'up'
-                                    ? 'bg-[#00E5FF]/20 text-[#00E5FF]'
-                                    : row.tone === 'down'
-                                    ? 'bg-amber-500/20 text-amber-300'
-                                    : 'bg-white/10 text-white/60'
-                                }`}
-                              >
-                                {row.deltaBadge}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="h-2 rounded-full bg-[#151515] relative overflow-hidden">
-                            <div
-                              className={`h-full transition-all duration-300 ${
-                                row.tone === 'up'
-                                  ? 'bg-[#00E5FF]'
-                                  : row.tone === 'down'
-                                  ? 'bg-amber-400'
-                                  : 'bg-[#00E5FF]/75'
-                              }`}
-                              style={{ width: `${row.candPct}%` }}
+                            <RigPartShowcase
+                              part={lureItem}
+                              isSelected={isSelected}
+                              size="swatch"
+                              theme={theme}
                             />
-                            {!comparisonReport.isSameAsBase && (
-                              <div
-                                className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_4px_#fff]"
-                                style={{ left: `${row.basePct}%` }}
-                              />
+                            <span
+                              className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full font-oswald text-[10px] font-bold shadow ${
+                                isSelected
+                                  ? 'bg-[#171A20] text-white'
+                                  : 'bg-white text-[#171A20] border border-black/15'
+                              }`}
+                            >
+                              {Math.round(lureItem.totalWeightG)}g
+                            </span>
+                            {!isCompat && (
+                              <span
+                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center"
+                                title="ロッドのルアー重量上限を超過しています"
+                              >
+                                !
+                              </span>
                             )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                          </button>
 
-                  {/* パッシブ特性ピル */}
-                  <div className="pt-4 border-t border-white/10 flex flex-wrap gap-2">
-                    {equippedPartForStep.propertyTags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[11px] font-light px-3 py-1 rounded-full bg-[#151515] border border-[#00E5FF]/30 text-white/90"
-                      >
-                        ✦ {tag}
-                      </span>
-                    ))}
+                          {isSelected && (
+                            <span className="mt-2 px-2 py-0.5 rounded bg-[#222222] text-white text-[10px] font-medium whitespace-nowrap shadow-sm">
+                              {lureItem.shortName.split(' (')[0]}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-
-                {/* 右Bento (6 cols): 実戦インパクト要約 ＆ 段階的開示（長文はクリック時のみ展開） */}
-                <div className="xl:col-span-6 rounded-2xl bg-[#222222]/85 backdrop-blur-xl border border-white/10 p-6 sm:p-7 flex flex-col justify-between gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                      <div className="flex items-center gap-2">
-                        <Flame className="w-4 h-4 text-[#00E5FF]" />
-                        <span className="font-oswald text-xs font-semibold text-[#00E5FF] tracking-widest">
-                          TACTICAL IMPACT // 実戦変化サマリー
-                        </span>
-                      </div>
-                      <span className="font-oswald text-xs text-white/50">
-                        VS {targetProfile.weightRange}
-                      </span>
-                    </div>
-
-                    {/* 1行で直感的にわかるヘッドラインのみ常時表示 */}
-                    <div className="rounded-xl bg-[#151515] border-l-4 border-l-[#00E5FF] p-4">
-                      <div className="text-sm font-normal text-white leading-relaxed">
-                        {comparisonReport.fishFightHeadline}
-                      </div>
-                    </div>
-
-                    {/* 互換性アラート（必要な場合のみ） */}
-                    {comparisonReport.cascadeNotice && (
-                      <div className="rounded-xl bg-amber-950/40 border border-amber-400/40 p-3.5 text-xs text-amber-200 flex items-start gap-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                        <span>{comparisonReport.cascadeNotice}</span>
-                      </div>
-                    )}
-
-                    {/* 【プログレッシブ・ディスクロージャー】長文の解説はデフォルト非表示・クリックで段階的開示 */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setShowNarrativeDetail((prev) => !prev)}
-                        aria-expanded={showNarrativeDetail}
-                        className="w-full py-2.5 px-4 rounded-xl bg-[#151515] border border-white/10 hover:border-[#00E5FF]/50 text-xs font-light text-[#00E5FF] flex items-center justify-between transition-colors"
-                      >
-                        <span className="flex items-center gap-2">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>
-                            {showNarrativeDetail
-                              ? '実戦ファイト詳細解説を閉じる'
-                              : '＋ 実戦ファイトでの詳細な変化・物理根拠を読む'}
-                          </span>
-                        </span>
-                        <ChevronDown
-                          className={`w-4 h-4 transition-transform duration-300 ${
-                            showNarrativeDetail ? 'rotate-180' : ''
-                          }`}
-                        />
-                      </button>
-
-                      {showNarrativeDetail && (
-                        <div className="mt-3 p-4 rounded-xl bg-[#151515]/90 border border-white/10 text-xs font-light text-white/80 leading-loose">
-                          {comparisonReport.fishFightNarrative}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* セカンダリアクション（アウトライン） */}
-                  <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-                    {!comparisonReport.isSameAsBase ? (
-                      <button
-                        type="button"
-                        onClick={() => handleEquipOption(basePartForStep)}
-                        className="px-3.5 py-2 rounded-xl bg-transparent border border-white/15 hover:border-[#00E5FF] text-xs font-light text-white/70 hover:text-white transition-colors flex items-center gap-2"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5 text-[#00E5FF]" />
-                        <span>推奨ベースに戻す</span>
-                      </button>
-                    ) : (
-                      <span className="text-xs font-light text-[#00E5FF] flex items-center gap-1.5">
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>推奨ベース装備中</span>
-                      </span>
-                    )}
-
-                    <a
-                      href={buildAmazonAffiliateUrl(equippedPartForStep.amazon)}
-                      target="_blank"
-                      rel="noopener noreferrer sponsored"
-                      className="px-3.5 py-2 rounded-xl bg-transparent border border-white/15 hover:border-white/40 text-xs font-light text-white/70 hover:text-white transition-colors inline-flex items-center gap-2"
-                    >
-                      <span>単体スペックをAmazonで確認</span>
-                      <ExternalLink className="w-3.5 h-3.5 text-[#00E5FF]" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </section>
+              </section>
+            </div>
           </div>
         )}
 
         {/* -------------------- 【画面3】最終確認・購入（完成仕様書） -------------------- */}
         {route.view === 'checkout' && (
-          <SpecCheckoutView
-            target={targetProfile}
-            rig={rig}
-            totalValue={totalValue}
-            totalWeightG={totalWeightG}
-            isAllSelectedCompatible={isAllSelectedCompatible}
-            onBackToGarage={(step) =>
-              navigateTo({
-                view: 'garage',
-                activeStep: step ?? route.activeStep,
-              })
-            }
-            onBackToTargetSelect={() => navigateTo({ view: 'home' })}
-            onResetToRecommended={handleResetToRecommended}
-          />
+          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 flex-1 flex flex-col">
+            <SpecCheckoutView
+              target={targetProfile}
+              rig={rig}
+              totalValue={totalValue}
+              totalWeightG={totalWeightG}
+              isAllSelectedCompatible={isAllSelectedCompatible}
+              onBackToGarage={(step) =>
+                navigateTo({
+                  view: 'garage',
+                  activeStep: step ?? route.activeStep,
+                })
+              }
+              onBackToTargetSelect={() => navigateTo({ view: 'home' })}
+              onResetToRecommended={handleResetToRecommended}
+            />
+          </div>
         )}
       </main>
 
-      {/* ==================== 下部常駐：トラストバッジ ＆ 階層化CTAドック ==================== */}
+      {/* =================================================================
+          最下部固定：Tesla Model 3 スタイル 決済・サマリーバー
+          ・左：ロッド × リール 構成タイトル ＆ サブ構成
+          ・右：¥218,500 ∨ (購入参考価格) ＋ 青い「今すぐ注文」ボタン (#3E6AE1)
+         ================================================================= */}
       {route.view !== 'home' && (
-        <footer className="sticky bottom-0 z-30 shrink-0 bg-[#151515]/90 backdrop-blur-xl border-t border-white/10 px-4 sm:px-8 lg:px-12 py-4">
-          <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-6">
-            {/* 左：Oswald 合計金額・総重量 ＆ 25万円決済の安心感を高めるトラストアイコン群 */}
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex items-baseline gap-4">
-                <div>
-                  <div className="text-[10px] font-light text-white/50 uppercase tracking-wider">
-                    TOTAL BUILD PRICE
-                  </div>
-                  <div className="font-oswald text-2xl sm:text-3xl font-bold text-[#00E5FF] tabular-nums leading-none mt-0.5">
-                    ¥{totalValue.toLocaleString()}
-                  </div>
-                </div>
-                <div className="border-l border-white/15 pl-4">
-                  <div className="text-[10px] font-light text-white/50 uppercase tracking-wider">
-                    TOTAL WEIGHT
-                  </div>
-                  <div className="font-oswald text-lg font-semibold text-white tabular-nums leading-none mt-0.5">
-                    {totalWeightG}g
-                  </div>
-                </div>
+        <footer
+          className={`sticky bottom-0 z-40 shrink-0 px-4 sm:px-8 lg:px-12 py-3.5 transition-colors duration-300 ${
+            isDay
+              ? 'bg-white border-t border-black/10 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] text-[#171A20]'
+              : 'bg-[#151515]/95 backdrop-blur-xl border-t border-white/10 text-white'
+          }`}
+        >
+          {/* 価格内訳ポップオーバー（¥218,500 ∨ をクリックした時に展開） */}
+          {isPriceBreakdownOpen && (
+            <div
+              className={`max-w-[1680px] mx-auto mb-3 p-4 rounded-2xl border shadow-xl transition-all ${
+                isDay
+                  ? 'bg-[#F8F9FA] border-black/10 text-[#171A20]'
+                  : 'bg-[#222222] border-white/15 text-white'
+              }`}
+            >
+              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-current/10">
+                <span className="text-xs font-bold tracking-wider uppercase">
+                  選択中の4点構成 価格内訳（税込・Amazon参考価格）
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsPriceBreakdownOpen(false)}
+                  className="p-1 rounded-md hover:bg-black/5"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                {CATEGORY_ORDER.map((cat) => {
+                  const p = rig[cat]!;
+                  return (
+                    <div
+                      key={cat}
+                      className={`p-3 rounded-xl flex items-center justify-between gap-2 ${
+                        isDay ? 'bg-white border border-black/5' : 'bg-[#151515] border border-white/10'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="text-[10px] opacity-60 uppercase">{cat}</div>
+                        <div className="font-medium truncate">{p.shortName}</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="font-oswald font-bold">
+                          ¥{p.price.toLocaleString()}
+                        </div>
+                        <a
+                          href={buildAmazonAffiliateUrl(p.amazon)}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="text-[10px] text-[#3E6AE1] hover:underline inline-flex items-center gap-0.5"
+                        >
+                          <span>Amazon</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-              {/* トラストシグナル（Secure Checkout / 送料無料 / 物理適合保証） */}
-              <div className="hidden xl:flex items-center gap-4 text-xs font-light text-white/75 border-l border-white/15 pl-6">
-                <span className="inline-flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-[#00E5FF]" />
-                  <span>Secure Checkout</span>
+          <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-4">
+            {/* 左（PC表示）：Teslaの「Model 3 パフォーマンス / デュアルモーターAWD...」と同じ構成サマリー */}
+            <div className="hidden md:block min-w-0">
+              <div className="flex items-baseline gap-2.5">
+                <span className="text-lg font-bold tracking-tight truncate">
+                  {rig.rod?.shortName} × {rig.reel?.shortName}
                 </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Truck className="w-3.5 h-3.5 text-[#00E5FF]" />
-                  <span>全国送料無料</span>
+                <span
+                  className={`text-xs font-normal ${
+                    isDay ? 'text-[#5C5E62]' : 'text-white/60'
+                  }`}
+                >
+                  {targetProfile.badge}
                 </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#00E5FF]" />
-                  <span>
-                    {isAllSelectedCompatible ? '100% 物理適合保証' : '番手バランス要確認'}
-                  </span>
-                </span>
+              </div>
+              <div
+                className={`text-xs truncate mt-0.5 ${
+                  isDay ? 'text-[#5C5E62]' : 'text-white/60'
+                }`}
+              >
+                {rig.line?.shortName} ・ {rig.lure?.shortName} ・ 総重量 {totalWeightG}g
               </div>
             </div>
 
-            {/* 右：Secondary（アウトライン）と Primary（塗りつぶし＋Glow＋Scale 1.05）を完全分離 */}
-            <div className="flex items-center gap-3">
-              {route.view === 'garage' && (
-                <>
-                  {/* Secondary Action: 前のスロット / 魚種変更（アウトライン・軽量） */}
-                  {prevStep ? (
-                    <button
-                      type="button"
-                      onClick={() => handleSelectStep(prevStep)}
-                      className="px-4 py-2.5 rounded-xl bg-transparent border border-white/15 hover:border-white/40 text-xs font-light text-white/80 hover:text-white transition-all duration-300 flex items-center gap-2"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5 text-[#00E5FF]" />
-                      <span>{STEP_META[prevStep].label}へ戻る</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => navigateTo({ view: 'home' })}
-                      className="px-4 py-2.5 rounded-xl bg-transparent border border-white/15 hover:border-white/40 text-xs font-light text-white/80 hover:text-white transition-all duration-300 flex items-center gap-2"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5 text-[#00E5FF]" />
-                      <span>魚を選び直す</span>
-                    </button>
-                  )}
+            {/* 右（PC・モバイル共通）：合計金額（¥218,500 ∨ 購入価格） ＋ 青い「今すぐ注文」ボタン */}
+            <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-6 sm:gap-8">
+              <button
+                type="button"
+                onClick={() => setIsPriceBreakdownOpen((prev) => !prev)}
+                className="text-left group"
+                title="クリックして4点の内訳を表示"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="font-oswald text-xl sm:text-2xl font-bold tabular-nums tracking-tight">
+                    ¥{totalValue.toLocaleString()}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isPriceBreakdownOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
+                <div
+                  className={`text-[11px] ${
+                    isDay ? 'text-[#5C5E62]' : 'text-white/55'
+                  }`}
+                >
+                  購入価格（4点合計）
+                </div>
+              </button>
 
-                  {/* Secondary Action: 次のスロット確認（アウトライン・軽量） */}
-                  {nextStep && (
-                    <button
-                      type="button"
-                      onClick={() => handleSelectStep(nextStep)}
-                      className="px-4 py-2.5 rounded-xl bg-[#222222] border border-[#00E5FF]/50 hover:border-[#00E5FF] text-xs font-medium text-[#00E5FF] transition-all duration-300 flex items-center gap-2"
-                    >
-                      <span>
-                        次へ：{STEP_META[nextStep].stepNum} {STEP_META[nextStep].label}
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-
-                  {/* Primary Action: 唯一の塗りつぶしメインCTA（視覚的重さを圧倒的に集中） */}
-                  <button
-                    type="button"
-                    onClick={() => navigateTo({ view: 'checkout' })}
-                    className="px-6 py-3 rounded-xl bg-[#00E5FF] text-[#151515] text-xs sm:text-sm font-bold tracking-wide shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all duration-300 ease-out hover:scale-105 flex items-center gap-2.5"
-                  >
-                    <ShoppingBag className="w-4 h-4 stroke-[2.5]" />
-                    <span>この構成で購入確認へ進む</span>
-                    <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                  </button>
-                </>
-              )}
-
-              {route.view === 'checkout' && (
+              {route.view === 'garage' ? (
+                <button
+                  type="button"
+                  onClick={() => navigateTo({ view: 'checkout' })}
+                  className="px-7 sm:px-9 py-3 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs sm:text-sm font-semibold tracking-wide transition-colors shadow-sm shrink-0"
+                >
+                  今すぐ注文
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={() => navigateTo({ view: 'garage' })}
-                  className="px-5 py-2.5 rounded-xl bg-transparent border border-white/20 hover:border-[#00E5FF] text-xs font-light text-white hover:text-[#00E5FF] transition-all duration-300 flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs sm:text-sm font-semibold tracking-wide transition-colors shrink-0"
                 >
-                  <Zap className="w-3.5 h-3.5 text-[#00E5FF]" />
-                  <span>コンフィギュレーターへ戻る</span>
+                  コンフィギュレーターへ戻る
                 </button>
               )}
             </div>
           </div>
         </footer>
+      )}
+
+      {/* =================================================================
+          モーダル1：Tesla風「機能を表示する（コールアウト [＋] 詳細）」スライドモーダル
+         ================================================================= */}
+      {featureModalIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setFeatureModalIndex(null)}
+        >
+          <div
+            className="relative w-full max-w-2xl rounded-3xl bg-white text-[#171A20] p-6 sm:p-8 shadow-2xl space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-oswald font-bold tracking-widest text-[#3E6AE1] uppercase">
+                {featureHighlights[featureModalIndex].tag}
+              </span>
+              <button
+                type="button"
+                onClick={() => setFeatureModalIndex(null)}
+                className="w-8 h-8 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="h-56 sm:h-64 rounded-2xl bg-[#FAFAFA] flex items-center justify-center p-6">
+              <img
+                src={featureHighlights[featureModalIndex].image}
+                alt={featureHighlights[featureModalIndex].title}
+                className="w-full h-full object-contain mix-blend-multiply"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl sm:text-2xl font-bold">
+                {featureHighlights[featureModalIndex].title}
+              </h3>
+              <div className="text-xs font-medium text-[#5C5E62]">
+                {featureHighlights[featureModalIndex].subtitle}
+              </div>
+              <p className="text-sm text-[#393C41] leading-relaxed pt-1">
+                {featureHighlights[featureModalIndex].description}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {featureHighlights[featureModalIndex].metrics.map((m) => (
+                <div key={m.label} className="rounded-xl bg-[#F4F4F4] p-3">
+                  <div className="text-[11px] text-[#5C5E62]">{m.label}</div>
+                  <div className="font-oswald text-sm font-bold text-[#171A20] mt-0.5">
+                    {m.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setFeatureModalIndex(
+                    (featureModalIndex - 1 + featureHighlights.length) %
+                      featureHighlights.length
+                  )
+                }
+                className="px-4 py-2 rounded-lg bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-medium flex items-center gap-1.5"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>前の機能</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                {featureHighlights.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setFeatureModalIndex(idx)}
+                    className={`w-2 h-2 rounded-full ${
+                      featureModalIndex === idx ? 'bg-[#171A20]' : 'bg-[#D0D1D2]'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setFeatureModalIndex(
+                    (featureModalIndex + 1) % featureHighlights.length
+                  )
+                }
+                className="px-4 py-2 rounded-lg bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-medium flex items-center gap-1.5"
+              >
+                <span>次の機能</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================
+          モーダル2：Tesla風「タックル仕様を比較する ＞」スペック＆戦闘力比較モーダル
+         ================================================================= */}
+      {isCompareModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setIsCompareModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-3xl rounded-3xl bg-white text-[#171A20] p-6 sm:p-8 shadow-2xl space-y-6 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-black/10 pb-4">
+              <div>
+                <span className="text-xs font-oswald font-bold tracking-widest text-[#3E6AE1] uppercase">
+                  SPECIFICATION & TELEMETRY COMPARISON
+                </span>
+                <h3 className="text-xl font-bold mt-0.5">
+                  推奨ベース構成とのスペック・戦闘力比較
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCompareModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* 比較カテゴリ切り替えタブ */}
+            <div className="flex items-center gap-2">
+              {CATEGORY_ORDER.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setRoute((r) => ({ ...r, activeStep: cat }))}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-colors ${
+                    activeStep === cat
+                      ? 'bg-[#171A20] text-white'
+                      : 'bg-[#F4F4F4] text-[#5C5E62] hover:text-[#171A20]'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* 選択中カテゴリのスペック差分 */}
+            <div className="rounded-2xl bg-[#F4F4F4] p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-bold">
+                  {equippedPartForStep.shortName} vs 推奨基準 ({basePartForStep.shortName})
+                </div>
+                <span className="font-oswald text-xs font-bold px-2.5 py-1 rounded-full bg-white">
+                  {comparisonReport.priceDeltaText}
+                </span>
+              </div>
+
+              <p className="text-xs text-[#393C41] leading-relaxed bg-white p-3.5 rounded-xl">
+                {comparisonReport.fishFightHeadline} — {comparisonReport.fishFightNarrative}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {comparisonReport.statRows.map((row) => (
+                  <div key={row.label} className="bg-white rounded-xl p-3.5 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-oswald text-[#5C5E62]">{row.label}</span>
+                      <span className="font-oswald font-bold">{row.candValText}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-[#E5E5E5] overflow-hidden">
+                      <div
+                        className="h-full bg-[#3E6AE1]"
+                        style={{ width: `${row.candPct}%` }}
+                      />
+                    </div>
+                    <div className="text-[11px] text-[#3E6AE1] font-medium">
+                      {row.deltaBadge}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 5項目 総合戦闘力テレメトリー */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#3E6AE1]" />
+                <span>対「{targetProfile.fishName}」5項目トータルバランス</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+                {combatStats.map((stat) => (
+                  <div key={stat.id} className="rounded-xl bg-[#F4F4F4] p-3 text-center">
+                    <div className="text-[10px] font-oswald text-[#5C5E62]">
+                      {stat.label}
+                    </div>
+                    <div className="font-oswald text-xl font-bold text-[#171A20] my-0.5">
+                      {stat.score}
+                      <span className="text-xs font-normal text-[#5C5E62]">/100</span>
+                    </div>
+                    <div className="text-[10px] text-[#5C5E62] truncate">
+                      {stat.subLabel}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCompareModalOpen(false);
+                  navigateTo({ view: 'checkout' });
+                }}
+                className="px-6 py-2.5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold flex items-center gap-2"
+              >
+                <span>完成仕様書・注文画面へ進む</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
