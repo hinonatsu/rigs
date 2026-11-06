@@ -112,8 +112,7 @@ const REEL_CATALOG: ReelPart[] = [
     name: '19 ステラ 14000番 エクストラハイギア',
     subCode: '14000番スプール // ハイスピードモデル',
     price: 119300,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=19+%E3%82%B9%E3%83%86%E3%83%A9+14000%E7%95%AA',
+    image: 'https://m.media-amazon.com/images/I/6137ljKmWdL._AC_SL1000_.jpg',
     sizeClass: 14000,
     dragMaxKg: 25,
     peCapacityNum: 6,
@@ -137,8 +136,7 @@ const REEL_CATALOG: ReelPart[] = [
     name: '20 ソルティガ 14000番 エクストラハイギア',
     subCode: 'モノコックボディ // 14000番ハイスピード',
     price: 119900,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+14000%E7%95%AA',
+    image: 'https://m.media-amazon.com/images/I/61zdeV7N7FL._AC_SL1000_.jpg',
     sizeClass: 14000,
     dragMaxKg: 25,
     peCapacityNum: 6,
@@ -162,8 +160,7 @@ const REEL_CATALOG: ReelPart[] = [
     name: '20 ステラ 18000番 パワーハイギア',
     subCode: '大型マグロ・オオマサ対応 // 18000番ハイギア',
     price: 130900,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%B9%E3%83%86%E3%83%A9+18000%E7%95%AA',
+    image: 'https://m.media-amazon.com/images/I/81OGHM7fueL._AC_SL1000_.jpg',
     sizeClass: 18000,
     dragMaxKg: 28,
     peCapacityNum: 8,
@@ -187,8 +184,7 @@ const REEL_CATALOG: ReelPart[] = [
     name: '20 ソルティガ 20000番 ハイギア',
     subCode: '100kg超クロマグロ遠征仕様 // 20000番',
     price: 141900,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+20000%E7%95%AA',
+    image: 'https://m.media-amazon.com/images/I/615wzgX56iL._AC_SL1000_.jpg',
     sizeClass: 20000,
     dragMaxKg: 30,
     peCapacityNum: 10,
@@ -215,8 +211,7 @@ const ROD_CATALOG: RodPart[] = [
     name: 'アクイラ 82-3/6（テクニカルモデル）',
     subCode: 'テクニカルキャスト仕様 // 適合ライン 3〜6号',
     price: 78100,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A2%E3%82%AF%E3%82%A4%E3%83%A9+82-3%2F6',
+    image: 'https://m.media-amazon.com/images/I/31hHyNP99RL._AC_SL1000_.jpg',
     compatibleReelSizes: [14000],
     minPe: 3,
     maxPe: 6,
@@ -242,8 +237,7 @@ const ROD_CATALOG: RodPart[] = [
     name: 'エクスプロージョン 865（フルコンタクト）',
     subCode: 'フルコンタクト仕様 // 適合ライン 5〜8号',
     price: 69300,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%97%E3%83%AD%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3+865',
+    image: 'https://m.media-amazon.com/images/I/91VjMH1vnXL._AC_SL1000_.jpg',
     compatibleReelSizes: [14000, 18000],
     minPe: 5,
     maxPe: 8,
@@ -269,8 +263,7 @@ const ROD_CATALOG: RodPart[] = [
     name: 'ウルティモ 83 ナノ（大型ヒラマサモデル）',
     subCode: '大型ヒラマサ特化 // 適合ライン 6〜8号',
     price: 83600,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A6%E3%83%AB%E3%83%86%E3%82%A3%E3%83%A2+83+%E3%83%8A%E3%83%8E',
+    image: 'https://m.media-amazon.com/images/I/51RRYYrky9L._AC_SL1000_.jpg',
     compatibleReelSizes: [14000, 18000],
     minPe: 6,
     maxPe: 8,
@@ -296,8 +289,7 @@ const ROD_CATALOG: RodPart[] = [
     name: 'ビッグツナ 83 ジャパンスペシャル',
     subCode: 'クロマグロ・スタンドアップ // 適合ライン 8〜12号',
     price: 86900,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%93%E3%83%83%E3%82%B0%E3%83%84%E3%83%8A+83',
+    image: 'https://m.media-amazon.com/images/I/71hSqVJhgTL._AC_SL1000_.jpg',
     compatibleReelSizes: [18000, 20000],
     minPe: 8,
     maxPe: 12,
@@ -326,8 +318,7 @@ const LINE_CATALOG: LinePart[] = [
     name: 'アバニ キャスティングライン 6号 (300m)',
     subCode: '自動セット: オーシャンレコード 130ポンド リーダー推奨',
     price: 16830,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+6%E5%8F%B7+300m',
+    image: 'https://m.media-amazon.com/images/I/71-1KOMli2L._AC_SL1000_.jpg',
     peNumber: 6,
     lengthM: 300,
     strengthLb: 90,
@@ -351,8 +342,7 @@ const LINE_CATALOG: LinePart[] = [
     name: 'オッズポート 8本組ライン 8号 (300m)',
     subCode: '自動セット: オーシャンレコード 170ポンド リーダー推奨',
     price: 18920,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AA%E3%83%83%E3%82%BA%E3%83%9D%E3%83%BC%E3%83%88+8%E5%8F%B7+300m',
+    image: 'https://m.media-amazon.com/images/I/61XXzr+YzUL._AC_SL1000_.jpg',
     peNumber: 8,
     lengthM: 300,
     strengthLb: 120,
@@ -376,8 +366,7 @@ const LINE_CATALOG: LinePart[] = [
     name: 'アバニ マグロ耐熱ライン 10号 (300m)',
     subCode: '自動セット: オーシャンレコード 220ポンド リーダー推奨',
     price: 20460,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+10%E5%8F%B7+300m',
+    image: 'https://m.media-amazon.com/images/I/71rWPcYeFjL._AC_SL1000_.jpg',
     peNumber: 10,
     lengthM: 300,
     strengthLb: 140,
@@ -404,8 +393,7 @@ const LURE_CATALOG: LurePart[] = [
     name: 'ライアン 200（太軸 3/0号 フック＆リング推奨）',
     subCode: '本体単体 85g ＋ 太軸フック・強化リング 11.5g',
     price: 13860,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%A9%E3%82%A4%E3%82%A2%E3%83%B3+200',
+    image: 'https://m.media-amazon.com/images/I/61iVcr6BFGL._AC_SL1000_.jpg',
     bodyWeightG: 85,
     hookRingWeightG: 11.5,
     totalWeightG: 96.5,
@@ -431,8 +419,7 @@ const LURE_CATALOG: LurePart[] = [
     name: 'ガンマ 90-特選モデル（太軸 3/0号 フック推奨）',
     subCode: '本体単体 75g ＋ 太軸フック・強化リング 11.5g',
     price: 15400,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AC%E3%83%B3%E3%83%9E+90',
+    image: 'https://m.media-amazon.com/images/I/71DPwUmtvsL._AC_SL1000_.jpg',
     bodyWeightG: 75,
     hookRingWeightG: 11.5,
     totalWeightG: 86.5,
@@ -458,8 +445,7 @@ const LURE_CATALOG: LurePart[] = [
     name: 'バズー 200（太軸 4/0号 フック＆リング推奨）',
     subCode: '本体単体 96g ＋ 太軸フック・強化リング 16.0g',
     price: 14960,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%82%BA%E3%83%BC+200',
+    image: 'https://m.media-amazon.com/images/I/61jTMcNB4fL._AC_SL1000_.jpg',
     bodyWeightG: 96,
     hookRingWeightG: 16.0,
     totalWeightG: 112.0,
@@ -485,8 +471,7 @@ const LURE_CATALOG: LurePart[] = [
     name: 'ゾロ 240 モンスター仕様（太軸 5/0号 フック推奨）',
     subCode: '本体単体 120g ＋ 太軸フック・強化リング 21.0g',
     price: 16720,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%BE%E3%83%AD+240',
+    image: 'https://m.media-amazon.com/images/I/417b406izAL._AC_SL1000_.jpg',
     bodyWeightG: 120,
     hookRingWeightG: 21.0,
     totalWeightG: 141.0,
@@ -771,16 +756,15 @@ export const TackleBuilder: React.FC = () => {
           </div>
 
           {/* 製品画像ステージ */}
-          <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[#151515] border border-white/5 mb-5">
+          <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-white border border-white/10 mb-5 flex items-center justify-center p-3">
             <img
               src={part.image}
               alt={`${part.brand} ${part.name}`}
               loading="lazy"
-              className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+              className="w-full h-full object-contain object-center transition-transform duration-500 ease-out group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#151515]/85 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between">
-              <span className="text-[11px] font-light tracking-wider text-[#A0A0A0]">
+            <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
+              <span className="px-2.5 py-0.5 rounded-md bg-[#151515]/85 backdrop-blur-sm text-[10px] font-light tracking-wider text-[#FFFFFF]">
                 {part.subCode}
               </span>
             </div>
@@ -1015,7 +999,7 @@ export const TackleBuilder: React.FC = () => {
                             <img
                               src={slot.item.image}
                               alt={slot.item.name}
-                              className="w-11 h-11 rounded-lg object-cover bg-[#222222] border border-[#00E5FF]/40 shrink-0"
+                              className="w-11 h-11 rounded-lg object-contain bg-white p-1 border border-[#00E5FF]/40 shrink-0"
                             />
                           ) : (
                             <div className="w-11 h-11 rounded-lg bg-[#222222] border border-white/10 flex items-center justify-center text-xs font-light text-[#A0A0A0] shrink-0">
