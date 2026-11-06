@@ -1,312 +1,280 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
-  ArrowRight,
   Check,
   Copy,
+  Crosshair,
   ExternalLink,
   Link2,
   RotateCcw,
-  Settings,
   Share2,
   ShieldCheck,
-  Sliders,
+  Sparkles,
 } from 'lucide-react';
 import { buildAmazonAffiliateUrl } from '../config/amazonAssociate';
 import {
-  AnyRigPart,
+  calculateOverallCombatStats,
   CATEGORY_ORDER,
   checkPartCompatibility,
+  getPresetRigState,
   PartCategory,
-  RigPreset,
   RigState,
   STEP_META,
+  TargetFishProfile,
 } from '../data/rigCatalog';
 import { buildShareableSpecUrl } from '../lib/urlRouter';
 
 interface SpecCheckoutViewProps {
+  target: TargetFishProfile;
   rig: RigState;
-  selectedCount: number;
   totalValue: number;
   totalWeightG: number;
   isAllSelectedCompatible: boolean;
-  activeAssociateTag: string;
-  onSaveAssociateTag: (newTag: string) => void;
-  onBackToBuilder: (step?: PartCategory) => void;
-  onOpenDetail: (item: AnyRigPart) => void;
-  onApplyPreset: (presetId: RigPreset['id']) => void;
+  onBackToGarage: (step?: PartCategory) => void;
+  onBackToTargetSelect: () => void;
+  onResetToRecommended: () => void;
 }
 
 export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
+  target,
   rig,
-  selectedCount,
   totalValue,
   totalWeightG,
   isAllSelectedCompatible,
-  activeAssociateTag,
-  onSaveAssociateTag,
-  onBackToBuilder,
-  onOpenDetail,
-  onApplyPreset,
+  onBackToGarage,
+  onBackToTargetSelect,
+  onResetToRecommended,
 }) => {
   const [urlCopied, setUrlCopied] = useState(false);
   const [textCopied, setTextCopied] = useState(false);
-  const [showTagConfig, setShowTagConfig] = useState(false);
-  const [tagInput, setTagInput] = useState(activeAssociateTag);
-  const [tagSaved, setTagSaved] = useState(false);
 
-  const shareUrl = buildShareableSpecUrl(rig);
+  const baseRig = useMemo(() => getPresetRigState(target.id), [target.id]);
+  const combatStats = useMemo(() => calculateOverallCombatStats(rig, target), [rig, target]);
+  const shareUrl = useMemo(() => buildShareableSpecUrl(rig, target.id), [rig, target.id]);
+
+  const baseTotalPrice =
+    (baseRig.reel?.price ?? 0) +
+    (baseRig.rod?.price ?? 0) +
+    (baseRig.line?.price ?? 0) +
+    (baseRig.lure?.price ?? 0);
+  const priceDiffFromBase = totalValue - baseTotalPrice;
 
   const recommendedDragText = rig.rod
     ? `${(rig.rod.dragMaxKg * 0.6).toFixed(1)} 〜 ${(rig.rod.dragMaxKg * 0.8).toFixed(1)} kg`
-    : rig.reel
-    ? `${(rig.reel.dragMaxKg * 0.35).toFixed(1)} 〜 ${(rig.reel.dragMaxKg * 0.5).toFixed(1)} kg`
-    : '未算出';
+    : '8.0 〜 11.0 kg';
 
-  const spoolFillText =
-    rig.reel && rig.line
-      ? rig.reel.peCapacityNum === rig.line.peNumber
-        ? '100%（下巻き不要・300m完全格納）'
-        : 'スプール号数不一致'
-      : 'リール＆ライン選択時に算出';
-
-  const handleCopyShareUrl = () => {
+  const handleCopyUrl = () => {
     navigator.clipboard.writeText(shareUrl);
     setUrlCopied(true);
     setTimeout(() => setUrlCopied(false), 2500);
   };
 
-  const generateShareSummaryText = () => {
+  const handleCopyText = () => {
     const lines = [
-      '【RIGs — オフショアキャスティング物理適合セッティング仕様書】',
-      `■ 01 リール: ${rig.reel ? `${rig.reel.brand} ${rig.reel.name}` : '未選択'}`,
-      `■ 02 ロッド: ${rig.rod ? `${rig.rod.brand} ${rig.rod.name}` : '未選択'}`,
-      `■ 03 ライン: ${rig.line ? `${rig.line.brand} ${rig.line.name}` : '未選択'}`,
-      `■ 04 ルアー: ${
-        rig.lure
-          ? `${rig.lure.brand} ${rig.lure.name} (針込実戦重量 ${rig.lure.totalWeightG}g)`
-          : '未選択'
-      }`,
-      `■ 物理適合判定: ${
-        selectedCount === 4 && isAllSelectedCompatible ? '100% 完全適合' : `${selectedCount}/4 選択中`
-      } / 総重量: ${totalWeightG}g / 合計参考金額: ¥${totalValue.toLocaleString()}`,
-      `▼ このセッティングを再現・Amazonで確認する`,
+      `【RIGs — 対「${target.fishName}」最終装備仕様書】`,
+      `■ 01 REEL: ${rig.reel?.name ?? '未選択'}`,
+      `■ 02 ROD: ${rig.rod?.name ?? '未選択'}`,
+      `■ 03 LINE: ${rig.line?.name ?? '未選択'}`,
+      `■ 04 LURE: ${rig.lure?.name ?? '未選択'} (針込 ${rig.lure?.totalWeightG ?? 0}g)`,
+      `■ 推奨初期ドラグ: ${recommendedDragText} / 装備総重量: ${totalWeightG}g / 合計: ¥${totalValue.toLocaleString()}`,
       shareUrl,
     ];
-    return lines.join('\n');
-  };
-
-  const handleCopyShareText = () => {
-    navigator.clipboard.writeText(generateShareSummaryText());
+    navigator.clipboard.writeText(lines.join('\n'));
     setTextCopied(true);
     setTimeout(() => setTextCopied(false), 2500);
   };
 
-  const handleTagSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleaned = tagInput.trim() || 'rigsoffshore-22';
-    onSaveAssociateTag(cleaned);
-    setTagInput(cleaned);
-    setTagSaved(true);
-    setTimeout(() => setTagSaved(false), 2500);
-  };
-
   return (
-    <div className="space-y-10">
-      {/* 上部ナビバー */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <button
-          type="button"
-          onClick={() => onBackToBuilder()}
-          className="px-4 py-2 rounded-full bg-[#222222] border border-white/15 hover:border-[#00E5FF] text-xs font-light tracking-wider text-[#FFFFFF] transition-all flex items-center gap-2"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 text-[#00E5FF]" />
-          <span>タックルビルダーへ戻ってパーツを編集する</span>
-        </button>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-light text-[#A0A0A0]">プリセット切替:</span>
-          {(
-            [
-              { id: 'pe6', label: 'PE6号 標準' },
-              { id: 'pe8', label: 'PE8号 大型マグロ' },
-              { id: 'pe10', label: 'PE10号 遠征' },
-            ] as const
-          ).map((p) => (
+    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 py-1 items-stretch">
+      {/* ==================== 左カラム (5 cols): 対ターゲット最終ステータス ＆ URL共有 ==================== */}
+      <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-5 space-y-4">
+        <div className="space-y-4">
+          {/* ヘッダー */}
+          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div>
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.18em] text-[#00E5FF]">
+                <Crosshair className="w-3.5 h-3.5" />
+                <span>STEP 03 // FINAL LOADOUT BRIEFING</span>
+              </div>
+              <h1 className="text-lg sm:text-xl font-normal text-[#FFFFFF] mt-0.5">
+                最終装備ステータス ＆ 一括購入
+              </h1>
+            </div>
             <button
-              key={p.id}
               type="button"
-              onClick={() => onApplyPreset(p.id)}
-              className="px-3 py-1 rounded-full bg-[#222222] border border-white/10 hover:border-[#00E5FF] text-[11px] font-light text-[#A0A0A0] hover:text-[#FFFFFF] transition-colors"
+              onClick={() => onBackToGarage()}
+              className="px-3 py-1.5 rounded-xl bg-[#151515] border border-white/15 hover:border-[#00E5FF] text-[11px] text-[#FFFFFF] transition-colors flex items-center gap-1.5 shrink-0"
             >
-              {p.label}
+              <ArrowLeft className="w-3 h-3 text-[#00E5FF]" />
+              <span>装備比較へ戻る</span>
             </button>
-          ))}
+          </div>
+
+          {/* 狙う魚 ＆ 物理適合サマリー */}
+          <div
+            className={`rounded-xl p-3.5 bg-[#151515] border ${
+              isAllSelectedCompatible ? 'border-[#00E5FF]/70' : 'border-rose-500/60'
+            } space-y-2`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold text-[#00E5FF] flex items-center gap-1.5">
+                {isAllSelectedCompatible ? (
+                  <ShieldCheck className="w-4 h-4 text-[#00E5FF]" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-rose-400" />
+                )}
+                <span>TARGET: {target.fishName}</span>
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00E5FF]/15 text-[#00E5FF] font-semibold">
+                {isAllSelectedCompatible ? '100% 物理適合' : '要調整'}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="bg-[#222222] rounded-lg p-2 border border-white/5">
+                <div className="text-[10px] text-[#A0A0A0]">推奨初期ドラグ</div>
+                <div className="text-xs font-semibold text-[#00E5FF] tabular-nums mt-0.5">
+                  {recommendedDragText}
+                </div>
+              </div>
+              <div className="bg-[#222222] rounded-lg p-2 border border-white/5">
+                <div className="text-[10px] text-[#A0A0A0]">装備総重量</div>
+                <div className="text-xs font-semibold text-[#FFFFFF] tabular-nums mt-0.5">
+                  {totalWeightG}g
+                </div>
+              </div>
+              <div className="bg-[#222222] rounded-lg p-2 border border-white/5">
+                <div className="text-[10px] text-[#A0A0A0]">針込ルアー重量</div>
+                <div className="text-xs font-semibold text-[#FFFFFF] tabular-nums mt-0.5">
+                  {rig.lure?.totalWeightG ?? 0}g
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 対ターゲット 5項目ゲームステータスゲージ */}
+          <div className="rounded-xl bg-[#151515] border border-white/10 p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold tracking-wider text-[#FFFFFF] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" />
+                <span>VS TARGET COMBAT PARAMETERS</span>
+              </span>
+              <button
+                type="button"
+                onClick={onResetToRecommended}
+                className="text-[10px] text-[#A0A0A0] hover:text-[#00E5FF] flex items-center gap-1"
+              >
+                <RotateCcw className="w-2.5 h-2.5" />
+                <span>推奨ベースに戻す</span>
+              </button>
+            </div>
+
+            {combatStats.map((stat) => {
+              const diff = stat.score - stat.baseScore;
+              return (
+                <div key={stat.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <div>
+                      <span className="font-mono font-semibold text-[#FFFFFF]">{stat.label}</span>
+                      <span className="text-[#A0A0A0] ml-1.5 text-[10px]">{stat.subLabel}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 tabular-nums">
+                      <span className="text-[10px] text-[#A0A0A0]">{stat.metricText}</span>
+                      {diff !== 0 && (
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                            diff > 0
+                              ? 'bg-[#00E5FF]/20 text-[#00E5FF]'
+                              : 'bg-amber-500/20 text-amber-300'
+                          }`}
+                        >
+                          {diff > 0 ? `▲+${diff}` : `▼${diff}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-[#222222] overflow-hidden relative border border-white/10">
+                    <div
+                      className="h-full bg-[#00E5FF] transition-all duration-300"
+                      style={{ width: `${stat.score}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 合計金額 ＆ URL共有ボックス */}
+        <div className="pt-3 border-t border-white/10 space-y-3">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <span className="text-[11px] font-light text-[#A0A0A0] block">
+                最終装備 合計参考金額
+              </span>
+              <span className="text-[10px] text-[#00E5FF]">
+                {priceDiffFromBase === 0
+                  ? '推奨ベースと同額'
+                  : priceDiffFromBase > 0
+                  ? `推奨ベースより +¥${priceDiffFromBase.toLocaleString()}`
+                  : `推奨ベースより -¥${Math.abs(priceDiffFromBase).toLocaleString()} お得`}
+              </span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-light text-[#FFFFFF] tabular-nums">
+              ¥{totalValue.toLocaleString()}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleCopyUrl}
+              className="py-2.5 px-3 rounded-xl bg-[#151515] border border-[#00E5FF]/50 hover:border-[#00E5FF] text-xs text-[#00E5FF] font-medium transition-colors flex items-center justify-center gap-1.5"
+            >
+              {urlCopied ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
+              <span>{urlCopied ? 'URLコピー完了' : '装備共有URLをコピー'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyText}
+              className="py-2.5 px-3 rounded-xl bg-[#151515] border border-white/15 hover:border-[#00E5FF] text-xs text-[#FFFFFF] font-light transition-colors flex items-center justify-center gap-1.5"
+            >
+              {textCopied ? <Check className="w-3.5 h-3.5 text-[#00E5FF]" /> : <Share2 className="w-3.5 h-3.5 text-[#00E5FF]" />}
+              <span>{textCopied ? 'テキストコピー済' : '仕様書テキストをコピー'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ==================== 1. 仕様書ヘッダー ＆ URL共有パネル ==================== */}
-      <section className="rounded-3xl bg-[#222222] border border-white/15 p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.65)] space-y-8">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-white/10">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#151515] border border-[#00E5FF]/50 text-[#00E5FF] text-xs font-light tracking-[0.16em]">
-              {isAllSelectedCompatible && selectedCount === 4 ? (
-                <>
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>100% PHYSICAL MATCH VERIFIED // 完全適合証明書</span>
-                </>
-              ) : (
-                <>
-                  <AlertTriangle className="w-4 h-4 text-[#FF9900]" />
-                  <span>TACKLE SPECIFICATION SHEET // セッティング仕様書 ({selectedCount}/4)</span>
-                </>
-              )}
-            </div>
-            <h1 className="text-2xl sm:text-4xl font-light tracking-tight text-[#FFFFFF]">
-              完成セッティング仕様書 ＆ Amazon一括購入
-            </h1>
-            <p className="text-xs font-light text-[#A0A0A0] leading-relaxed">
-              このページのURLには選択した4パーツのIDがすべて記録されています。URLをコピーしてブックマークやSNS共有すると、いつでもこの構成を再現できます。
-            </p>
-          </div>
-
-          <div className="text-left lg:text-right shrink-0 bg-[#151515] p-5 rounded-2xl border border-white/10">
-            <span className="text-xs font-light tracking-[0.18em] text-[#A0A0A0] block">
-              合計参考金額 ({selectedCount}点)
-            </span>
-            <div className="text-3xl sm:text-4xl font-light text-[#FFFFFF] tabular-nums mt-1">
-              ¥{totalValue.toLocaleString()}
-            </div>
-            <span className="text-[11px] font-light text-[#00E5FF] mt-1 block">
-              タックル総重量: {totalWeightG}g
-            </span>
-          </div>
-        </div>
-
-        {/* 4大テレメトリーサマリー */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-2xl bg-[#151515] border border-white/10 p-4">
-            <div className="text-[11px] font-light text-[#A0A0A0]">スプール糸巻充填率</div>
-            <div className="text-sm sm:text-base font-normal text-[#00E5FF] mt-1">
-              {spoolFillText}
-            </div>
-          </div>
-          <div className="rounded-2xl bg-[#151515] border border-white/10 p-4">
-            <div className="text-[11px] font-light text-[#A0A0A0]">
-              ルアー実戦総重量（針・リング込）
-            </div>
-            <div className="text-sm sm:text-base font-normal text-[#FFFFFF] mt-1 tabular-nums">
-              {rig.lure
-                ? `${rig.lure.totalWeightG}g (本体${rig.lure.bodyWeightG}g + 金具${rig.lure.hookRingWeightG}g)`
-                : 'ルアー未選択'}
-            </div>
-          </div>
-          <div className="rounded-2xl bg-[#151515] border border-white/10 p-4">
-            <div className="text-[11px] font-light text-[#A0A0A0]">推奨初期ドラグ設定値</div>
-            <div className="text-sm sm:text-base font-normal text-[#00E5FF] mt-1 tabular-nums">
-              {recommendedDragText}
-            </div>
-          </div>
-          <div className="rounded-2xl bg-[#151515] border border-white/10 p-4">
-            <div className="text-[11px] font-light text-[#A0A0A0]">適合ショックリーダー＆フック</div>
-            <div className="text-xs font-normal text-[#FFFFFF] mt-1 leading-relaxed">
-              {rig.line ? rig.line.pairedLeaderSpec : 'リーダー未定'} /{' '}
-              {rig.lure ? rig.lure.hookSpec : 'フック未定'}
-            </div>
-          </div>
-        </div>
-
-        {/* URL共有 ＆ SNSコピーボックス */}
-        <div className="rounded-2xl bg-[#151515] border border-[#00E5FF]/40 p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-xs font-normal text-[#00E5FF]">
-              <Link2 className="w-4 h-4" />
-              <span>このセッティングの専用共有URL（開くとこの編成が100%再現されます）</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleCopyShareText}
-              className="text-xs font-light text-[#A0A0A0] hover:text-[#FFFFFF] flex items-center gap-1.5 self-start sm:self-auto"
-            >
-              {textCopied ? (
-                <Check className="w-3.5 h-3.5 text-[#00E5FF]" />
-              ) : (
-                <Share2 className="w-3.5 h-3.5 text-[#00E5FF]" />
-              )}
-              <span>{textCopied ? '仕様書テキストをコピーしました！' : 'SNS投稿用テキストも一緒にコピー'}</span>
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2.5">
-            <input
-              type="text"
-              readOnly
-              value={shareUrl}
-              aria-label="セッティング共有用URL"
-              onClick={(e) => (e.target as HTMLInputElement).select()}
-              className="flex-1 rounded-xl bg-[#222222] border border-white/15 px-4 py-3 text-xs font-mono text-[#FFFFFF] focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleCopyShareUrl}
-              className="px-6 py-3 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-semibold tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.4)]"
-            >
-              {urlCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              <span>{urlCopied ? 'URLをコピーしました！' : '共有URLをコピー'}</span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== 2. スロット別 構成パーツ ＆ Amazon購入リンク一覧 ==================== */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+      {/* ==================== 右カラム (7 cols): 4スロット装備 ＋ Amazon購入リスト ==================== */}
+      <div className="lg:col-span-7 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-5 space-y-3">
+        <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
           <div>
-            <span className="text-[11px] font-light tracking-[0.2em] text-[#FF9900]">
-              AMAZON.CO.JP DIRECT PURCHASE LINKS
+            <span className="text-[10px] font-semibold tracking-[0.18em] text-[#FF9900]">
+              AMAZON.CO.JP OFFICIAL AFFILIATE LINKS
             </span>
-            <h2 className="text-xl sm:text-2xl font-light text-[#FFFFFF] mt-0.5">
-              構成パーツ別のAmazon購入・差し替えリスト
+            <h2 className="text-base sm:text-lg font-normal text-[#FFFFFF]">
+              決定した4スロット装備 ＆ 適合リーダー・フック購入リスト
             </h2>
           </div>
-          <span className="text-xs font-light text-[#A0A0A0] hidden sm:inline">
-            各パーツをAmazonの新しいタブで開いてカートへ追加できます
-          </span>
+          <button
+            type="button"
+            onClick={onBackToTargetSelect}
+            className="text-[11px] font-light text-[#A0A0A0] hover:text-[#00E5FF] underline"
+          >
+            釣る魚を選び直す
+          </button>
         </div>
 
-        <div className="space-y-4">
+        {/* 4スロットのコンパクト購入カードリスト */}
+        <div className="flex-1 min-h-0 flex flex-col justify-between gap-2.5">
           {CATEGORY_ORDER.map((cat) => {
             const meta = STEP_META[cat];
             const item = rig[cat];
+            const baseItem = baseRig[cat];
+            if (!item) return null;
 
-            if (!item) {
-              return (
-                <div
-                  key={cat}
-                  className="rounded-2xl bg-[#222222] border border-dashed border-white/20 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div>
-                    <span className="text-xs font-medium text-[#00E5FF]">
-                      {meta.stepNum} {meta.label}
-                    </span>
-                    <div className="text-base font-light text-[#A0A0A0] mt-1">
-                      このスロットはまだ選択されていません
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onBackToBuilder(cat)}
-                    className="px-5 py-2.5 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-semibold tracking-wider flex items-center gap-1.5 self-start sm:self-auto"
-                  >
-                    <Sliders className="w-3.5 h-3.5" />
-                    <span>ビルダーで{meta.label}を選択する</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              );
-            }
-
+            const isCustomized = baseItem && baseItem.id !== item.id;
             const { compatible, reason } = checkPartCompatibility(item, rig);
             const mainAmazonUrl = buildAmazonAffiliateUrl(item.amazon);
             const subAmazonUrl = item.amazon.subItemQuery
@@ -316,90 +284,82 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             return (
               <div
                 key={cat}
-                className={`rounded-2xl bg-[#222222] border p-5 sm:p-6 space-y-4 ${
-                  compatible ? 'border-white/15' : 'border-rose-500/50'
+                className={`rounded-xl bg-[#151515] border p-3.5 flex flex-col justify-between gap-2 ${
+                  compatible ? 'border-white/10 hover:border-[#00E5FF]/50' : 'border-rose-500/60'
                 }`}
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-                  <div className="flex items-start sm:items-center gap-4 min-w-0">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      onClick={() => onOpenDetail(item)}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover bg-[#151515] border border-white/10 shrink-0 cursor-pointer hover:border-[#00E5FF]"
-                    />
-                    <div className="min-w-0 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-medium text-[#00E5FF]">
-                          {meta.stepNum} {meta.label}
-                        </span>
-                        <span className="text-xs font-light text-[#A0A0A0]">// {item.brand}</span>
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full ${
-                            compatible
-                              ? 'bg-[#00E5FF]/15 text-[#00E5FF] border border-[#00E5FF]/40'
-                              : 'bg-rose-950 text-rose-200 border border-rose-400'
-                          }`}
-                        >
-                          {compatible ? '物理適合' : '不整合あり'}
-                        </span>
-                      </div>
-                      <h3
-                        onClick={() => onOpenDetail(item)}
-                        className="text-base sm:text-lg font-normal text-[#FFFFFF] hover:text-[#00E5FF] cursor-pointer"
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-[#00E5FF] font-mono">
+                        {meta.stepNum} {meta.label}
+                      </span>
+                      <span
+                        className={`text-[10px] px-2 py-0.2 rounded-full font-semibold ${
+                          isCustomized
+                            ? 'bg-[#00E5FF] text-[#151515]'
+                            : 'bg-white/10 text-[#A0A0A0]'
+                        }`}
                       >
-                        {item.name}
-                      </h3>
-                      <div className="text-xs font-light text-[#00E5FF]">{reason}</div>
-                      <div className="text-xs font-light text-[#A0A0A0] tabular-nums">
-                        参考価格: ¥{item.price.toLocaleString()}
-                      </div>
+                        {isCustomized ? `変更済 (元: ${baseItem?.shortName})` : '推奨ベース'}
+                      </span>
+                      <span className="text-[11px] font-light text-[#FFFFFF] tabular-nums">
+                        ¥{item.price.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="text-sm font-normal text-[#FFFFFF] truncate">
+                      {item.brand} — {item.name}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      {item.propertyTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[10px] px-2 py-0.2 rounded bg-[#222222] border border-white/10 text-[#00E5FF]"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      <span className="text-[10px] text-[#A0A0A0]">({reason})</span>
                     </div>
                   </div>
 
-                  {/* 右側：変更ボタン ＆ Amazon購入ボタン */}
-                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+                  {/* 右側ボタン群 */}
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      onClick={() => onOpenDetail(item)}
-                      className="px-3.5 py-2.5 rounded-xl bg-[#151515] border border-white/10 hover:border-[#00E5FF] text-xs font-light text-[#A0A0A0] hover:text-[#FFFFFF] transition-colors"
+                      onClick={() => onBackToGarage(cat)}
+                      className="px-3 py-2 rounded-lg bg-[#222222] border border-white/15 hover:border-[#00E5FF] text-[11px] text-[#FFFFFF] transition-colors"
                     >
-                      スペック詳細
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onBackToBuilder(cat)}
-                      className="px-3.5 py-2.5 rounded-xl bg-[#151515] border border-white/15 hover:border-[#00E5FF] text-xs font-normal text-[#FFFFFF] transition-colors flex items-center gap-1.5"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-[#00E5FF]" />
-                      <span>変更する</span>
+                      変更・比較
                     </button>
                     <a
                       href={mainAmazonUrl}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
-                      className="px-5 py-2.5 rounded-xl bg-[#FF9900] hover:bg-[#FF9900]/90 text-[#151515] text-xs font-bold tracking-wider transition-transform hover:scale-105 flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,153,0,0.3)]"
+                      className="px-4 py-2 rounded-lg bg-[#FF9900] hover:bg-[#FF9900]/90 text-[#151515] text-xs font-bold tracking-wider transition-transform hover:scale-105 flex items-center gap-1.5 shadow-[0_0_12px_rgba(255,153,0,0.3)]"
                     >
                       <span>Amazonで購入</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
                 </div>
 
-                {/* サブアイテム（適合リーダー・太軸フック）のAmazon導線 */}
+                {/* 適合サブパーツ（ショックリーダー・太軸フック）の購入リンク */}
                 {subAmazonUrl && item.amazon.subItemLabel && (
-                  <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span className="text-xs font-light text-[#00E5FF]">
-                      ＋ 自動ペアリング推奨品：{item.amazon.subItemLabel}
+                  <div className="pt-2 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                    <span className="text-[11px] font-light text-[#00E5FF]">
+                      ＋ 必須ペア金具：{item.amazon.subItemLabel}
                     </span>
                     <a
                       href={subAmazonUrl}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
-                      className="self-start sm:self-auto px-3.5 py-1.5 rounded-lg bg-[#151515] hover:bg-[#FF9900]/20 border border-[#FF9900]/50 text-xs font-medium text-[#FF9900] transition-colors inline-flex items-center gap-1.5"
+                      className="self-start sm:self-auto px-2.5 py-1 rounded bg-[#222222] hover:bg-[#FF9900]/20 border border-[#FF9900]/50 text-[10px] font-medium text-[#FF9900] transition-colors inline-flex items-center gap-1"
                     >
                       <span>適合サブパーツもAmazonで見る</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-2.5 h-2.5" />
                     </a>
                   </div>
                 )}
@@ -407,61 +367,15 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             );
           })}
         </div>
-      </section>
 
-      {/* ==================== 3. AmazonアソシエイトID設定パネル ==================== */}
-      <section className="rounded-2xl bg-[#222222] border border-white/10 p-5 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => setShowTagConfig((prev) => !prev)}
-            className="text-xs font-normal text-[#00E5FF] hover:underline flex items-center gap-1.5"
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span>
-              Amazonアソシエイト・トラッキングID設定: <strong>{activeAssociateTag}</strong>
-            </span>
-          </button>
-          <a
-            href="https://affiliate.amazon.co.jp/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] text-[#A0A0A0] hover:text-[#FFFFFF] inline-flex items-center gap-1"
-          >
-            <span>Amazonアソシエイト公式ページへ</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
+        {/* Amazonアソシエイト規約表記（1行コンパクト） */}
+        <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] font-light text-[#A0A0A0]">
+          <span>
+            Amazonのアソシエイトとして、RIGs（リグス）は適格販売により収入を得ています。
+          </span>
+          <span>※最新価格・在庫は各Amazonページにてご確認ください</span>
         </div>
-
-        {showTagConfig && (
-          <form onSubmit={handleTagSubmit} className="pt-2 space-y-2.5">
-            <p className="text-[11px] font-light text-[#A0A0A0]">
-              ご自身のトラッキングID（例: <code>yourname-22</code>）を保存すると、サイト内の全Amazon購入リンクに自動付与されます。
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                placeholder="例: yourname-22"
-                aria-label="AmazonアソシエイトID"
-                className="flex-1 rounded-xl bg-[#151515] border border-white/20 px-3.5 py-2 text-xs font-mono text-[#FFFFFF] focus:border-[#00E5FF] focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="px-5 py-2 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-semibold tracking-wider"
-              >
-                IDを保存
-              </button>
-            </div>
-            {tagSaved && (
-              <p className="text-[11px] text-[#00E5FF]">
-                ✓ トラッキングID「{activeAssociateTag}」を保存しました。
-              </p>
-            )}
-          </form>
-        )}
-      </section>
+      </div>
     </div>
   );
 };

@@ -5,21 +5,27 @@ import { AmazonLinkTarget } from '../config/amazonAssociate';
 // ============================================================================
 
 export type PartCategory = 'reel' | 'rod' | 'line' | 'lure';
+export type TargetId = 'pe6' | 'pe8' | 'pe10';
 
 export interface ReelPart {
   id: string;
   category: 'reel';
   brand: string;
   name: string;
+  shortName: string;
   subCode: string;
   price: number;
   image: string;
   sizeClass: 14000 | 18000 | 20000;
   dragMaxKg: number;
+  practicalDragKg: number;
   peCapacityNum: number;
   peCapacityMeter: number;
   weightG: number;
+  retrieveCm: number;
+  gearRatioNum: number;
   gearRatio: string;
+  propertyTags: string[];
   description: string;
   specs: { label: string; value: string }[];
   amazon: AmazonLinkTarget;
@@ -30,6 +36,7 @@ export interface RodPart {
   category: 'rod';
   brand: string;
   name: string;
+  shortName: string;
   subCode: string;
   price: number;
   image: string;
@@ -40,7 +47,9 @@ export interface RodPart {
   lureMaxG: number;
   dragMaxKg: number;
   lengthFt: string;
+  lengthInches: number;
   weightG: number;
+  propertyTags: string[];
   description: string;
   specs: { label: string; value: string }[];
   amazon: AmazonLinkTarget;
@@ -51,13 +60,17 @@ export interface LinePart {
   category: 'line';
   brand: string;
   name: string;
+  shortName: string;
   subCode: string;
   price: number;
   image: string;
   peNumber: number;
   lengthM: number;
   strengthLb: number;
+  strengthKg: number;
   pairedLeaderSpec: string;
+  pairedLeaderLb: number;
+  propertyTags: string[];
   description: string;
   specs: { label: string; value: string }[];
   amazon: AmazonLinkTarget;
@@ -68,6 +81,7 @@ export interface LurePart {
   category: 'lure';
   brand: string;
   name: string;
+  shortName: string;
   subCode: string;
   price: number;
   image: string;
@@ -77,6 +91,8 @@ export interface LurePart {
   minPe: number;
   lengthMm: number;
   hookSpec: string;
+  actionType: string;
+  propertyTags: string[];
   description: string;
   specs: { label: string; value: string }[];
   amazon: AmazonLinkTarget;
@@ -91,12 +107,19 @@ export interface RigState {
   lure: LurePart | null;
 }
 
-export interface RigPreset {
-  id: 'pe6' | 'pe8' | 'pe10';
+export interface TargetFishProfile {
+  id: TargetId;
+  code: string;
   badge: string;
-  title: string;
-  targetFish: string;
+  fishName: string;
+  weightRange: string;
   field: string;
+  strikeSpeedKmh: number;
+  initialRunLoadKg: number;
+  dailyCastCount: number;
+  baitSizeMm: string;
+  fishHabit: string;
+  tacticalKey: string;
   summary: string;
   rigIds: {
     reel: string;
@@ -106,40 +129,52 @@ export interface RigPreset {
   };
 }
 
+export type RigPreset = TargetFishProfile;
+
 export const STEP_META: Record<
   PartCategory,
-  { stepNum: string; label: string; fullTitle: string; shortDesc: string }
+  {
+    stepNum: string;
+    label: string;
+    combatRole: string;
+    fullTitle: string;
+    shortDesc: string;
+  }
 > = {
   reel: {
     stepNum: '01',
     label: 'リール',
-    fullTitle: 'スピニングリールを選択',
-    shortDesc: '14000番〜20000番・スプール糸巻量基準',
+    combatRole: '魚の猛烈なファーストランを受け止め、主導権を奪う心臓部',
+    fullTitle: 'スピニングリール（推奨 vs 変更オプション比較）',
+    shortDesc: '14000番〜20000番・ドラグ制動力＆巻上スピード比較',
   },
   rod: {
     stepNum: '02',
     label: 'ロッド',
-    fullTitle: 'オフショアキャスティングロッドを選択',
-    shortDesc: 'リール番手・適合PE・ルアー負荷連動',
+    combatRole: 'ナブラへルアーを撃ち込み、海底の根から魚を引き剥がす刀',
+    fullTitle: 'キャスティングロッド（推奨 vs 変更オプション比較）',
+    shortDesc: '飛距離・許容ルアー重量上限・最大ドラグ耐荷重の比較',
   },
   line: {
     stepNum: '03',
     label: 'ライン',
-    fullTitle: 'メインライン＆自動適合リーダーを選択',
-    shortDesc: 'スプール充填率100%・下巻き不要',
+    combatRole: '暴れる巨魚とアングラーを繋ぐ唯一の命綱（スプール100%格納）',
+    fullTitle: 'PEライン＆リーダー（推奨 vs 変更オプション比較）',
+    shortDesc: '直線強力(lb)・耐熱摩耗性・スプール充填率の比較',
   },
   lure: {
     stepNum: '04',
     label: 'ルアー',
-    fullTitle: 'オフショアプラグ＆太軸フックを選択',
-    shortDesc: 'フック・リング込み実戦総重量判定',
+    combatRole: '水面を割らせて捕食スイッチを入れる切り札（針込実戦重量）',
+    fullTitle: 'オフショアプラグ＆太軸フック（推奨 vs 変更オプション比較）',
+    shortDesc: 'フック込実戦重量・アクション波動・ロッド負荷率の比較',
   },
 };
 
 export const CATEGORY_ORDER: PartCategory[] = ['reel', 'rod', 'line', 'lure'];
 
 // ============================================================================
-// 厳選マスターカタログデータ
+// 厳選マスターカタログデータ（ゲーム装備プロパティタグ＆定量数値付き）
 // ============================================================================
 
 export const REEL_CATALOG: ReelPart[] = [
@@ -148,18 +183,27 @@ export const REEL_CATALOG: ReelPart[] = [
     category: 'reel',
     brand: 'シマノ',
     name: '19 ステラ 14000番 エクストラハイギア',
-    subCode: '14000番スプール // ハイスピードモデル',
+    shortName: '19 ステラ SW 14000XG',
+    subCode: '14000番 // 高剛性HAGANE・高速巻上 134cm',
     price: 119300,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=19+%E3%82%B9%E3%83%86%E3%83%A9+14000%E7%95%AA',
     sizeClass: 14000,
     dragMaxKg: 25,
+    practicalDragKg: 18,
     peCapacityNum: 6,
     peCapacityMeter: 300,
     weightG: 675,
+    retrieveCm: 134,
+    gearRatioNum: 6.2,
     gearRatio: '6.2 (134cm)',
+    propertyTags: [
+      '高剛性HAGANEボディ',
+      '高速回収 134cm/回転',
+      'ヒートシンクドラグ放熱',
+    ],
     description:
-      'PE6号-300m基準のヒラマサ・近海マグロキャスティングの業界標準フラッグシップ。1回転134cmの高速巻上げでダイビングペンシルのラインスラックを瞬時に回収。',
+      'PE6号-300m基準のヒラマサ・近海マグロの王道基準機。金属的なダイレクト感と134cmの高速巻上げで、風波の中でもダイビングペンシルのラインスラックを瞬時に回収します。',
     specs: [
       { label: '最大ドラグ力', value: '25kg' },
       { label: '推奨糸巻量', value: '6号-300m' },
@@ -175,18 +219,27 @@ export const REEL_CATALOG: ReelPart[] = [
     category: 'reel',
     brand: 'ダイワ',
     name: '20 ソルティガ 14000番 エクストラハイギア',
-    subCode: 'モノコックボディ // 14000番ハイスピード',
+    shortName: '20 ソルティガ 14000-XH',
+    subCode: '14000番 // 軽量モノコック・滑らかATDドラグ',
     price: 119900,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+14000%E7%95%AA',
     sizeClass: 14000,
     dragMaxKg: 25,
+    practicalDragKg: 18,
     peCapacityNum: 6,
     peCapacityMeter: 300,
     weightG: 665,
+    retrieveCm: 134,
+    gearRatioNum: 6.2,
     gearRatio: '6.2 (134cm)',
+    propertyTags: [
+      '軽量モノコック (-10g)',
+      'ATD初動追従ドラグ',
+      '大口径タフデジギア',
+    ],
     description:
-      '高剛性モノコックボディと大口径G1ジュラルミンタフデジギアを搭載。PE6号-300mをジャスト格納し、初動の滑らかなATDドラグで高負荷ファイト時の身切れ・ラインブレイクを防ぐ。',
+      'ステラより10g軽い665gのモノコックボディに大口径ギアを搭載。魚の急激な突っ込みに対して初動が滑らかに滑り出すATDドラグにより、船べりでの口切れ・身切れバラシを徹底抑制します。',
     specs: [
       { label: '最大ドラグ力', value: '25kg' },
       { label: '推奨糸巻量', value: '6号-300m' },
@@ -202,18 +255,27 @@ export const REEL_CATALOG: ReelPart[] = [
     category: 'reel',
     brand: 'シマノ',
     name: '20 ステラ 18000番 パワーハイギア',
-    subCode: '大型マグロ・オオマサ対応 // 18000番ハイギア',
+    shortName: '20 ステラ SW 18000HG',
+    subCode: '18000番 // 大型マグロ＆オオマサ制圧トルク',
     price: 130900,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%B9%E3%83%86%E3%83%A9+18000%E7%95%AA',
     sizeClass: 18000,
     dragMaxKg: 28,
+    practicalDragKg: 20,
     peCapacityNum: 8,
     peCapacityMeter: 300,
     weightG: 875,
+    retrieveCm: 129,
+    gearRatioNum: 5.7,
     gearRatio: '5.7 (129cm)',
+    propertyTags: [
+      'PE8号-300m完全格納',
+      '最大ドラグ 28kg制圧',
+      'パワーギア比 5.7トルク',
+    ],
     description:
-      'PE8号-300mを完全格納する大型クロマグロ・20kg超オオマサ用の中核番手。Xタフドラグにより28kgの最大ドラグ力と圧倒的な巻き上げトルクを両立。',
+      'PE8号-300mをフル格納し、最大ドラグ28kgを叩き出す大型クロマグロ・20kg超オオマサの基準機。ギア比5.7のパワーセッティングで、深場へ突っ込む巨魚を強引に浮かせます。',
     specs: [
       { label: '最大ドラグ力', value: '28kg' },
       { label: '推奨糸巻量', value: '8号-300m' },
@@ -229,18 +291,27 @@ export const REEL_CATALOG: ReelPart[] = [
     category: 'reel',
     brand: 'ダイワ',
     name: '20 ソルティガ 20000番 ハイギア',
-    subCode: '100kg超クロマグロ遠征仕様 // 20000番',
+    shortName: '20 ソルティガ 20000-H',
+    subCode: '20000番 // 100kg超クロマグロ遠征・最大ドラグ30kg',
     price: 141900,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+20000%E7%95%AA',
     sizeClass: 20000,
     dragMaxKg: 30,
+    practicalDragKg: 22,
     peCapacityNum: 10,
     peCapacityMeter: 300,
     weightG: 890,
+    retrieveCm: 143,
+    gearRatioNum: 5.8,
     gearRatio: '5.8 (143cm)',
+    propertyTags: [
+      'PE10号-300mモンスター容量',
+      '最大ドラグ 30kg＆放熱ノブ',
+      '超高速回収 143cm/回転',
+    ],
     description:
-      'PE10号-300m格納、最大ドラグ30kgを誇るモンスタークロマグロ専用機。ラジエーションドラグノブによる高い放熱性能で100kg超の長時間ファーストランに耐え抜く。',
+      'PE10号-300m格納・最大ドラグ30kgを誇る対100kg超クロマグロ決戦兵器。1回転143cmの巻上長により、こちらへ向かって泳ぐマグロのラインスラックも遅れず回収しフッキングへ持ち込みます。',
     specs: [
       { label: '最大ドラグ力', value: '30kg' },
       { label: '推奨糸巻量', value: '10号-300m' },
@@ -259,7 +330,8 @@ export const ROD_CATALOG: RodPart[] = [
     category: 'rod',
     brand: 'リップルフィッシャー',
     name: 'アクイラ 82-3/6（テクニカルモデル）',
-    subCode: 'テクニカルキャスト仕様 // 適合ライン 3〜6号',
+    shortName: 'アクイラ MLT 82-3/6',
+    subCode: '8\'2" (346g) // 3番ティップ追従 × 6番バットパワー',
     price: 78100,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A2%E3%82%AF%E3%82%A4%E3%83%A9+82-3%2F6',
@@ -270,9 +342,15 @@ export const ROD_CATALOG: RodPart[] = [
     lureMaxG: 110,
     dragMaxKg: 11,
     lengthFt: '8フィート2インチ',
+    lengthInches: 98,
     weightG: 346,
+    propertyTags: [
+      '超軽量 346g（疲労軽減）',
+      '3番ティップ喰わせ追従',
+      '小型〜中型プラグ高精度狙撃',
+    ],
     description:
-      '3番クラスの繊細なティップと6番クラスの強靭なバットを融合したマルチレングスロッド。14000番リール＋PE6号で小型〜中型プラグをピンポイントへ撃ち込む近海ヒラマサ・キハダゲームに最適。',
+      '346gの圧倒的な軽さで1日300投してもスイングが鈍らないテクニカルロッド。3番クラスの繊細なティップが水面直下のプラグを弾かず泳がせ、ヒット後は6番バットで20kg級を受け止めます。',
     specs: [
       { label: '適合ライン', value: '3〜6号' },
       { label: '適合ルアー重量', value: '40〜110g' },
@@ -288,7 +366,8 @@ export const ROD_CATALOG: RodPart[] = [
     category: 'rod',
     brand: 'エムシーワークス',
     name: 'エクスプロージョン 865（フルコンタクト）',
-    subCode: 'フルコンタクト仕様 // 適合ライン 5〜8号',
+    shortName: 'エクスプロージョン 865HF',
+    subCode: '8\'6" (375g) // ロングキャスト遠投 × 許容130g',
     price: 69300,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%97%E3%83%AD%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3+865',
@@ -299,9 +378,15 @@ export const ROD_CATALOG: RodPart[] = [
     lureMaxG: 130,
     dragMaxKg: 15,
     lengthFt: '8フィート6インチ',
+    lengthInches: 102,
     weightG: 375,
+    propertyTags: [
+      '8\'6" ロングリーチ遠投',
+      'ルアー上限 130g（大型プラグ対応）',
+      '14000/18000番スイッチ対応',
+    ],
     description:
-      '8フィート6インチのロングレングスによる圧倒的な飛距離と、PE5〜8号・14000〜18000番リールを幅広くカバーする懐の深さを備えた王道ヒラマサ・マグロ兼用ロッド。',
+      '8フィート6インチの長尺ブランクスにより遠いナブラへルアーを届ける遠投モデル。ルアー上限130g・最大ドラグ15kgを備え、PE6号からPE8号クラスまで1本でカバーします。',
     specs: [
       { label: '適合ライン', value: '5〜8号' },
       { label: '適合ルアー重量', value: '60〜130g' },
@@ -317,7 +402,8 @@ export const ROD_CATALOG: RodPart[] = [
     category: 'rod',
     brand: 'リップルフィッシャー',
     name: 'ウルティモ 83 ナノ（大型ヒラマサモデル）',
-    subCode: '大型ヒラマサ特化 // 適合ライン 6〜8号',
+    shortName: 'ウルティモ 83M Nano',
+    subCode: '8\'3" (388g) // ナノアロイ高反発リフト・許容150g',
     price: 83600,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A6%E3%83%AB%E3%83%86%E3%82%A3%E3%83%A2+83+%E3%83%8A%E3%83%8E',
@@ -328,9 +414,15 @@ export const ROD_CATALOG: RodPart[] = [
     lureMaxG: 150,
     dragMaxKg: 16,
     lengthFt: '8フィート3インチ',
+    lengthInches: 99,
     weightG: 388,
+    propertyTags: [
+      '東レ・ナノアロイ高反発復元力',
+      '最大ドラグ 16kg（根剥がし特化）',
+      'ルアー上限 150g（バズー/ゾロ対応）',
+    ],
     description:
-      'ナノアロイ技術採用ブランクスにより、200mm超の大型ダイビングペンシル（針込110〜145g）を軽快に振り抜き、浅根の20kg超オオマサを主導権を渡さず浮かせ切るハイパワーモデル。',
+      'ナノアロイ技術採用の高反発ブランクスにより、針込110〜145gの大型プラグを空気を切り裂くようにキャスト可能。ヒット直後に16kgドラグ耐荷重で巨魚の頭を強制的に上へ向けます。',
     specs: [
       { label: '適合ライン', value: '6〜8号' },
       { label: '適合ルアー重量', value: '70〜150g' },
@@ -346,7 +438,8 @@ export const ROD_CATALOG: RodPart[] = [
     category: 'rod',
     brand: 'リップルフィッシャー',
     name: 'ビッグツナ 83 ジャパンスペシャル',
-    subCode: 'クロマグロ・スタンドアップ // 適合ライン 8〜12号',
+    shortName: 'ビッグツナ 83 JAPAN SP',
+    subCode: '8\'3" (440g) // 対100kg超クロマグロ垂直リフト設計',
     price: 86900,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%93%E3%83%83%E3%82%B0%E3%83%84%E3%83%8A+83',
@@ -357,9 +450,15 @@ export const ROD_CATALOG: RodPart[] = [
     lureMaxG: 180,
     dragMaxKg: 18,
     lengthFt: '8フィート3インチ',
+    lengthInches: 99,
     weightG: 440,
+    propertyTags: [
+      '最大ドラグ 18kg（100kg超対応）',
+      'スタンドアップ支点手元設計',
+      'ルアー上限 180g（超大型ベイト対応）',
+    ],
     description:
-      'PE8〜12号・18000〜20000番リールに対応し、240mmクラスの大型プラグ遠投と、真下に突っ込む大型クロマグロをアングラーの体重を乗せてリフトするスタンドアップ専用設計。',
+      '真下に潜行する100kg超クロマグロに対し、ロッドの支点がアングラーのグリップ側に寄る設計で、体幹を使って少ない消耗で巨魚をリフトアップできる日本海・津軽海峡の決定版。',
     specs: [
       { label: '適合ライン', value: '8〜12号' },
       { label: '適合ルアー重量', value: '70〜180g' },
@@ -378,16 +477,24 @@ export const LINE_CATALOG: LinePart[] = [
     category: 'line',
     brand: 'バリバス',
     name: 'アバニ キャスティングライン 6号 (300m)',
-    subCode: '自動セット: オーシャンレコード 130ポンド リーダー推奨',
+    shortName: 'バリバス SMP PE6号 (90lb)',
+    subCode: 'PE6号-300m // 自動セット: 130lbショックリーダー',
     price: 16830,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+6%E5%8F%B7+300m',
     peNumber: 6,
     lengthM: 300,
     strengthLb: 90,
+    strengthKg: 40.8,
     pairedLeaderSpec: 'オーシャンレコード 130ポンド（推奨ペア）',
+    pairedLeaderLb: 130,
+    propertyTags: [
+      '14000番スプール100%格納',
+      '細径6号で向かい風でも飛距離UP',
+      '130lbリーダー自動結束ペア',
+    ],
     description:
-      '14000番スプールに下巻き不要で100%ジャスト格納できるPE6号-300m。直線強力90lbを誇り、130lbショックリーダーとの組み合わせで抜群の飛距離と耐久性を発揮。',
+      '14000番スプールに下巻き不要で300mジャスト格納。細径PE6号ならではの空気抵抗の少なさで飛距離を伸ばしつつ、90lb（40.8kg）の直線強力で20〜30kg級と対峙します。',
     specs: [
       { label: '号数・長さ', value: '6号-300m' },
       { label: '最大直線強力', value: '90ポンド (40.8kg)' },
@@ -405,16 +512,24 @@ export const LINE_CATALOG: LinePart[] = [
     category: 'line',
     brand: 'エックスブレイド',
     name: 'オッズポート 8本組ライン 8号 (300m)',
-    subCode: '自動セット: オーシャンレコード 170ポンド リーダー推奨',
+    shortName: 'オッズポート PE8号 (120lb)',
+    subCode: 'PE8号-300m // 自動セット: 170lbショックリーダー',
     price: 18920,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AA%E3%83%83%E3%82%BA%E3%83%9D%E3%83%BC%E3%83%88+8%E5%8F%B7+300m',
     peNumber: 8,
     lengthM: 300,
     strengthLb: 120,
+    strengthKg: 54.4,
     pairedLeaderSpec: 'オーシャンレコード 170ポンド（推奨ペア）',
+    pairedLeaderLb: 170,
+    propertyTags: [
+      '18000番スプール100%格納',
+      '高負荷でも潰れない中芯WX構造',
+      '170lb極太リーダー自動ペア',
+    ],
     description:
-      '18000番スプールに100%ジャスト格納されるPE8号-300m。中芯入りWX組工法により高負荷ドラグでも偏平せず、170lbリーダーとの結束で大型クロマグロ・オオマサに対応する。',
+      '18000番スプールに300mジャスト格納。中芯入りWX組工法により15kg超ドラグ負荷でもラインが偏平せず、120lb（54.4kg）の圧倒的強度で大型クロマグロ・オオマサの瀬ズレを防ぎます。',
     specs: [
       { label: '号数・長さ', value: '8号-300m' },
       { label: '最大直線強力', value: '120ポンド (54.4kg)' },
@@ -432,16 +547,24 @@ export const LINE_CATALOG: LinePart[] = [
     category: 'line',
     brand: 'バリバス',
     name: 'アバニ マグロ耐熱ライン 10号 (300m)',
-    subCode: '自動セット: オーシャンレコード 220ポンド リーダー推奨',
+    shortName: 'バリバス Si-X PE10号 (140lb)',
+    subCode: 'PE10号-300m // 自動セット: 220lbショックリーダー',
     price: 20460,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+10%E5%8F%B7+300m',
     peNumber: 10,
     lengthM: 300,
     strengthLb: 140,
+    strengthKg: 63.5,
     pairedLeaderSpec: 'オーシャンレコード 220ポンド（推奨ペア）',
+    pairedLeaderLb: 220,
+    propertyTags: [
+      '20000番スプール100%格納',
+      'Si-X特殊耐熱繊維（摩擦熱破断防止）',
+      '220lbモンスターリーダー自動ペア',
+    ],
     description:
-      '20000番スプールに100%格納されるPE10号-300m。特殊耐熱繊維Si-Xを編み込むことで、15kg超の超高負荷ドラグ連続滑走時の摩擦熱によるラインブレイクを徹底防止。',
+      '20000番スプールに300m完全格納。100kg超クロマグロが時速60kmで200m疾走した際に発生するガイド・スプール摩擦熱に耐える特殊耐熱繊維Si-X採用の最高峰ライン。',
     specs: [
       { label: '号数・長さ', value: '10号-300m' },
       { label: '最大直線強力', value: '140ポンド (63.5kg)' },
@@ -462,7 +585,8 @@ export const LURE_CATALOG: LurePart[] = [
     category: 'lure',
     brand: 'シービーワン',
     name: 'ライアン 200（太軸 3/0号 フック＆リング推奨）',
-    subCode: '本体単体 85g ＋ 太軸フック・強化リング 11.5g',
+    shortName: 'CB ONE ライアン 200 (針込96.5g)',
+    subCode: '全長200mm // 本体85g ＋ 太軸#3/0金具 11.5g ＝ 96.5g',
     price: 13860,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%A9%E3%82%A4%E3%82%A2%E3%83%B3+200',
@@ -472,8 +596,14 @@ export const LURE_CATALOG: LurePart[] = [
     minPe: 5,
     lengthMm: 200,
     hookSpec: '太軸 3/0号 ＋ 強化リング 9番',
+    actionType: '強波動ウォブリング＆泡噛みダイブ',
+    propertyTags: [
+      '実戦総重量 96.5g（上限110g竿に最適）',
+      '荒天・高波でも飛び出さない安定ダイブ',
+      '広範囲の魚を浮かせる強波動ロール',
+    ],
     description:
-      '本体85gにST-66 #3/0前後＋強化リング（計11.5g）をセットした実戦総重量96.5g。適合ルアー上限110gクラスのテクニカルロッドでも振り抜きやすい黄金バランス。',
+      '本体85gにST-66 #3/0前後＋強化リング（11.5g）を装着した実戦重量96.5g。強い水押しとウォブリングで、深場のヒラマサやキハダを水面まで引きずり出すパイロットルアー。',
     specs: [
       { label: '実戦総重量', value: '96.5g (針・リング込)' },
       { label: '本体単体重量', value: '85.0g (全長200mm)' },
@@ -491,7 +621,8 @@ export const LURE_CATALOG: LurePart[] = [
     category: 'lure',
     brand: 'カーペンター',
     name: 'ガンマ 90-特選モデル（太軸 3/0号 フック推奨）',
-    subCode: '本体単体 75g ＋ 太軸フック・強化リング 11.5g',
+    shortName: 'カーペンター ガンマ 90 (針込86.5g)',
+    subCode: '全長200mm // 本体75g ＋ 太軸#3/0金具 11.5g ＝ 86.5g',
     price: 15400,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AC%E3%83%B3%E3%83%9E+90',
@@ -501,8 +632,14 @@ export const LURE_CATALOG: LurePart[] = [
     minPe: 5,
     lengthMm: 200,
     hookSpec: '太軸 3/0号 ＋ 強化リング 9番',
+    actionType: '高速S字スライド＆ナチュラル喰わせ',
+    propertyTags: [
+      '実戦総重量 86.5g（-10g軽快スイング）',
+      '見切らせないキレのあるS字ダート',
+      'ベイトが小さい日・スレた魚に抜群',
+    ],
     description:
-      '本体75g＋適合フック11.5gで実戦総重量86.5g。PE5〜6号タックルでの誘い出し・ナブラ撃ちにおいて全国的な実績を誇る名作ダイビングペンシル。',
+      'ライアン200より実戦重量が10g軽い86.5g。ロッド負荷が軽く鋭い振り抜きが可能で、水面直下を逃惑うトビウオ・サンマを演出するスライドアクションがスレた大物に口を使わせます。',
     specs: [
       { label: '実戦総重量', value: '86.5g (針・リング込)' },
       { label: '本体単体重量', value: '75.0g (全長200mm)' },
@@ -520,7 +657,8 @@ export const LURE_CATALOG: LurePart[] = [
     category: 'lure',
     brand: 'シービーワン',
     name: 'バズー 200（太軸 4/0号 フック＆リング推奨）',
-    subCode: '本体単体 96g ＋ 太軸フック・強化リング 16.0g',
+    shortName: 'CB ONE バズー 200 (針込112.0g)',
+    subCode: '全長200mm // 本体96g ＋ 太軸#4/0金具 16.0g ＝ 112.0g',
     price: 14960,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%82%BA%E3%83%BC+200',
@@ -530,8 +668,14 @@ export const LURE_CATALOG: LurePart[] = [
     minPe: 6,
     lengthMm: 200,
     hookSpec: '太軸 4/0号 ＋ 強化リング 10番',
+    actionType: '爆発的スプラッシュ＆重低音ポップサウンド',
+    propertyTags: [
+      '実戦総重量 112.0g（※要130g上限以上の竿）',
+      '太軸#4/0フック搭載で大型マグロ対応',
+      '泡と重低音で深場のモンスターを強制浮上',
+    ],
     description:
-      '本体は96gだが、浮力設計に適合する太軸#4/0フック＆リング（+16.0g）を装着すると実戦総重量112.0gに達するため、上限110gロッドでは重量超過となる点までRIGsが精密判定。',
+      '本体96g＋太軸#4/0フック（16g）で実戦総重量112.0g。上限110gロッドでは2g重量超過となるため130g以上のパワーロッドが必須。強烈な泡と音で40〜80kg級マグロ・オオマサを狂わせます。',
     specs: [
       { label: '実戦総重量', value: '112.0g (針・リング込)' },
       { label: '本体単体重量', value: '96.0g (全長200mm)' },
@@ -549,7 +693,8 @@ export const LURE_CATALOG: LurePart[] = [
     category: 'lure',
     brand: 'シービーワン',
     name: 'ゾロ 240 モンスター仕様（太軸 5/0号 フック推奨）',
-    subCode: '本体単体 120g ＋ 太軸フック・強化リング 21.0g',
+    shortName: 'CB ONE ゾロ 240 (針込141.0g)',
+    subCode: '全長240mm // 本体120g ＋ 太軸#5/0金具 21.0g ＝ 141.0g',
     price: 16720,
     image:
       'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%BE%E3%83%AD+240',
@@ -559,8 +704,14 @@ export const LURE_CATALOG: LurePart[] = [
     minPe: 8,
     lengthMm: 240,
     hookSpec: '太軸 5/0号 ＋ 強化リング 11番',
+    actionType: '240mmビッグベイト波動＆対100kg超マグロ仕様',
+    propertyTags: [
+      '実戦総重量 141.0g（150g〜180g上限竿専用）',
+      '極太#5/0フック＆#11リング完全武装',
+      'シイラ・大サバ捕食時の100kg超マグロ特効',
+    ],
     description:
-      '本体120g＋太軸#5/0フック＆強化リング21.0gで実戦総重量141.0g。大型シイラ・サンマパターンで100kg超クロマグロや超大型ヒラマサを狙い撃つビッグプラグ。',
+      '全長240mm、実戦総重量141.0gのモンスタープラグ。シイラや大型サンマを偏食する80〜150kg超のクロマグロ・超大型ヒラマサが、小型ルアーを無視する状況で唯一反応する切り札です。',
     specs: [
       { label: '実戦総重量', value: '141.0g (針・リング込)' },
       { label: '本体単体重量', value: '120.0g (全長240mm)' },
@@ -582,15 +733,27 @@ export const ALL_PARTS: AnyRigPart[] = [
   ...LURE_CATALOG,
 ];
 
-export const RIG_PRESETS: RigPreset[] = [
+// ============================================================================
+// ターゲット魚種プロファイル（ホームで選択する3大ターゲット）
+// ============================================================================
+
+export const RIG_PRESETS: TargetFishProfile[] = [
   {
     id: 'pe6',
-    badge: 'STANDARD // PE6号・14000番クラス',
-    title: '近海ヒラマサ・キハダ 6号標準セッティング',
-    targetFish: 'ヒラマサ 10〜20kg / キハダマグロ 20〜45kg',
+    code: 'TARGET 01 // NEARSHORE KINGFISH & YELLOWFIN',
+    badge: 'PE6号・14000番基準',
+    fishName: '近海ヒラマサ (10〜20kg) ＆ キハダマグロ (20〜40kg)',
+    weightRange: '10〜40kgクラス',
     field: '玄界灘・五島列島・外房・相模湾・三重沖',
+    strikeSpeedKmh: 45,
+    initialRunLoadKg: 10,
+    dailyCastCount: 300,
+    baitSizeMm: '160〜200mm (トビウオ・マイワシ・サンマ)',
+    fishHabit:
+      'ヒット直後に時速45kmで海底の荒根へ突っ込む。1日300投の誘い出しで集中力を切らさず、初動3秒を止められるかが勝負。',
+    tacticalKey: '1日中振り抜ける「総重量の軽さ」と「ドラグ10kg領域の初動追従性」',
     summary:
-      '14000番XGリールにPE6号-300mを下巻き無しで100%格納。針込96.5gの200mmペンシルを1日中軽快に振り抜ける黄金バランスの基準構成。',
+      '14000番XGリール＋PE6号300m完全格納。針込96.5gの200mmプラグを軽快に振り抜き、不意の20kg級ヒラマサも主導権を渡さず獲る黄金構成。',
     rigIds: {
       reel: 'reel-stella-14000xg',
       rod: 'rod-aquila-82-36',
@@ -600,12 +763,20 @@ export const RIG_PRESETS: RigPreset[] = [
   },
   {
     id: 'pe8',
-    badge: 'HEAVY // PE8号・18000番クラス',
-    title: '大型クロマグロ・オオマサ 8号パワーセッティング',
-    targetFish: 'クロマグロ 40〜80kg / オオマサ 20〜30kg超',
+    code: 'TARGET 02 // HEAVY BLUEFIN TUNA & GIANT KINGFISH',
+    badge: 'PE8号・18000番基準',
+    fishName: '大型クロマグロ (40〜80kg) ＆ オオマサ (20〜30kg超)',
+    weightRange: '40〜80kgクラス',
     field: '津軽海峡・丹後半島・壱岐対馬・男女群島',
+    strikeSpeedKmh: 55,
+    initialRunLoadKg: 14,
+    dailyCastCount: 200,
+    baitSizeMm: '200〜220mm (大型サンマ・シイラ・スルメイカ)',
+    fishHabit:
+      '100m以上の暴力的なファーストランと激しい首振りで針を伸ばし根へ走る。中途半端な6号タックルでは太刀打ちできない領域。',
+    tacticalKey: '針込112g超の大型プラグを飛ばす「反発力」と「14kg負荷で根から剥がす剛性」',
     summary:
-      '18000番HGリール＋PE8号-300m完全格納。針込112gのバズー200を上限150gのナノブランクスでフルキャストし、高負荷ドラグで根から引き剥がす実戦仕様。',
+      '18000番HGリール＋PE8号300m完全格納。ナノアロイ採用のウルティモ83Mと針込112gのバズー200で大型魚を強引に浮かせ切るパワー構成。',
     rigIds: {
       reel: 'reel-stella-18000hg',
       rod: 'rod-ultimo-83m',
@@ -615,12 +786,20 @@ export const RIG_PRESETS: RigPreset[] = [
   },
   {
     id: 'pe10',
-    badge: 'EXPEDITION // PE10号・20000番クラス',
-    title: '100kg超モンスタークロマグロ 10号遠征セッティング',
-    targetFish: 'クロマグロ 80〜150kg超 / 離島モンスターGT',
+    code: 'TARGET 03 // 100KG+ MONSTER BLUEFIN EXPEDITION',
+    badge: 'PE10号・20000番基準',
+    fishName: '100kg超モンスタークロマグロ ＆ 離島遠征GT',
+    weightRange: '80〜150kg超クラス',
     field: '竜飛崎・北海道松前・トカラ列島・海外遠征',
+    strikeSpeedKmh: 65,
+    initialRunLoadKg: 17,
+    dailyCastCount: 150,
+    baitSizeMm: '240mm超 (大型シイラ・大サバ・ダツ)',
+    fishHabit:
+      '15kg超のドラグを鳴らし続けながら深場へ垂直潜行し、摩擦熱でラインを焼き切る。アングラーの体力とタックル限界が試される極限戦。',
+    tacticalKey: '摩擦熱を防ぐ「耐熱PE10号＋放熱20000番」と「体重を乗せてリフトする支点設計」',
     summary:
-      '20000番リールに耐熱PE10号-300mをフル格納。針込141gの240mmモンスタープラグとスタンドアップ専用ロッドで100kg超と真っ向勝負する最高峰構成。',
+      '20000番リール＋耐熱PE10号300mフル格納。針込141gの240mmモンスタープラグとスタンドアップ専用ロッドで100kg超を獲る決戦構成。',
     rigIds: {
       reel: 'reel-saltiga-20000h',
       rod: 'rod-bigtuna-83',
@@ -631,7 +810,7 @@ export const RIG_PRESETS: RigPreset[] = [
 ];
 
 // ============================================================================
-// 検索・物理互換性判定・逆引きエンジン
+// 物理互換性判定・検索ヘルパー
 // ============================================================================
 
 export function findPartById(id: string | null | undefined): AnyRigPart | null {
@@ -639,8 +818,12 @@ export function findPartById(id: string | null | undefined): AnyRigPart | null {
   return ALL_PARTS.find((p) => p.id === id) ?? null;
 }
 
-export function getPresetRigState(presetId: 'pe6' | 'pe8' | 'pe10'): RigState {
-  const preset = RIG_PRESETS.find((p) => p.id === presetId) ?? RIG_PRESETS[0];
+export function getTargetProfile(targetId: TargetId): TargetFishProfile {
+  return RIG_PRESETS.find((p) => p.id === targetId) ?? RIG_PRESETS[0];
+}
+
+export function getPresetRigState(presetId: TargetId): RigState {
+  const preset = getTargetProfile(presetId);
   return {
     reel: (findPartById(preset.rigIds.reel) as ReelPart) ?? REEL_CATALOG[0],
     rod: (findPartById(preset.rigIds.rod) as RodPart) ?? ROD_CATALOG[0],
@@ -725,7 +908,6 @@ export function checkPartCompatibility(
     };
   }
 
-  // ルアー
   if (rig.rod && (part.totalWeightG < rig.rod.lureMinG || part.totalWeightG > rig.rod.lureMaxG)) {
     return {
       compatible: false,
@@ -744,43 +926,571 @@ export function checkPartCompatibility(
   };
 }
 
-/**
- * 個別スペック詳細ページの「逆引きシナジー」用：
- * 指定した1パーツだけを装着した仮状態で、他カテゴリの100%適合パーツ一覧を返す
- */
-export function getCompatiblePartnersForPart(targetPart: AnyRigPart): {
-  category: PartCategory;
+// ============================================================================
+// ゲーム装備ステータス比較エンジン（数値Δゲージ ＆ 釣る魚への実戦変化解説）
+// ============================================================================
+
+export interface StatDeltaRow {
   label: string;
-  items: { part: AnyRigPart; reason: string }[];
-}[] {
-  const soloRig: RigState = {
-    reel: targetPart.category === 'reel' ? targetPart : null,
-    rod: targetPart.category === 'rod' ? targetPart : null,
-    line: targetPart.category === 'line' ? targetPart : null,
-    lure: targetPart.category === 'lure' ? targetPart : null,
-  };
+  baseValText: string;
+  candValText: string;
+  basePct: number;
+  candPct: number;
+  deltaBadge: string;
+  tone: 'up' | 'down' | 'neutral';
+}
 
-  return CATEGORY_ORDER.filter((cat) => cat !== targetPart.category).map((cat) => {
-    const pool = ALL_PARTS.filter((p) => p.category === cat);
-    const compatibleItems = pool
-      .map((p) => {
-        const res = checkPartCompatibility(p, soloRig);
-        return { part: p, compatible: res.compatible, reason: res.reason };
-      })
-      .filter((entry) => entry.compatible)
-      .map(({ part, reason }) => ({ part, reason }));
+export interface PartComparisonReport {
+  isSameAsBase: boolean;
+  statRows: StatDeltaRow[];
+  priceDeltaText: string;
+  priceDeltaTone: 'up' | 'down' | 'neutral';
+  fishFightHeadline: string;
+  fishFightNarrative: string;
+  cascadeNotice: string | null;
+}
 
-    return {
-      category: cat,
-      label: `${STEP_META[cat].stepNum} ${STEP_META[cat].label}`,
-      items: compatibleItems,
-    };
-  });
+function clampPct(val: number): number {
+  return Math.max(8, Math.min(100, Math.round(val)));
 }
 
 /**
- * 次に選択すべき未選択ステップを返す（すべて選択済みなら null）
+ * ターゲット魚種の「推奨ベースパーツ (basePart)」と「比較対象パーツ (candidatePart)」を比較し、
+ * ゲーム風ステータスバー用の数値Δと「その魚とのファイトで何が変わるか」の文章を生成する
  */
+export function comparePartAgainstRecommended(
+  basePart: AnyRigPart,
+  candidatePart: AnyRigPart,
+  target: TargetFishProfile,
+  currentRig: RigState
+): PartComparisonReport {
+  const isSame = basePart.id === candidatePart.id;
+  const priceDiff = candidatePart.price - basePart.price;
+  const priceDeltaText =
+    priceDiff === 0
+      ? '±¥0 (同価格)'
+      : priceDiff > 0
+      ? `+¥${priceDiff.toLocaleString()}`
+      : `-¥${Math.abs(priceDiff).toLocaleString()} お得`;
+  const priceDeltaTone: 'up' | 'down' | 'neutral' =
+    priceDiff === 0 ? 'neutral' : priceDiff < 0 ? 'up' : 'down';
+
+  const { compatible, reason } = checkPartCompatibility(candidatePart, currentRig);
+  const cascadeNotice = compatible
+    ? null
+    : `※注意：${reason}（このパーツを使う場合は他スロットも対応番手へ変更が必要です）`;
+
+  // -------------------- 01. リール比較 --------------------
+  if (basePart.category === 'reel' && candidatePart.category === 'reel') {
+    const wtDiff = candidatePart.weightG - basePart.weightG;
+    const dragDiff = candidatePart.dragMaxKg - basePart.dragMaxKg;
+    const retDiff = candidatePart.retrieveCm - basePart.retrieveCm;
+    const dailyCastKgDiff = ((wtDiff * target.dailyCastCount) / 1000).toFixed(1);
+
+    const statRows: StatDeltaRow[] = [
+      {
+        label: 'STOPPING DRAG (最大ドラグ制動力)',
+        baseValText: `${basePart.dragMaxKg}kg`,
+        candValText: `${candidatePart.dragMaxKg}kg`,
+        basePct: clampPct((basePart.dragMaxKg / 32) * 100),
+        candPct: clampPct((candidatePart.dragMaxKg / 32) * 100),
+        deltaBadge:
+          dragDiff === 0
+            ? '±0kg 同等'
+            : dragDiff > 0
+            ? `▲ +${dragDiff}kg 制動力UP`
+            : `▼ ${dragDiff}kg`,
+        tone: dragDiff > 0 ? 'up' : dragDiff < 0 ? 'down' : 'neutral',
+      },
+      {
+        label: 'AGILITY / LIGHTNESS (自重の軽快さ)',
+        baseValText: `${basePart.weightG}g`,
+        candValText: `${candidatePart.weightG}g`,
+        // 軽いほどバーが高い表現ではなく実重量比＋軽量化をポジティブ表示
+        basePct: clampPct((1 - (basePart.weightG - 500) / 550) * 100),
+        candPct: clampPct((1 - (candidatePart.weightG - 500) / 550) * 100),
+        deltaBadge:
+          wtDiff === 0
+            ? '±0g 同重量'
+            : wtDiff < 0
+            ? `▲ ${wtDiff}g 軽量化`
+            : `▼ +${wtDiff}g 重量増`,
+        tone: wtDiff < 0 ? 'up' : wtDiff > 0 ? 'down' : 'neutral',
+      },
+      {
+        label: 'RETRIEVE SPEED (1回転の巻上スピード)',
+        baseValText: `${basePart.retrieveCm}cm`,
+        candValText: `${candidatePart.retrieveCm}cm`,
+        basePct: clampPct((basePart.retrieveCm / 150) * 100),
+        candPct: clampPct((candidatePart.retrieveCm / 150) * 100),
+        deltaBadge:
+          retDiff === 0
+            ? '±0cm 同速'
+            : retDiff > 0
+            ? `▲ +${retDiff}cm 高速回収`
+            : `▼ ${retDiff}cm トルク重視`,
+        tone: retDiff > 0 ? 'up' : retDiff < 0 ? 'neutral' : 'neutral',
+      },
+      {
+        label: 'SPOOL CAPACITY (300m適合PE号数)',
+        baseValText: `PE${basePart.peCapacityNum}号-300m`,
+        candValText: `PE${candidatePart.peCapacityNum}号-300m`,
+        basePct: clampPct((basePart.peCapacityNum / 12) * 100),
+        candPct: clampPct((candidatePart.peCapacityNum / 12) * 100),
+        deltaBadge:
+          basePart.peCapacityNum === candidatePart.peCapacityNum
+            ? '同号数ジャスト'
+            : `PE${basePart.peCapacityNum}号 ➔ PE${candidatePart.peCapacityNum}号`,
+        tone:
+          candidatePart.peCapacityNum > basePart.peCapacityNum
+            ? 'up'
+            : candidatePart.peCapacityNum < basePart.peCapacityNum
+            ? 'down'
+            : 'neutral',
+      },
+    ];
+
+    if (isSame) {
+      return {
+        isSameAsBase: true,
+        statRows,
+        priceDeltaText,
+        priceDeltaTone,
+        fishFightHeadline: `【${target.fishName}】に対する推奨ベースリール（基準ステータス）`,
+        fishFightNarrative: `${target.fishName}の初動負荷（約${target.initialRunLoadKg}kg）と1日${target.dailyCastCount}投のキャストに最もバランス良く対応する基準機です。${candidatePart.description}`,
+        cascadeNotice,
+      };
+    }
+
+    let narrative = '';
+    let headline = '';
+    if (wtDiff < 0 && candidatePart.sizeClass === basePart.sizeClass) {
+      headline = `手元が ${Math.abs(wtDiff)}g 軽くなり、1日${target.dailyCastCount}投で累積 ${Math.abs(Number(dailyCastKgDiff))}kg 分の腕の負担を軽減！`;
+      narrative = `${basePart.shortName}（${basePart.weightG}g）から ${candidatePart.shortName}（${candidatePart.weightG}g）へ変えることで、夕マズメの最後の1投まで振り抜き速度が落ちません。さらにダイワ特有の「ATDドラグ」は魚が船べりで急に突っ込んだ瞬間に滑らかに追従するため、${target.fishName}の口切れ・身切れバラシをより抑える粘り強いファイトに変わります。`;
+    } else if (wtDiff > 0 && candidatePart.sizeClass === basePart.sizeClass) {
+      headline = `自重は +${wtDiff}g 増えますが、金属ボディの剛性感と高速スラック処理のダイレクト感が向上！`;
+      narrative = `${candidatePart.shortName}は自重が+${wtDiff}g増える一方、高剛性HAGANEボディとリジッドサポートドラグにより、高負荷ファイト時でもボディのたわみがゼロ。${target.fishName}が瀬際へ走る初動をガッチリ受け止め、巻きたい瞬間にミリ単位でゴリ巻きできる攻撃的な操作感に変わります。`;
+    } else if (candidatePart.sizeClass > basePart.sizeClass) {
+      headline = `番手が #${basePart.sizeClass} ➔ #${candidatePart.sizeClass} に上がり、最大ドラグ +${dragDiff}kg・PE${candidatePart.peCapacityNum}号300mの巨魚制圧仕様へ変化！`;
+      narrative = `1日${target.dailyCastCount}投での累積重量は +${dailyCastKgDiff}kg 増えますが、最大ドラグが${basePart.dragMaxKg}kgから${candidatePart.dragMaxKg}kgへ強化され、太糸（PE${candidatePart.peCapacityNum}号）を300m巻けるようになります。${target.fishName}の中でも記録級のモンスターがヒットした際、ラインブレイクの恐怖なく真っ向勝負できるパワー重視の装備に変わります。`;
+    } else {
+      headline = `番手を #${basePart.sizeClass} ➔ #${candidatePart.sizeClass} へ小型化し、手元を ${Math.abs(wtDiff)}g 軽量化するライト＆フィネス変化`;
+      narrative = `ドラグ上限は${Math.abs(dragDiff)}kg下がりますが、手元が一気に${Math.abs(wtDiff)}g軽くなり（1日${target.dailyCastCount}投で累積 ${Math.abs(Number(dailyCastKgDiff))}kg 軽減）、1日中シャープにルアーを動かし続けられます。`;
+    }
+
+    return {
+      isSameAsBase: false,
+      statRows,
+      priceDeltaText,
+      priceDeltaTone,
+      fishFightHeadline: headline,
+      fishFightNarrative: narrative,
+      cascadeNotice,
+    };
+  }
+
+  // -------------------- 02. ロッド比較 --------------------
+  if (basePart.category === 'rod' && candidatePart.category === 'rod') {
+    const lureMaxDiff = candidatePart.lureMaxG - basePart.lureMaxG;
+    const dragDiff = candidatePart.dragMaxKg - basePart.dragMaxKg;
+    const lenDiff = candidatePart.lengthInches - basePart.lengthInches;
+    const wtDiff = candidatePart.weightG - basePart.weightG;
+
+    const baseLoadRatio = Math.round((target.initialRunLoadKg / basePart.dragMaxKg) * 100);
+    const candLoadRatio = Math.round((target.initialRunLoadKg / candidatePart.dragMaxKg) * 100);
+
+    const statRows: StatDeltaRow[] = [
+      {
+        label: 'LURE MAX CAPACITY (許容ルアー重量上限)',
+        baseValText: `MAX ${basePart.lureMaxG}g`,
+        candValText: `MAX ${candidatePart.lureMaxG}g`,
+        basePct: clampPct((basePart.lureMaxG / 190) * 100),
+        candPct: clampPct((candidatePart.lureMaxG / 190) * 100),
+        deltaBadge:
+          lureMaxDiff === 0
+            ? '±0g 同上限'
+            : lureMaxDiff > 0
+            ? `▲ +${lureMaxDiff}g 大型ルアー解禁`
+            : `▼ ${lureMaxDiff}g 小型プラグ特化`,
+        tone: lureMaxDiff > 0 ? 'up' : lureMaxDiff < 0 ? 'down' : 'neutral',
+      },
+      {
+        label: 'ROD LIFT POWER (最大ドラグ耐荷重 45°)',
+        baseValText: `${basePart.dragMaxKg}kg`,
+        candValText: `${candidatePart.dragMaxKg}kg`,
+        basePct: clampPct((basePart.dragMaxKg / 20) * 100),
+        candPct: clampPct((candidatePart.dragMaxKg / 20) * 100),
+        deltaBadge:
+          dragDiff === 0
+            ? '±0kg 同等'
+            : dragDiff > 0
+            ? `▲ +${dragDiff}kg 根剥がし力UP`
+            : `▼ ${dragDiff}kg 柔軟追従`,
+        tone: dragDiff > 0 ? 'up' : dragDiff < 0 ? 'down' : 'neutral',
+      },
+      {
+        label: 'CASTING REACH (全長・遠投リーチ)',
+        baseValText: basePart.lengthFt,
+        candValText: candidatePart.lengthFt,
+        basePct: clampPct(((basePart.lengthInches - 90) / 16) * 100),
+        candPct: clampPct(((candidatePart.lengthInches - 90) / 16) * 100),
+        deltaBadge:
+          lenDiff === 0
+            ? '±0 同レングス'
+            : lenDiff > 0
+            ? `▲ +${lenDiff}インチ 飛距離UP`
+            : `▼ ${lenDiff}インチ 取り回し重視`,
+        tone: lenDiff > 0 ? 'up' : lenDiff < 0 ? 'neutral' : 'neutral',
+      },
+      {
+        label: 'SWING LIGHTNESS (ロッド自重・軽快さ)',
+        baseValText: `${basePart.weightG}g`,
+        candValText: `${candidatePart.weightG}g`,
+        basePct: clampPct((1 - (basePart.weightG - 300) / 200) * 100),
+        candPct: clampPct((1 - (candidatePart.weightG - 300) / 200) * 100),
+        deltaBadge:
+          wtDiff === 0
+            ? '±0g 同重量'
+            : wtDiff < 0
+            ? `▲ ${wtDiff}g 軽量化`
+            : `▼ +${wtDiff}g パワー肉厚化`,
+        tone: wtDiff < 0 ? 'up' : wtDiff > 0 ? 'down' : 'neutral',
+      },
+    ];
+
+    if (isSame) {
+      return {
+        isSameAsBase: true,
+        statRows,
+        priceDeltaText,
+        priceDeltaTone,
+        fishFightHeadline: `【${target.fishName}】に対する推奨ベースロッド（基準ステータス）`,
+        fishFightNarrative: `${target.baitSizeMm}のベイトパターンに合わせやすく、${target.fishName}の初動突っ込み（約${target.initialRunLoadKg}kg）に対してブランクス負荷率 ${baseLoadRatio}% で余裕を持って対処できる基準ロッドです。`,
+        cascadeNotice,
+      };
+    }
+
+    const headline =
+      dragDiff > 0
+        ? `魚の初動突っ込み(${target.initialRunLoadKg}kg)に対するロッド負荷率が ${baseLoadRatio}% ➔ ${candLoadRatio}% に余裕拡大！ルアー上限も +${lureMaxDiff}g 増加`
+        : `ロッド自重が ${Math.abs(wtDiff)}g 軽くなり、ティップが柔軟になって小型ルアーの喰わせ性能が大幅向上！`;
+
+    const narrative =
+      dragDiff > 0
+        ? `${basePart.shortName}に比べ、ロッド自重は+${wtDiff}g増えますが、最大ドラグ耐荷重が${basePart.dragMaxKg}kgから${candidatePart.dragMaxKg}kg（+${dragDiff}kg）へ大幅強化されます。これにより${target.fishName}がヒット直後に瀬や深場へ突っ込んだ際、ロッドの限界余力が大きく広がり強引に頭をこちらへ向けられます。また許容ルアー重量が${basePart.lureMaxG}g➔${candidatePart.lureMaxG}g（+${lureMaxDiff}g）に広がるため、針込112gの『バズー200』など大型プラグも重量超過せずフルキャスト可能になります。`
+        : `${basePart.shortName}から${candidatePart.shortName}へ変更すると、最大パワー（上限${candidatePart.lureMaxG}g / ドラグ${candidatePart.dragMaxKg}kg）は抑えられる代わりに、自重が${Math.abs(wtDiff)}g軽くなりティップがしなやかになります。魚が小さいベイト（マイワシや小型トビウオ）しか食べず大きなルアーを見切る日に、80〜95gのプラグを水面に絡みつくようにナチュラルに泳がせてバイトを引き出せます。`;
+
+    return {
+      isSameAsBase: false,
+      statRows,
+      priceDeltaText,
+      priceDeltaTone,
+      fishFightHeadline: headline,
+      fishFightNarrative: narrative,
+      cascadeNotice,
+    };
+  }
+
+  // -------------------- 03. ライン比較 --------------------
+  if (basePart.category === 'line' && candidatePart.category === 'line') {
+    const lbDiff = candidatePart.strengthLb - basePart.strengthLb;
+    const kgDiff = Number((candidatePart.strengthKg - basePart.strengthKg).toFixed(1));
+    const ldrDiff = candidatePart.pairedLeaderLb - basePart.pairedLeaderLb;
+
+    const baseSafetyMultiple = (basePart.strengthKg / target.initialRunLoadKg).toFixed(1);
+    const candSafetyMultiple = (candidatePart.strengthKg / target.initialRunLoadKg).toFixed(1);
+
+    const statRows: StatDeltaRow[] = [
+      {
+        label: 'BREAKING STRENGTH (最大直線強力)',
+        baseValText: `${basePart.strengthLb}lb (${basePart.strengthKg}kg)`,
+        candValText: `${candidatePart.strengthLb}lb (${candidatePart.strengthKg}kg)`,
+        basePct: clampPct((basePart.strengthLb / 150) * 100),
+        candPct: clampPct((candidatePart.strengthLb / 150) * 100),
+        deltaBadge:
+          lbDiff === 0
+            ? '±0lb 同強度'
+            : lbDiff > 0
+            ? `▲ +${lbDiff}lb (+${kgDiff}kg) 強度UP`
+            : `▼ ${lbDiff}lb 細径・飛距離重視`,
+        tone: lbDiff > 0 ? 'up' : lbDiff < 0 ? 'down' : 'neutral',
+      },
+      {
+        label: 'SHOCK LEADER (自動ペアリングリーダー耐摩耗)',
+        baseValText: `${basePart.pairedLeaderLb}lb`,
+        candValText: `${candidatePart.pairedLeaderLb}lb`,
+        basePct: clampPct((basePart.pairedLeaderLb / 240) * 100),
+        candPct: clampPct((candidatePart.pairedLeaderLb / 240) * 100),
+        deltaBadge:
+          ldrDiff === 0
+            ? '±0lb 同号数'
+            : ldrDiff > 0
+            ? `▲ +${ldrDiff}lb 根ズレ耐性UP`
+            : `▼ ${ldrDiff}lb ルアー動き重視`,
+        tone: ldrDiff > 0 ? 'up' : ldrDiff < 0 ? 'down' : 'neutral',
+      },
+      {
+        label: 'WIND CUT / FLIGHT (細さによる風切り・飛距離)',
+        baseValText: `PE ${basePart.peNumber}号`,
+        candValText: `PE ${candidatePart.peNumber}号`,
+        basePct: clampPct((1 - (basePart.peNumber - 4) / 8) * 100),
+        candPct: clampPct((1 - (candidatePart.peNumber - 4) / 8) * 100),
+        deltaBadge:
+          candidatePart.peNumber === basePart.peNumber
+            ? '同号数'
+            : candidatePart.peNumber < basePart.peNumber
+            ? `▲ ${basePart.peNumber - candidatePart.peNumber}号細径化で飛距離UP`
+            : `▼ +${candidatePart.peNumber - basePart.peNumber}号太糸化`,
+        tone:
+          candidatePart.peNumber < basePart.peNumber
+            ? 'up'
+            : candidatePart.peNumber > basePart.peNumber
+            ? 'down'
+            : 'neutral',
+      },
+    ];
+
+    if (isSame) {
+      return {
+        isSameAsBase: true,
+        statRows,
+        priceDeltaText,
+        priceDeltaTone,
+        fishFightHeadline: `【${target.fishName}】に対する推奨ベースライン（安全率 ${baseSafetyMultiple}倍）`,
+        fishFightNarrative: `魚の初動負荷（${target.initialRunLoadKg}kg）に対して ${baseSafetyMultiple}倍 の直線強力（${basePart.strengthKg}kg）を持ち、推奨リールに下巻きなしで300mジャスト格納できる基準ラインです。`,
+        cascadeNotice,
+      };
+    }
+
+    const headline =
+      lbDiff > 0
+        ? `直線強力が +${lbDiff}lb（+${kgDiff}kg）増加！魚の初動負荷に対する安全率が ${baseSafetyMultiple}倍 ➔ ${candSafetyMultiple}倍 に向上`
+        : `PE${basePart.peNumber}号 ➔ PE${candidatePart.peNumber}号へ細径化し、向かい風でのルアー飛距離と操作性が大幅に向上！`;
+
+    const narrative =
+      lbDiff > 0
+        ? `${basePart.shortName}から${candidatePart.shortName}へ太くすることで、直線強力が${basePart.strengthKg}kgから${candidatePart.strengthKg}kgへ強化され、自動セットされるリーダーも${basePart.pairedLeaderLb}lb➔${candidatePart.pairedLeaderLb}lbにランクアップします。水深が浅く起伏の激しい岩礁帯で大型ヒラマサに根に擦られた際や、大型クロマグロとの長時間ファイトでの破断リスクが劇的に下がります（※スプール容量を合わせるため${candidatePart.peNumber === 8 ? '18000番' : '20000番'}リールとの組み合わせが必要）。`
+        : `ラインをPE${candidatePart.peNumber}号へ細くすることで、ガイド抜けと水切り抵抗が劇的に軽くなり、遠くのナブラへあと10mルアーを届かせることができます。絶対強度は${Math.abs(kgDiff)}kg下がるため、根の荒いポイントよりもオープンウォーターでの誘い出し・ナブラ撃ちに特化したセッティングに変わります。`;
+
+    return {
+      isSameAsBase: false,
+      statRows,
+      priceDeltaText,
+      priceDeltaTone,
+      fishFightHeadline: headline,
+      fishFightNarrative: narrative,
+      cascadeNotice,
+    };
+  }
+
+  // -------------------- 04. ルアー比較 --------------------
+  if (basePart.category === 'lure' && candidatePart.category === 'lure') {
+    const wtDiff = Number((candidatePart.totalWeightG - basePart.totalWeightG).toFixed(1));
+    const lenDiff = candidatePart.lengthMm - basePart.lengthMm;
+    const rodMax = currentRig.rod?.lureMaxG ?? 110;
+    const baseRodRatio = Math.round((basePart.totalWeightG / rodMax) * 100);
+    const candRodRatio = Math.round((candidatePart.totalWeightG / rodMax) * 100);
+
+    const statRows: StatDeltaRow[] = [
+      {
+        label: 'TOTAL WEIGHT (針・リング込の実戦総重量)',
+        baseValText: `${basePart.totalWeightG}g`,
+        candValText: `${candidatePart.totalWeightG}g`,
+        basePct: clampPct((basePart.totalWeightG / 160) * 100),
+        candPct: clampPct((candidatePart.totalWeightG / 160) * 100),
+        deltaBadge:
+          wtDiff === 0
+            ? '±0g 同重量'
+            : wtDiff > 0
+            ? `▲ +${wtDiff}g 重量・飛距離増`
+            : `▲ ${wtDiff}g 軽快スイング`,
+        tone: candRodRatio <= 100 ? 'up' : 'down',
+      },
+      {
+        label: 'ROD LOAD RATIO (選択中ロッド上限に対する負荷率)',
+        baseValText: `${baseRodRatio}% (上限${rodMax}g)`,
+        candValText: `${candRodRatio}% (上限${rodMax}g)`,
+        basePct: clampPct(baseRodRatio),
+        candPct: clampPct(candRodRatio),
+        deltaBadge:
+          candRodRatio > 100
+            ? `⚠️ 上限超過 (${candRodRatio}%)`
+            : `${baseRodRatio}% ➔ ${candRodRatio}% (適正域)`,
+        tone: candRodRatio > 100 ? 'down' : 'up',
+      },
+      {
+        label: 'APPEAL & SILHOUETTE (全長・アピール波動)',
+        baseValText: `${basePart.lengthMm}mm (${basePart.hookSpec.split(' ')[1]})`,
+        candValText: `${candidatePart.lengthMm}mm (${candidatePart.hookSpec.split(' ')[1]})`,
+        basePct: clampPct((basePart.lengthMm / 250) * 100),
+        candPct: clampPct((candidatePart.lengthMm / 250) * 100),
+        deltaBadge:
+          lenDiff === 0
+            ? '同サイズ 200mm'
+            : lenDiff > 0
+            ? `▲ +${lenDiff}mm 大型ベイト対応`
+            : `▼ ${lenDiff}mm 一口サイズ化`,
+        tone: lenDiff !== 0 ? 'up' : 'neutral',
+      },
+    ];
+
+    if (isSame) {
+      return {
+        isSameAsBase: true,
+        statRows,
+        priceDeltaText,
+        priceDeltaTone,
+        fishFightHeadline: `【${target.fishName}】に対する推奨ベースルアー（ロッド負荷率 ${baseRodRatio}%）`,
+        fishFightNarrative: `本体${basePart.bodyWeightG}gに適合フック＆リング（+${basePart.hookRingWeightG}g）を合わせた実戦総重量 ${basePart.totalWeightG}g。現在のロッド上限（${rodMax}g）に対して ${baseRodRatio}% の理想的なスイートスポットで振り抜ける基準プラグです。`,
+        cascadeNotice,
+      };
+    }
+
+    let headline = '';
+    let narrative = '';
+
+    if (wtDiff < 0) {
+      headline = `針込実戦重量が ${Math.abs(wtDiff)}g 軽くなり（ロッド負荷率 ${baseRodRatio}% ➔ ${candRodRatio}%）、見切らせない高速スライドアクションに変化！`;
+      narrative = `${basePart.shortName}（${basePart.totalWeightG}g）から${candidatePart.shortName}（${candidatePart.totalWeightG}g）へ変えることで、振り抜き負荷が${Math.abs(candRodRatio - baseRodRatio)}%軽くなります。${basePart.actionType}で魚を寄せる基準ルアーに対し、こちらは「${candidatePart.actionType}」に特化しており、ベイトが小さい日や船が多くてスレた${target.fishName}がルアーを見切る状況で、最後の最後に口を使わせる喰わせの切り札になります。`;
+    } else {
+      headline = `針込実戦重量が +${wtDiff}g 増加（${basePart.totalWeightG}g ➔ ${candidatePart.totalWeightG}g）し、強波動＆太軸フックで大型魚を強制浮上させる仕様へ変化！`;
+      narrative = `本体＋太軸フック（${candidatePart.hookSpec}）により実戦重量が${candidatePart.totalWeightG}gへアップします。${
+        candRodRatio > 100
+          ? `※現在のロッド上限（${rodMax}g）を ${ Number((candidatePart.totalWeightG - rodMax).toFixed(1)) }g 超過するため、02 ロッドを『エクスプロージョン865（上限130g）』または『ウルティモ83M（上限150g）』へ強化することで100%性能を発揮できます。`
+          : `現在のロッド上限（${rodMax}g）に対して負荷率${candRodRatio}%でしっかりブランクスを曲げて反発遠投できます。`
+      }「${candidatePart.actionType}」により、水深30〜50mの深場に沈んだ${target.fishName}やシイラパターン時の大型個体を水面まで引きずり出す爆発力が手に入ります。`;
+    }
+
+    return {
+      isSameAsBase: false,
+      statRows,
+      priceDeltaText,
+      priceDeltaTone,
+      fishFightHeadline: headline,
+      fishFightNarrative: narrative,
+      cascadeNotice,
+    };
+  }
+
+  return {
+    isSameAsBase: true,
+    statRows: [],
+    priceDeltaText: '±¥0',
+    priceDeltaTone: 'neutral',
+    fishFightHeadline: '',
+    fishFightNarrative: '',
+    cascadeNotice: null,
+  };
+}
+
+// ============================================================================
+// 4スロット合算「対ターゲット総合戦闘力（5項目ゲームステータス）」算出エンジン
+// ============================================================================
+
+export interface CombatStatBar {
+  id: string;
+  label: string;
+  subLabel: string;
+  score: number; // 0 - 100
+  baseScore: number; // 推奨ベース時のスコア (0 - 100)
+  metricText: string;
+}
+
+export function calculateOverallCombatStats(
+  rig: RigState,
+  target: TargetFishProfile
+): CombatStatBar[] {
+  const baseRig = getPresetRigState(target.id);
+
+  const calcScores = (r: RigState) => {
+    const reelDrag = r.reel?.dragMaxKg ?? 25;
+    const rodDrag = r.rod?.dragMaxKg ?? 11;
+    const lineKg = r.line?.strengthKg ?? 40;
+    const totalWt =
+      (r.reel?.weightG ?? 675) +
+      (r.rod?.weightG ?? 350) +
+      Math.round(r.lure?.totalWeightG ?? 95);
+    const rodLenIn = r.rod?.lengthInches ?? 98;
+    const lureWt = r.lure?.totalWeightG ?? 96;
+    const rodMax = r.rod?.lureMaxG ?? 110;
+
+    // 1. STOPPING POWER (制動力・根剥がし)
+    const stopping = clampPct(((rodDrag * 3.5 + reelDrag * 1.2 + lineKg * 0.5) / 115) * 100);
+
+    // 2. CASTING RANGE (遠投飛距離)
+    const lureOverPenalty = lureWt > rodMax ? -20 : 0;
+    const casting = clampPct(
+      ((rodLenIn - 92) * 3.5 + (lureWt / 145) * 45 + (12 - (r.line?.peNumber ?? 6)) * 3) +
+        lureOverPenalty
+    );
+
+    // 3. STAMINA / AGILITY (1日投げ続ける軽快さ)
+    const stamina = clampPct(100 - ((totalWt - 1050) / 550) * 45);
+
+    // 4. BITE & HOLD (喰わせ・バラシ耐性)
+    const isAtd = r.reel?.id.includes('saltiga') ? 8 : 0;
+    const isFinesseLure = r.lure?.id.includes('gamma') ? 8 : 0;
+    const isSoftTip = r.rod?.id.includes('aquila') ? 8 : 0;
+    const biteHold = clampPct(74 + isAtd + isFinesseLure + isSoftTip);
+
+    // 5. SAFETY MARGIN (大物急襲時の破断余裕度)
+    const allCompat = [r.reel, r.rod, r.line, r.lure]
+      .filter((x): x is AnyRigPart => x !== null)
+      .every((item) => checkPartCompatibility(item, r).compatible);
+    const safety = clampPct(
+      (allCompat ? 82 : 45) + ((r.line?.pairedLeaderLb ?? 130) - 120) * 0.16
+    );
+
+    return { stopping, casting, stamina, biteHold, safety, rodDrag, totalWt, lineKg };
+  };
+
+  const cur = calcScores(rig);
+  const base = calcScores(baseRig);
+
+  return [
+    {
+      id: 'stopping',
+      label: 'STOPPING POWER',
+      subLabel: '瀬際で魚を止める制動力',
+      score: cur.stopping,
+      baseScore: base.stopping,
+      metricText: `最大ドラグ負荷 ${rig.rod?.dragMaxKg ?? '-'}kg / リール ${rig.reel?.dragMaxKg ?? '-'}kg`,
+    },
+    {
+      id: 'casting',
+      label: 'CASTING RANGE',
+      subLabel: 'ナブラへ届かせる飛距離',
+      score: cur.casting,
+      baseScore: base.casting,
+      metricText: `${rig.rod?.lengthFt ?? '-'} × 針込${rig.lure?.totalWeightG ?? '-'}g`,
+    },
+    {
+      id: 'stamina',
+      label: 'STAMINA & AGILITY',
+      subLabel: `1日${target.dailyCastCount}投の持久力・軽快さ`,
+      score: cur.stamina,
+      baseScore: base.stamina,
+      metricText: `装備総重量 ${cur.totalWt}g`,
+    },
+    {
+      id: 'bite',
+      label: 'BITE & HOLD',
+      subLabel: '見切らせない誘い＆バラシ耐性',
+      score: cur.biteHold,
+      baseScore: base.biteHold,
+      metricText: `${rig.lure?.actionType.slice(0, 10) ?? '-'}`,
+    },
+    {
+      id: 'safety',
+      label: 'SAFETY MARGIN',
+      subLabel: 'モンスター急襲時の破断余裕度',
+      score: cur.safety,
+      baseScore: base.safety,
+      metricText: `直線 ${rig.line?.strengthLb ?? '-'}lb + ${rig.line?.pairedLeaderLb ?? '-'}lbリーダー`,
+    },
+  ];
+}
+
 export function getNextUnselectedStep(
   rig: RigState,
   currentStep?: PartCategory

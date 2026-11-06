@@ -1,5 +1,4 @@
 import {
-  AnyRigPart,
   findPartById,
   getPresetRigState,
   LinePart,
@@ -8,107 +7,91 @@ import {
   ReelPart,
   RigState,
   RodPart,
+  TargetId,
 } from '../data/rigCatalog';
 
-export type PageView = 'home' | 'catalog' | 'detail' | 'builder' | 'spec';
+export type PageView = 'home' | 'garage' | 'checkout';
 
 export interface RouteState {
   view: PageView;
-  builderStep: PartCategory;
-  catalogCategory: PartCategory | 'all';
-  detailItemId: string | null;
-  detailReturnView: 'catalog' | 'builder' | 'home';
+  targetId: TargetId;
+  activeStep: PartCategory;
 }
 
-const VALID_VIEWS: PageView[] = ['home', 'catalog', 'detail', 'builder', 'spec'];
-const VALID_CATEGORIES: PartCategory[] = ['reel', 'rod', 'line', 'lure'];
+const VALID_TARGETS: TargetId[] = ['pe6', 'pe8', 'pe10'];
+const VALID_STEPS: PartCategory[] = ['reel', 'rod', 'line', 'lure'];
 
 /**
- * 現在の window.location.search から画面遷移状態と4スロットのタックル編成を復元する
+ * 現在の window.location.search から画面状態・ターゲット魚種・4スロット装備を復元する
  */
 export function parseUrlState(): {
   route: RouteState;
   rig: RigState;
-  hasUrlRigParams: boolean;
 } {
   if (typeof window === 'undefined') {
     return {
       route: {
         view: 'home',
-        builderStep: 'reel',
-        catalogCategory: 'all',
-        detailItemId: null,
-        detailReturnView: 'catalog',
+        targetId: 'pe6',
+        activeStep: 'reel',
       },
       rig: getPresetRigState('pe6'),
-      hasUrlRigParams: false,
     };
   }
 
   const params = new URLSearchParams(window.location.search);
-  const rawView = params.get('view') as PageView | null;
+  const rawView = params.get('view');
+  const rawTarget = params.get('target') as TargetId | null;
   const rawStep = params.get('step') as PartCategory | null;
-  const rawCat = params.get('cat') as PartCategory | 'all' | null;
-  const rawItem = params.get('item');
-  const rawFrom = params.get('from') as 'catalog' | 'builder' | 'home' | null;
+
+  const targetId: TargetId = VALID_TARGETS.includes(rawTarget as TargetId)
+    ? (rawTarget as TargetId)
+    : 'pe6';
+
+  const activeStep: PartCategory = VALID_STEPS.includes(rawStep as PartCategory)
+    ? (rawStep as PartCategory)
+    : 'reel';
 
   const reelId = params.get('reel');
   const rodId = params.get('rod');
   const lineId = params.get('line');
   const lureId = params.get('lure');
-
   const hasUrlRigParams = Boolean(reelId || rodId || lineId || lureId);
 
-  let rig: RigState;
-  if (hasUrlRigParams) {
-    rig = {
-      reel: (findPartById(reelId) as ReelPart) ?? null,
-      rod: (findPartById(rodId) as RodPart) ?? null,
-      line: (findPartById(lineId) as LinePart) ?? null,
-      lure: (findPartById(lureId) as LurePart) ?? null,
-    };
-  } else {
-    rig = getPresetRigState('pe6');
+  const presetFallback = getPresetRigState(targetId);
+
+  const rig: RigState = hasUrlRigParams
+    ? {
+        reel: (findPartById(reelId) as ReelPart) ?? presetFallback.reel,
+        rod: (findPartById(rodId) as RodPart) ?? presetFallback.rod,
+        line: (findPartById(lineId) as LinePart) ?? presetFallback.line,
+        lure: (findPartById(lureId) as LurePart) ?? presetFallback.lure,
+      }
+    : presetFallback;
+
+  let view: PageView = 'home';
+  if (rawView === 'garage' || rawView === 'builder') {
+    view = 'garage';
+  } else if (rawView === 'checkout' || rawView === 'spec') {
+    view = 'checkout';
+  } else if (rawView === 'home') {
+    view = 'home';
+  } else if (hasUrlRigParams) {
+    view = 'checkout';
   }
-
-  let view: PageView = VALID_VIEWS.includes(rawView as PageView)
-    ? (rawView as PageView)
-    : hasUrlRigParams
-    ? 'spec'
-    : 'home';
-
-  const detailPart: AnyRigPart | null = findPartById(rawItem);
-  if (view === 'detail' && !detailPart) {
-    view = 'catalog';
-  }
-
-  const builderStep: PartCategory = VALID_CATEGORIES.includes(rawStep as PartCategory)
-    ? (rawStep as PartCategory)
-    : 'reel';
-
-  const catalogCategory: PartCategory | 'all' =
-    rawCat === 'all' || VALID_CATEGORIES.includes(rawCat as PartCategory)
-      ? (rawCat as PartCategory | 'all')
-      : 'all';
-
-  const detailReturnView: 'catalog' | 'builder' | 'home' =
-    rawFrom === 'builder' || rawFrom === 'home' ? rawFrom : 'catalog';
 
   return {
     route: {
       view,
-      builderStep,
-      catalogCategory,
-      detailItemId: detailPart ? detailPart.id : null,
-      detailReturnView,
+      targetId,
+      activeStep,
     },
     rig,
-    hasUrlRigParams,
   };
 }
 
 /**
- * RouteState と RigState から URL クエリ文字列を組み立てる
+ * RouteState と RigState から URL クエリ文字列を生成する
  */
 export function buildUrlString(route: RouteState, rig: RigState): string {
   if (typeof window === 'undefined') return '';
@@ -116,16 +99,10 @@ export function buildUrlString(route: RouteState, rig: RigState): string {
   const params = new URLSearchParams();
 
   params.set('view', route.view);
+  params.set('target', route.targetId);
 
-  if (route.view === 'builder') {
-    params.set('step', route.builderStep);
-  }
-  if (route.view === 'catalog' && route.catalogCategory !== 'all') {
-    params.set('cat', route.catalogCategory);
-  }
-  if (route.view === 'detail' && route.detailItemId) {
-    params.set('item', route.detailItemId);
-    params.set('from', route.detailReturnView);
+  if (route.view === 'garage') {
+    params.set('step', route.activeStep);
   }
 
   if (rig.reel) params.set('reel', rig.reel.id);
@@ -138,13 +115,14 @@ export function buildUrlString(route: RouteState, rig: RigState): string {
 }
 
 /**
- * SNS共有・ブックマーク用の完成仕様書URLを生成する
+ * SNS共有・ブックマーク用の最終装備URLを生成する
  */
-export function buildShareableSpecUrl(rig: RigState): string {
+export function buildShareableSpecUrl(rig: RigState, targetId: TargetId = 'pe6'): string {
   if (typeof window === 'undefined') return '';
   const url = new URL(window.location.origin + window.location.pathname);
   const params = new URLSearchParams();
-  params.set('view', 'spec');
+  params.set('view', 'checkout');
+  params.set('target', targetId);
   if (rig.reel) params.set('reel', rig.reel.id);
   if (rig.rod) params.set('rod', rig.rod.id);
   if (rig.line) params.set('line', rig.line.id);
