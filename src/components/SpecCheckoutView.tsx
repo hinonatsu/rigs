@@ -111,26 +111,39 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             </button>
           </div>
 
-          {/* 狙う魚 ＆ 物理適合サマリー */}
+          {/* 狙う魚 ＆ 物理適合サマリー（リアル水中フォトバナー付き） */}
           <div
-            className={`rounded-xl p-3.5 bg-[#151515] border ${
+            className={`rounded-xl overflow-hidden bg-[#151515] border ${
               isAllSelectedCompatible ? 'border-[#00E5FF]/70' : 'border-rose-500/60'
-            } space-y-2`}
+            }`}
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-semibold text-[#00E5FF] flex items-center gap-1.5">
-                {isAllSelectedCompatible ? (
-                  <ShieldCheck className="w-4 h-4 text-[#00E5FF]" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-rose-400" />
-                )}
-                <span>TARGET: {target.fishName}</span>
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00E5FF]/15 text-[#00E5FF] font-semibold">
-                {isAllSelectedCompatible ? '100% 物理適合' : '要調整'}
-              </span>
+            <div className="relative h-28 w-full overflow-hidden">
+              <img
+                src={target.heroImage}
+                alt={target.fishName}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#151515] via-[#151515]/45 to-black/30" />
+              <div className="absolute top-2.5 left-3 right-3 flex items-center justify-between gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#151515]/90 border border-[#00E5FF]/60 text-[10px] font-semibold text-[#00E5FF] flex items-center gap-1">
+                  {isAllSelectedCompatible ? (
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                  )}
+                  <span>{target.badge}</span>
+                </span>
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#151515]/90 border border-[#00E5FF]/40 text-[#00E5FF] font-semibold">
+                  {isAllSelectedCompatible ? '100% 物理適合' : '要調整'}
+                </span>
+              </div>
+              <div className="absolute bottom-2 left-3 right-3">
+                <div className="text-xs sm:text-sm font-bold text-[#FFFFFF] drop-shadow-md">
+                  TARGET: {target.fishName}
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+            <div className="p-3 pt-2 grid grid-cols-3 gap-2 text-center">
               <div className="bg-[#222222] rounded-lg p-2 border border-white/5">
                 <div className="text-[10px] text-[#A0A0A0]">推奨初期ドラグ</div>
                 <div className="text-xs font-semibold text-[#00E5FF] tabular-nums mt-0.5">

@@ -236,9 +236,9 @@ export const TackleBuilder: React.FC = () => {
   };
 
   return (
-    <div className="min-h-dvh lg:h-dvh lg:overflow-hidden bg-[#151515] text-[#FFFFFF] font-jp antialiased selection:bg-[#00E5FF] selection:text-[#151515] flex flex-col justify-between">
+    <div className="min-h-dvh bg-[#151515] text-[#FFFFFF] font-jp antialiased selection:bg-[#00E5FF] selection:text-[#151515] flex flex-col justify-between">
       {/* ==================== 上部常駐：グローバルステップバー ＆ TARGET LOCK-ON HUD ==================== */}
-      <header className="shrink-0 bg-[#151515]/95 border-b border-white/10 px-4 sm:px-6 lg:px-10 py-2.5">
+      <header className="sticky top-0 z-30 shrink-0 bg-[#151515]/95 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-10 py-2.5">
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
           {/* 左：ロゴ ＆ 3ステップ進行ナビ */}
           <div className="flex items-center gap-4">
@@ -283,10 +283,15 @@ export const TackleBuilder: React.FC = () => {
             </nav>
           </div>
 
-          {/* 右：常駐 TARGET LOCK-ON HUD（常に釣る魚を意識させるパネル） */}
+          {/* 右：常駐 TARGET LOCK-ON HUD（常に釣る魚を意識させるリアル水中サムネイル付きパネル） */}
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center gap-2.5 px-3.5 py-1 rounded-full bg-[#222222] border border-[#00E5FF]/50">
-              <Fish className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+            <div className="flex items-center gap-2.5 pl-1.5 pr-3.5 py-1 rounded-full bg-[#222222] border border-[#00E5FF]/50">
+              <img
+                src={targetProfile.heroImage}
+                alt={targetProfile.fishName}
+                className="w-7 h-5 rounded-full object-cover border border-[#00E5FF]/60 shrink-0"
+              />
+              <Fish className="w-3.5 h-3.5 text-[#00E5FF] shrink-0 hidden sm:inline" />
               <span className="text-[10px] font-mono text-[#00E5FF] tracking-wider uppercase hidden sm:inline">
                 TARGET LOCKED:
               </span>
@@ -338,8 +343,8 @@ export const TackleBuilder: React.FC = () => {
         </div>
       </header>
 
-      {/* ==================== 中央メインステージ（1画面固定・スクロールレス領域） ==================== */}
-      <main className="flex-1 min-h-0 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 py-2 flex flex-col">
+      {/* ==================== 中央メインステージ ==================== */}
+      <main className="flex-1 min-h-0 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex flex-col">
         {/* -------------------- 【画面1】ホーム：何を釣るかを選択 -------------------- */}
         {route.view === 'home' && (
           <TargetSelectHomeView
@@ -356,27 +361,45 @@ export const TackleBuilder: React.FC = () => {
                 左ペイン (4 cols)：4つの装備スロット ＆ 対ターゲット総合戦闘力ゲージ
                ================================================================= */}
             <aside className="lg:col-span-4 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-4 space-y-3">
-              {/* 1. ターゲット魚種の攻略条件ミニHUD */}
-              <div className="rounded-xl bg-[#151515] border-l-2 border-l-[#00E5FF] border border-white/10 p-3 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-semibold text-[#00E5FF] tracking-wider flex items-center gap-1">
-                    <Crosshair className="w-3 h-3" />
-                    <span>VS {targetProfile.fishName}</span>
-                  </span>
-                  {customizedSlotsCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleResetToRecommended}
-                      className="text-[10px] text-[#A0A0A0] hover:text-[#00E5FF] flex items-center gap-1"
-                    >
-                      <RotateCcw className="w-2.5 h-2.5" />
-                      <span>推奨に戻す</span>
-                    </button>
-                  )}
+              {/* 1. ターゲット魚種のリアル水中ビジュアル付き攻略HUD */}
+              <div className="relative rounded-xl overflow-hidden bg-[#151515] border border-[#00E5FF]/50">
+                <div className="relative h-28 w-full overflow-hidden">
+                  <img
+                    src={targetProfile.heroImage}
+                    alt={targetProfile.fishName}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#151515] via-[#151515]/55 to-black/30" />
+                  <div className="absolute top-2 left-2.5 right-2.5 flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded-full bg-[#151515]/90 border border-[#00E5FF]/60 text-[10px] font-mono font-semibold text-[#00E5FF] tracking-wider flex items-center gap-1">
+                      <Crosshair className="w-3 h-3" />
+                      <span>VS TARGET MONSTER</span>
+                    </span>
+                    {customizedSlotsCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleResetToRecommended}
+                        className="px-2 py-0.5 rounded-full bg-[#151515]/90 border border-white/20 text-[10px] text-[#FFFFFF] hover:text-[#00E5FF] flex items-center gap-1"
+                      >
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        <span>推奨に戻す</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="absolute bottom-1.5 left-3 right-3">
+                    <div className="text-xs sm:text-sm font-bold text-[#FFFFFF] drop-shadow-md truncate">
+                      {targetProfile.fishName}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[11px] font-light text-[#FFFFFF]/90 leading-snug">
-                  {targetProfile.fishHabit}
-                </p>
+                <div className="p-2.5 pt-1.5 space-y-1">
+                  <p className="text-[11px] font-light text-[#FFFFFF]/90 leading-snug">
+                    {targetProfile.fishHabit}
+                  </p>
+                  <div className="text-[10px] text-[#00E5FF] font-medium">
+                    ★ 捕食ベイト: {targetProfile.baitSizeMm}
+                  </div>
+                </div>
               </div>
 
               {/* 2. 4つの装備スロット（クリックで比較対象カテゴリを即切替） */}

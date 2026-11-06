@@ -107,6 +107,13 @@ export interface RigState {
   lure: LurePart | null;
 }
 
+export interface TargetFishGalleryItem {
+  url: string;
+  label: string;
+  tag: string;
+  caption: string;
+}
+
 export interface TargetFishProfile {
   id: TargetId;
   code: string;
@@ -121,6 +128,10 @@ export interface TargetFishProfile {
   fishHabit: string;
   tacticalKey: string;
   summary: string;
+  heroImage: string;
+  catchCopy: string;
+  waterDepthText: string;
+  gallery: TargetFishGalleryItem[];
   rigIds: {
     reel: string;
     rod: string;
@@ -754,6 +765,29 @@ export const RIG_PRESETS: TargetFishProfile[] = [
     tacticalKey: '1日中振り抜ける「総重量の軽さ」と「ドラグ10kg領域の初動追従性」',
     summary:
       '14000番XGリール＋PE6号300m完全格納。針込96.5gの200mmプラグを軽快に振り抜き、不意の20kg級ヒラマサも主導権を渡さず獲る黄金構成。',
+    heroImage: './images/fish/target-pe6-hiramasa.jpg',
+    catchCopy: '水面を割る黄金のストライプ。初動3秒の根ズレを制圧せよ。',
+    waterDepthText: '水深 15〜60m // 表層ナブラ＆荒根カケアガリ',
+    gallery: [
+      {
+        url: './images/fish/target-pe6-hiramasa.jpg',
+        label: 'ヒラマサ＆キハダ 表層捕食',
+        tag: 'MAIN TARGET',
+        caption: 'トビウオを追い詰める大型ヒラマサとキハダマグロ。水しぶきが上がる瞬間の正確なキャストが勝負を分ける。',
+      },
+      {
+        url: './images/fish/sub-kihada.jpg',
+        label: 'キハダマグロ (20〜40kg)',
+        tag: 'YELLOWFIN',
+        caption: '黄金の第二背鰭をなびかせて回遊するキハダマグロ。ヒット後の疾走をATD/ヒートシンクドラグでいなす。',
+      },
+      {
+        url: './images/fish/bait-nabura.jpg',
+        label: '捕食ベイト・ナブラ沸騰',
+        tag: 'BAIT BALL',
+        caption: '水面下で渦巻くマイワシ・トビウオのベイトボールとシイラ。160〜200mmプラグが完全にシンクロする。',
+      },
+    ],
     rigIds: {
       reel: 'reel-stella-14000xg',
       rod: 'rod-aquila-82-36',
@@ -777,6 +811,29 @@ export const RIG_PRESETS: TargetFishProfile[] = [
     tacticalKey: '針込112g超の大型プラグを飛ばす「反発力」と「14kg負荷で根から剥がす剛性」',
     summary:
       '18000番HGリール＋PE8号300m完全格納。ナノアロイ採用のウルティモ83Mと針込112gのバズー200で大型魚を強引に浮かせ切るパワー構成。',
+    heroImage: './images/fish/target-pe8-bluefin.jpg',
+    catchCopy: '深淵から急浮上する黒き弾丸。時速55kmの暴力的なファーストラン。',
+    waterDepthText: '水深 40〜150m // 急潮流の潮目＆ディープ誘い出し',
+    gallery: [
+      {
+        url: './images/fish/target-pe8-bluefin.jpg',
+        label: '大型クロマグロ 急浮上バイト',
+        tag: 'BLUEFIN TUNA',
+        caption: '泡の渦を纏いながら海面へ突き上げる40〜80kg級クロマグロ。バズー200の重低音スプラッシュで強制浮上させる。',
+      },
+      {
+        url: './images/fish/target-pe6-hiramasa.jpg',
+        label: '20〜30kg超 オオマサ',
+        tag: 'GIANT KINGFISH',
+        caption: '玄界灘・男女群島の荒根に潜む20kgオーバーの巨体オオマサ。ドラグ14kg領域のガチンコ勝負が求められる。',
+      },
+      {
+        url: './images/fish/bait-nabura.jpg',
+        label: '大型シイラ・サンマ捕食',
+        tag: 'HEAVY BAIT',
+        caption: '秋〜冬の大型魚が偏食するシイラや大型サンマ。太軸#4/0フックを搭載した200mm超プラグが必須。',
+      },
+    ],
     rigIds: {
       reel: 'reel-stella-18000hg',
       rod: 'rod-ultimo-83m',
@@ -800,6 +857,29 @@ export const RIG_PRESETS: TargetFishProfile[] = [
     tacticalKey: '摩擦熱を防ぐ「耐熱PE10号＋放熱20000番」と「体重を乗せてリフトする支点設計」',
     summary:
       '20000番リール＋耐熱PE10号300mフル格納。針込141gの240mmモンスタープラグとスタンドアップ専用ロッドで100kg超を獲る決戦構成。',
+    heroImage: './images/fish/target-pe10-monster.jpg',
+    catchCopy: '海面が大爆発する極限の海域。100kg超の怪物と真っ向勝負。',
+    waterDepthText: '水深 10〜200m+ // 激流海峡＆シャローリーフエッジ',
+    gallery: [
+      {
+        url: './images/fish/target-pe10-monster.jpg',
+        label: '100kg超モンスター＆GT 水面炸裂',
+        tag: 'MONSTER BOIL',
+        caption: '荒波を割って跳躍する100kg超のモンスタークロマグロとGT。20000番リールとPE10号だけが許される極限の戦場。',
+      },
+      {
+        url: './images/fish/sub-gt.jpg',
+        label: '離島遠征 ロウニンアジ (GT)',
+        tag: 'GIANT TREVALLY',
+        caption: 'トカラ列島や南西諸島のシャローリーフを支配する鎧武者GT（ロウニンアジ）。一瞬の隙も許されない超パワーファイト。',
+      },
+      {
+        url: './images/fish/target-pe8-bluefin.jpg',
+        label: '垂直潜行する100kg超クロマグロ',
+        tag: 'ABYSS DIVE',
+        caption: 'ヒット後にドラグ17kgを引き出しながら深海へ疾走する巨体。耐熱SI-Xラインと放熱スプールが命綱となる。',
+      },
+    ],
     rigIds: {
       reel: 'reel-saltiga-20000h',
       rod: 'rod-bigtuna-83',
