@@ -721,7 +721,7 @@ export const TackleBuilder: React.FC = () => {
 
   const handleSaveAssociateTag = (e: React.FormEvent) => {
     e.preventDefault();
-    const cleaned = associateTagInput.trim() || 'rigs-offshore-22';
+    const cleaned = associateTagInput.trim() || 'rigsoffshore-22';
     setAssociateTag(cleaned);
     setActiveAssociateTag(cleaned);
     setAssociateTagInput(cleaned);

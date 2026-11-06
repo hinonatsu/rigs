@@ -7,17 +7,17 @@
  */
 
 export const DEFAULT_AMAZON_ASSOCIATE_TAG =
-  import.meta.env.VITE_AMAZON_ASSOCIATE_TAG || 'rigs-offshore-22';
+  import.meta.env.VITE_AMAZON_ASSOCIATE_TAG || 'rigsoffshore-22';
 
 const STORAGE_KEY = 'rigs_amazon_associate_tag';
 
 /**
- * 現在有効なAmazonアソシエイト・トラッキングID（例: `xxxx-22`）を取得します。
+ * 現在有効なAmazonアソシエイト・トラッキングID（例: `rigsoffshore-22`）を取得します。
  */
 export function getAssociateTag(): string {
   if (typeof window !== 'undefined') {
     const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved && saved.trim().length > 0) {
+    if (saved && saved.trim().length > 0 && saved.trim() !== 'rigs-offshore-22') {
       return saved.trim();
     }
   }
