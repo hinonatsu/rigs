@@ -8,11 +8,8 @@ import {
   ChevronRight,
   ExternalLink,
   Globe,
-  Moon,
   RotateCcw,
-  ShieldCheck,
   Sparkles,
-  Sun,
   X,
 } from 'lucide-react';
 import { buildAmazonAffiliateUrl } from '../config/amazonAssociate';
@@ -44,7 +41,6 @@ import { TargetSelectHomeView } from './CatalogAndHubViews';
 import {
   resolvePartStudioImage,
   RigPartShowcase,
-  StudioTheme,
   TeslaHeroConfiguratorStage,
 } from './RigPartShowcase';
 import { SpecCheckoutView } from './SpecCheckoutView';
@@ -64,9 +60,6 @@ export const TackleBuilder: React.FC = () => {
   const [route, setRoute] = useState<RouteState>(initialParsed.route);
   const [rig, setRig] = useState<RigState>(initialParsed.rig);
   const [headerUrlCopied, setHeaderUrlCopied] = useState(false);
-
-  // Day (白スタジオ: Tesla標準) / Night (ダークスタジオ) テーマ切り替え
-  const [theme, setTheme] = useState<StudioTheme>('day');
 
   // メインフォトステージのカルーセルスライド番号 (0: ロッド×リール統合, 1: リール単体, 2: ロッド単体, 3: ライン&ルアー, 4: ターゲット魚)
   const [activeSlide, setActiveSlide] = useState<number>(0);
@@ -158,19 +151,16 @@ export const TackleBuilder: React.FC = () => {
     const currentReel = rig.reel ?? recommendedRig.reel!;
     const currentRod = rig.rod ?? recommendedRig.rod!;
 
-    // リール番手に適合するロッドが選ばれていなければ適合ロッドへ
     const matchedRod = currentRod.compatibleReelSizes.includes(currentReel.sizeClass)
       ? currentRod
       : ROD_CATALOG.find((r) => r.compatibleReelSizes.includes(currentReel.sizeClass)) ??
         currentRod;
 
-    // リールのPE容量と一致するラインを選択
     const matchedLine =
       LINE_CATALOG.find((l) => l.peNumber === currentReel.peCapacityNum) ??
       rig.line ??
       recommendedRig.line!;
 
-    // ロッドの許容重量とライン号数に適合するルアーを選択
     const matchedLure =
       LURE_CATALOG.find(
         (lu) =>
@@ -252,8 +242,6 @@ export const TackleBuilder: React.FC = () => {
     setTimeout(() => setHeaderUrlCopied(false), 2500);
   };
 
-  const isDay = theme === 'day' && route.view === 'garage';
-
   // フィーチャーモーダル用の4大ハイライト定義
   const featureHighlights = useMemo(() => {
     const reel = rig.reel!;
@@ -299,21 +287,9 @@ export const TackleBuilder: React.FC = () => {
   }, [rig]);
 
   return (
-    <div
-      className={`min-h-dvh font-sans antialiased flex flex-col justify-between transition-colors duration-300 ${
-        isDay
-          ? 'bg-white text-[#171A20] selection:bg-[#3E6AE1] selection:text-white'
-          : 'bg-[#151515] text-white selection:bg-[#00E5FF] selection:text-[#151515]'
-      }`}
-    >
-      {/* ==================== 上部ヘッダー：Tesla Minimal Navigation ==================== */}
-      <header
-        className={`sticky top-0 z-30 shrink-0 px-4 sm:px-8 lg:px-12 py-3.5 transition-colors duration-300 ${
-          isDay
-            ? 'bg-white/95 backdrop-blur-md border-b border-black/5'
-            : 'bg-[#151515]/90 backdrop-blur-xl border-b border-white/10'
-        }`}
-      >
+    <div className="min-h-dvh bg-white text-[#171A20] font-sans antialiased selection:bg-[#3E6AE1] selection:text-white flex flex-col justify-between">
+      {/* ==================== 上部ヘッダー：Tesla Minimal Navigation (白スタジオ統一) ==================== */}
+      <header className="sticky top-0 z-30 shrink-0 bg-white/95 backdrop-blur-md border-b border-black/5 px-4 sm:px-8 lg:px-12 py-3.5">
         <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-4">
           {/* 左：Tesla ワイドレタースペーシング風ブランドロゴ */}
           <div className="flex items-center gap-8">
@@ -322,13 +298,7 @@ export const TackleBuilder: React.FC = () => {
               onClick={() => navigateTo({ view: 'garage' })}
               className="flex items-center gap-2 text-left group"
             >
-              <span
-                className={`font-oswald text-lg sm:text-xl font-bold tracking-[0.42em] transition-colors ${
-                  isDay
-                    ? 'text-[#171A20] group-hover:text-[#3E6AE1]'
-                    : 'text-white group-hover:text-[#00E5FF]'
-                }`}
-              >
+              <span className="font-oswald text-lg sm:text-xl font-bold tracking-[0.42em] text-[#171A20] group-hover:text-[#3E6AE1] transition-colors">
                 R I G s
               </span>
             </button>
@@ -349,12 +319,8 @@ export const TackleBuilder: React.FC = () => {
                     onClick={() => navigateTo({ view: phase.id })}
                     className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                       isActive
-                        ? isDay
-                          ? 'bg-[#F4F4F4] text-[#171A20] font-semibold'
-                          : 'bg-white/15 text-white font-semibold'
-                        : isDay
-                        ? 'text-[#5C5E62] hover:text-[#171A20] hover:bg-[#F4F4F4]/60'
-                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'bg-[#F4F4F4] text-[#171A20] font-semibold'
+                        : 'text-[#5C5E62] hover:text-[#171A20] hover:bg-[#F4F4F4]/60'
                     }`}
                   >
                     {phase.label}
@@ -364,41 +330,38 @@ export const TackleBuilder: React.FC = () => {
             </nav>
           </div>
 
-          {/* 右：Day/Night スタジオ切替 ＆ URL共有 ＆ 🌐 JP */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            {route.view === 'garage' && (
-              <button
-                type="button"
-                onClick={() => setTheme((prev) => (prev === 'day' ? 'night' : 'day'))}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  isDay
-                    ? 'bg-[#F4F4F4] hover:bg-[#E8E8EA] text-[#171A20]'
-                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/15'
-                }`}
-                title="白スタジオ(Day) / ダークスタジオ(Night) を切り替え"
-              >
-                {theme === 'day' ? (
-                  <>
-                    <Sun className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="hidden sm:inline">白スタジオ</span>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="w-3.5 h-3.5 text-[#00E5FF]" />
-                    <span className="hidden sm:inline">ダークスタジオ</span>
-                  </>
-                )}
-              </button>
-            )}
+          {/* 右：モバイル用ナビ ＆ 🌐 JP (URL共有) */}
+          <div className="flex items-center gap-2">
+            <div className="flex md:hidden items-center gap-1">
+              {(
+                [
+                  { id: 'garage' as PageView, label: 'ビルド' },
+                  { id: 'home' as PageView, label: '魚種' },
+                  { id: 'checkout' as PageView, label: '注文' },
+                ] as const
+              ).map((phase) => {
+                const isActive = route.view === phase.id;
+                return (
+                  <button
+                    key={phase.id}
+                    type="button"
+                    onClick={() => navigateTo({ view: phase.id })}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${
+                      isActive
+                        ? 'bg-[#171A20] text-white'
+                        : 'bg-[#F4F4F4] text-[#5C5E62]'
+                    }`}
+                  >
+                    {phase.label}
+                  </button>
+                );
+              })}
+            </div>
 
             <button
               type="button"
               onClick={handleCopyShareUrl}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                isDay
-                  ? 'text-[#171A20] hover:bg-[#F4F4F4]'
-                  : 'text-white/80 hover:bg-white/10'
-              }`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#171A20] hover:bg-[#F4F4F4] transition-colors"
               title="現在のカスタム構成URLをコピー"
             >
               {headerUrlCopied ? (
@@ -418,7 +381,7 @@ export const TackleBuilder: React.FC = () => {
       </header>
 
       {/* ==================== メインステージ ==================== */}
-      <main className="flex-1 min-h-0 w-full flex flex-col">
+      <main className="flex-1 min-h-0 w-full flex flex-col bg-white">
         {/* -------------------- 【画面1】ターゲット魚種ガイド画面 -------------------- */}
         {route.view === 'home' && (
           <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 flex-1 flex flex-col">
@@ -431,7 +394,7 @@ export const TackleBuilder: React.FC = () => {
         )}
 
         {/* =================================================================
-            【画面2】Tesla Model 3 型 スプリット・コンフィギュレーター
+            【画面2】Tesla Model 3 型 スプリット・コンフィギュレーター（白スタジオ統一）
             ・左 8 cols (Sticky固定): ロッド＆リール スタジオ写真 ＋ 引き出し線コールアウト [＋] ＋ < ● ○ ○ ○ ○ >
             ・右 4 cols (縦スクロール): ロッド・リール中心の大型セレクター ＋ ライン・ルアー丸型スウォッチ
            ================================================================= */}
@@ -440,17 +403,10 @@ export const TackleBuilder: React.FC = () => {
             {/* -----------------------------------------------------------------
                 左ペイン (PC: 8 cols Sticky / モバイル: 上部固定フォトステージ)
                ----------------------------------------------------------------- */}
-            <div
-              className={`lg:col-span-8 lg:sticky lg:top-[57px] lg:h-[calc(100dvh-137px)] w-full flex flex-col justify-between z-20 ${
-                isDay
-                  ? 'bg-white border-b lg:border-b-0 border-black/5'
-                  : 'bg-[#111215] border-b lg:border-b-0 border-white/10'
-              }`}
-            >
+            <div className="lg:col-span-8 lg:sticky lg:top-[57px] lg:h-[calc(100dvh-137px)] w-full flex flex-col justify-between z-20 bg-white border-b lg:border-b-0 border-black/5">
               <TeslaHeroConfiguratorStage
                 rig={rig}
                 target={targetProfile}
-                theme={theme}
                 activeSlide={activeSlide}
                 onChangeSlide={(idx) => setActiveSlide(idx)}
                 onOpenFeatureModal={(featIdx) => setFeatureModalIndex(featIdx ?? 0)}
@@ -463,19 +419,11 @@ export const TackleBuilder: React.FC = () => {
                ----------------------------------------------------------------- */}
             <div className="lg:col-span-4 w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 pb-28">
               {/* 1. モバイル専用：添付画像2枚目の「機能を表示する ＞」枠ボックス */}
-              <div
-                className={` sm:hidden rounded-xl border-2 p-2.5 ${
-                  isDay ? 'border-[#171A20] bg-white' : 'border-white/30 bg-[#1C1D21]'
-                }`}
-              >
+              <div className="sm:hidden rounded-xl border-2 border-[#171A20] bg-white p-2.5">
                 <button
                   type="button"
                   onClick={() => setFeatureModalIndex(0)}
-                  className={`w-full rounded-lg px-4 py-3 flex items-center justify-between text-sm font-medium transition-colors ${
-                    isDay
-                      ? 'bg-[#F4F4F4] text-[#171A20] hover:bg-[#E8E8EA]'
-                      : 'bg-white/10 text-white hover:bg-white/15'
-                  }`}
+                  className="w-full rounded-lg px-4 py-3 flex items-center justify-between text-sm font-medium bg-[#F4F4F4] text-[#171A20] hover:bg-[#E8E8EA] transition-colors"
                 >
                   <span>機能を表示する</span>
                   <ChevronRight className="w-4 h-4" />
@@ -483,20 +431,10 @@ export const TackleBuilder: React.FC = () => {
               </div>
 
               {/* 2. ターゲットクラス切替 ＆「タックル仕様を比較する ＞」カード */}
-              <div
-                className={`rounded-2xl p-5 sm:p-6 space-y-4 transition-colors ${
-                  isDay
-                    ? 'bg-[#F4F4F4] text-[#171A20]'
-                    : 'bg-[#1C1D21] text-white border border-white/10'
-                }`}
-              >
+              <div className="rounded-2xl p-5 sm:p-6 space-y-4 bg-[#F4F4F4] text-[#171A20]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span
-                      className={`text-[11px] font-oswald tracking-widest uppercase block ${
-                        isDay ? 'text-[#5C5E62]' : 'text-white/50'
-                      }`}
-                    >
+                    <span className="text-[11px] font-oswald tracking-widest uppercase block text-[#5C5E62]">
                       TARGET CLASS // 推奨基準クラス
                     </span>
                     <h2 className="text-base font-bold mt-0.5">
@@ -507,11 +445,7 @@ export const TackleBuilder: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleResetToRecommended}
-                      className={`text-xs font-medium px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
-                        isDay
-                          ? 'bg-white text-[#5C5E62] hover:text-[#171A20] shadow-sm'
-                          : 'bg-white/10 text-white/70 hover:text-white'
-                      }`}
+                      className="text-xs font-medium px-2.5 py-1 rounded-md flex items-center gap-1 bg-white text-[#5C5E62] hover:text-[#171A20] shadow-sm transition-colors"
                     >
                       <RotateCcw className="w-3 h-3" />
                       <span>推奨に戻す</span>
@@ -542,22 +476,14 @@ export const TackleBuilder: React.FC = () => {
                         onClick={() => handleSelectTarget(preset.id, 'garage')}
                         className={`rounded-xl p-2.5 text-left transition-all ${
                           isSelectedTarget
-                            ? isDay
-                              ? 'bg-white border-2 border-[#171A20] shadow-sm'
-                              : 'bg-[#26282E] border-2 border-[#00E5FF]'
-                            : isDay
-                            ? 'bg-white/60 border border-black/10 hover:bg-white'
-                            : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                            ? 'bg-white border-2 border-[#171A20] shadow-sm'
+                            : 'bg-white/60 border border-black/10 hover:bg-white'
                         }`}
                       >
                         <div className="font-oswald text-xs font-bold tracking-wider">
                           {shortLabel}
                         </div>
-                        <div
-                          className={`text-[10px] truncate mt-0.5 ${
-                            isDay ? 'text-[#5C5E62]' : 'text-white/60'
-                          }`}
-                        >
+                        <div className="text-[10px] truncate mt-0.5 text-[#5C5E62]">
                           {subFish}
                         </div>
                       </button>
@@ -569,11 +495,7 @@ export const TackleBuilder: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCompareModalOpen(true)}
-                  className={`w-full rounded-xl px-4 py-3.5 flex items-center justify-between text-xs sm:text-sm font-medium transition-all ${
-                    isDay
-                      ? 'bg-white hover:bg-[#FAFAFA] text-[#171A20] shadow-sm'
-                      : 'bg-white/10 hover:bg-white/15 text-white'
-                  }`}
+                  className="w-full rounded-xl px-4 py-3.5 flex items-center justify-between text-xs sm:text-sm font-medium bg-white hover:bg-[#FAFAFA] text-[#171A20] shadow-sm transition-all"
                 >
                   <span>タックル仕様を比較する</span>
                   <ChevronRight className="w-4 h-4" />
@@ -581,13 +503,7 @@ export const TackleBuilder: React.FC = () => {
 
                 {/* 番手不一致がある場合のワンタップ自動最適化アシスト */}
                 {!isAllSelectedCompatible && (
-                  <div
-                    className={`rounded-xl p-3.5 flex items-center justify-between gap-3 ${
-                      isDay
-                        ? 'bg-amber-50 border border-amber-200 text-amber-900'
-                        : 'bg-amber-500/15 border border-amber-500/30 text-amber-200'
-                    }`}
-                  >
+                  <div className="rounded-xl p-3.5 flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 text-amber-900">
                     <div className="flex items-center gap-2 text-xs">
                       <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
                       <span>選択中のリール番手とライン/ロッドに不一致があります</span>
@@ -608,11 +524,7 @@ export const TackleBuilder: React.FC = () => {
                  ================================================================= */}
               <section
                 aria-label="リール選択"
-                className={`rounded-2xl p-5 sm:p-6 space-y-5 transition-colors ${
-                  isDay
-                    ? 'bg-[#F4F4F4] text-[#171A20]'
-                    : 'bg-[#1C1D21] text-white border border-white/10'
-                }`}
+                className="rounded-2xl p-5 sm:p-6 space-y-5 bg-[#F4F4F4] text-[#171A20]"
               >
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -622,11 +534,7 @@ export const TackleBuilder: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveSlide(1)}
-                      className={`text-xs font-medium underline underline-offset-4 ${
-                        isDay
-                          ? 'text-[#5C5E62] hover:text-[#171A20]'
-                          : 'text-white/60 hover:text-white'
-                      }`}
+                      className="text-xs font-medium underline underline-offset-4 text-[#5C5E62] hover:text-[#171A20]"
                     >
                       単体写真を拡大
                     </button>
@@ -642,11 +550,7 @@ export const TackleBuilder: React.FC = () => {
                     </div>
                   </div>
 
-                  <div
-                    className={`text-xs ${
-                      isDay ? 'text-[#5C5E62]' : 'text-white/60'
-                    }`}
-                  >
+                  <div className="text-xs text-[#5C5E62]">
                     {rig.reel?.sizeClass}番 ・ 最大ドラグ {rig.reel?.dragMaxKg}kg ・ 自重{' '}
                     {rig.reel?.weightG}g ・ 1回転 {rig.reel?.retrieveCm}cm
                   </div>
@@ -669,34 +573,22 @@ export const TackleBuilder: React.FC = () => {
                         }
                         className={`group relative rounded-xl p-3 text-left transition-all flex flex-col justify-between ${
                           isSelected
-                            ? isDay
-                              ? 'bg-white ring-2 ring-[#171A20] shadow-md'
-                              : 'bg-[#26282E] ring-2 ring-[#00E5FF] shadow-lg'
-                            : isDay
-                            ? 'bg-white/80 hover:bg-white border border-black/5'
-                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                            ? 'bg-white ring-2 ring-[#171A20] shadow-md'
+                            : 'bg-white/80 hover:bg-white border border-black/5'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-1 mb-1.5">
                           <span
                             className={`font-oswald text-[10px] font-bold px-2 py-0.5 rounded-full ${
                               isSelected
-                                ? isDay
-                                  ? 'bg-[#171A20] text-white'
-                                  : 'bg-[#00E5FF] text-[#111215]'
-                                : isDay
-                                ? 'bg-[#F4F4F4] text-[#5C5E62]'
-                                : 'bg-white/10 text-white/70'
+                                ? 'bg-[#171A20] text-white'
+                                : 'bg-[#F4F4F4] text-[#5C5E62]'
                             }`}
                           >
                             #{reelItem.sizeClass}
                           </span>
                           {isBase && (
-                            <span
-                              className={`text-[10px] font-medium ${
-                                isDay ? 'text-[#3E6AE1]' : 'text-[#00E5FF]'
-                              }`}
-                            >
+                            <span className="text-[10px] font-medium text-[#3E6AE1]">
                               標準推奨
                             </span>
                           )}
@@ -706,15 +598,10 @@ export const TackleBuilder: React.FC = () => {
                           part={reelItem}
                           isSelected={isSelected}
                           size="md"
-                          theme={theme}
                         />
 
                         <div className="mt-2.5 space-y-0.5">
-                          <div
-                            className={`text-[10px] font-medium ${
-                              isDay ? 'text-[#5C5E62]' : 'text-white/50'
-                            }`}
-                          >
+                          <div className="text-[10px] font-medium text-[#5C5E62]">
                             {reelItem.brand}
                           </div>
                           <div className="text-xs sm:text-[13px] font-semibold truncate">
@@ -724,11 +611,7 @@ export const TackleBuilder: React.FC = () => {
                             <span className="font-oswald text-xs font-bold tabular-nums">
                               ¥{reelItem.price.toLocaleString()}
                             </span>
-                            <span
-                              className={`text-[10px] font-oswald ${
-                                isDay ? 'text-[#5C5E62]' : 'text-white/50'
-                              }`}
-                            >
+                            <span className="text-[10px] font-oswald text-[#5C5E62]">
                               PE{reelItem.peCapacityNum}号
                             </span>
                           </div>
@@ -744,11 +627,7 @@ export const TackleBuilder: React.FC = () => {
                  ================================================================= */}
               <section
                 aria-label="ロッド選択"
-                className={`rounded-2xl p-5 sm:p-6 space-y-5 transition-colors ${
-                  isDay
-                    ? 'bg-[#F4F4F4] text-[#171A20]'
-                    : 'bg-[#1C1D21] text-white border border-white/10'
-                }`}
+                className="rounded-2xl p-5 sm:p-6 space-y-5 bg-[#F4F4F4] text-[#171A20]"
               >
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -758,11 +637,7 @@ export const TackleBuilder: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveSlide(2)}
-                      className={`text-xs font-medium underline underline-offset-4 ${
-                        isDay
-                          ? 'text-[#5C5E62] hover:text-[#171A20]'
-                          : 'text-white/60 hover:text-white'
-                      }`}
+                      className="text-xs font-medium underline underline-offset-4 text-[#5C5E62] hover:text-[#171A20]"
                     >
                       単体写真を拡大
                     </button>
@@ -778,11 +653,7 @@ export const TackleBuilder: React.FC = () => {
                     </div>
                   </div>
 
-                  <div
-                    className={`text-xs ${
-                      isDay ? 'text-[#5C5E62]' : 'text-white/60'
-                    }`}
-                  >
+                  <div className="text-xs text-[#5C5E62]">
                     {rig.rod?.lengthFt} ・ ルアー {rig.rod?.lureMinG}〜{rig.rod?.lureMaxG}g ・
                     耐荷重 {rig.rod?.dragMaxKg}kg ・ 自重 {rig.rod?.weightG}g
                   </div>
@@ -807,37 +678,23 @@ export const TackleBuilder: React.FC = () => {
                         }
                         className={`group relative rounded-xl p-3 text-left transition-all flex flex-col justify-between ${
                           isSelected
-                            ? isDay
-                              ? 'bg-white ring-2 ring-[#171A20] shadow-md'
-                              : 'bg-[#26282E] ring-2 ring-[#00E5FF] shadow-lg'
-                            : isDay
-                            ? 'bg-white/80 hover:bg-white border border-black/5'
-                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                            ? 'bg-white ring-2 ring-[#171A20] shadow-md'
+                            : 'bg-white/80 hover:bg-white border border-black/5'
                         } ${!isReelMatched && !isSelected ? 'opacity-75' : ''}`}
                       >
                         <div className="flex items-center justify-between gap-1 mb-1.5">
                           <span
                             className={`font-oswald text-[10px] font-bold px-2 py-0.5 rounded-full ${
                               isSelected
-                                ? isDay
-                                  ? 'bg-[#171A20] text-white'
-                                  : 'bg-[#00E5FF] text-[#111215]'
-                                : isDay
-                                ? 'bg-[#F4F4F4] text-[#5C5E62]'
-                                : 'bg-white/10 text-white/70'
+                                ? 'bg-[#171A20] text-white'
+                                : 'bg-[#F4F4F4] text-[#5C5E62]'
                             }`}
                           >
                             MAX {rodItem.lureMaxG}g
                           </span>
                           <span
                             className={`text-[10px] font-medium ${
-                              isReelMatched
-                                ? isDay
-                                  ? 'text-emerald-700'
-                                  : 'text-emerald-400'
-                                : isDay
-                                ? 'text-amber-600'
-                                : 'text-amber-300'
+                              isReelMatched ? 'text-emerald-700' : 'text-amber-600'
                             }`}
                           >
                             {isReelMatched
@@ -850,15 +707,10 @@ export const TackleBuilder: React.FC = () => {
                           part={rodItem}
                           isSelected={isSelected}
                           size="md"
-                          theme={theme}
                         />
 
                         <div className="mt-2.5 space-y-0.5">
-                          <div
-                            className={`text-[10px] font-medium truncate ${
-                              isDay ? 'text-[#5C5E62]' : 'text-white/50'
-                            }`}
-                          >
+                          <div className="text-[10px] font-medium truncate text-[#5C5E62]">
                             {rodItem.brand}
                           </div>
                           <div className="text-xs sm:text-[13px] font-semibold truncate">
@@ -868,11 +720,7 @@ export const TackleBuilder: React.FC = () => {
                             <span className="font-oswald text-xs font-bold tabular-nums">
                               ¥{rodItem.price.toLocaleString()}
                             </span>
-                            <span
-                              className={`text-[10px] font-oswald ${
-                                isDay ? 'text-[#5C5E62]' : 'text-white/50'
-                              }`}
-                            >
+                            <span className="text-[10px] font-oswald text-[#5C5E62]">
                               PE{rodItem.minPe}-{rodItem.maxPe}
                             </span>
                           </div>
@@ -888,11 +736,7 @@ export const TackleBuilder: React.FC = () => {
                  ================================================================= */}
               <section
                 aria-label="ライン＆ルアー選択"
-                className={`rounded-2xl p-5 sm:p-6 space-y-6 transition-colors ${
-                  isDay
-                    ? 'bg-[#F4F4F4] text-[#171A20]'
-                    : 'bg-[#1C1D21] text-white border border-white/10'
-                }`}
+                className="rounded-2xl p-5 sm:p-6 space-y-6 bg-[#F4F4F4] text-[#171A20]"
               >
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
@@ -901,11 +745,7 @@ export const TackleBuilder: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveSlide(3)}
-                    className={`text-xs font-medium underline underline-offset-4 ${
-                      isDay
-                        ? 'text-[#5C5E62] hover:text-[#171A20]'
-                        : 'text-white/60 hover:text-white'
-                    }`}
+                    className="text-xs font-medium underline underline-offset-4 text-[#5C5E62] hover:text-[#171A20]"
                   >
                     写真を表示
                   </button>
@@ -916,11 +756,7 @@ export const TackleBuilder: React.FC = () => {
                   <div className="flex items-baseline justify-between gap-2">
                     <div>
                       <div className="text-sm font-medium">{rig.line?.shortName}</div>
-                      <div
-                        className={`text-[11px] mt-0.5 ${
-                          isDay ? 'text-[#5C5E62]' : 'text-white/55'
-                        }`}
-                      >
+                      <div className="text-[11px] mt-0.5 text-[#5C5E62]">
                         ＋ {rig.line?.pairedLeaderSpec}
                       </div>
                     </div>
@@ -942,9 +778,7 @@ export const TackleBuilder: React.FC = () => {
                             aria-label={lineItem.shortName}
                             className={`group relative w-14 h-14 rounded-full p-0.5 transition-all duration-200 ${
                               isSelected
-                                ? isDay
-                                  ? 'ring-2 ring-[#171A20] ring-offset-2 ring-offset-[#F4F4F4] scale-105'
-                                  : 'ring-2 ring-[#00E5FF] ring-offset-2 ring-offset-[#1C1D21] scale-105'
+                                ? 'ring-2 ring-[#171A20] ring-offset-2 ring-offset-[#F4F4F4] scale-105'
                                 : 'opacity-80 hover:opacity-100 hover:scale-105'
                             }`}
                           >
@@ -952,7 +786,6 @@ export const TackleBuilder: React.FC = () => {
                               part={lineItem}
                               isSelected={isSelected}
                               size="swatch"
-                              theme={theme}
                             />
                             <span
                               className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full font-oswald text-[10px] font-bold shadow ${
@@ -973,7 +806,6 @@ export const TackleBuilder: React.FC = () => {
                             )}
                           </button>
 
-                          {/* Tesla添付画像1枚目の黒い吹き出しラベル再現 */}
                           {isSelected && (
                             <span className="mt-2 px-2 py-0.5 rounded bg-[#222222] text-white text-[10px] font-medium whitespace-nowrap shadow-sm">
                               PE{lineItem.peNumber}号 ({lineItem.strengthLb}lb)
@@ -985,22 +817,14 @@ export const TackleBuilder: React.FC = () => {
                   </div>
                 </div>
 
-                <div
-                  className={`h-[1px] w-full ${
-                    isDay ? 'bg-black/10' : 'bg-white/10'
-                  }`}
-                />
+                <div className="h-[1px] w-full bg-black/10" />
 
                 {/* -------- 5-B. オフショアルアー（丸型スウォッチ選択） -------- */}
                 <div className="space-y-3">
                   <div className="flex items-baseline justify-between gap-2">
                     <div>
                       <div className="text-sm font-medium">{rig.lure?.shortName}</div>
-                      <div
-                        className={`text-[11px] mt-0.5 ${
-                          isDay ? 'text-[#5C5E62]' : 'text-white/55'
-                        }`}
-                      >
+                      <div className="text-[11px] mt-0.5 text-[#5C5E62]">
                         実戦総重量 {rig.lure?.totalWeightG}g ({rig.lure?.hookSpec})
                       </div>
                     </div>
@@ -1022,9 +846,7 @@ export const TackleBuilder: React.FC = () => {
                             aria-label={lureItem.shortName}
                             className={`group relative w-14 h-14 rounded-full p-0.5 transition-all duration-200 ${
                               isSelected
-                                ? isDay
-                                  ? 'ring-2 ring-[#171A20] ring-offset-2 ring-offset-[#F4F4F4] scale-105'
-                                  : 'ring-2 ring-[#00E5FF] ring-offset-2 ring-offset-[#1C1D21] scale-105'
+                                ? 'ring-2 ring-[#171A20] ring-offset-2 ring-offset-[#F4F4F4] scale-105'
                                 : 'opacity-80 hover:opacity-100 hover:scale-105'
                             }`}
                           >
@@ -1032,7 +854,6 @@ export const TackleBuilder: React.FC = () => {
                               part={lureItem}
                               isSelected={isSelected}
                               size="swatch"
-                              theme={theme}
                             />
                             <span
                               className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full font-oswald text-[10px] font-bold shadow ${
@@ -1091,28 +912,16 @@ export const TackleBuilder: React.FC = () => {
       </main>
 
       {/* =================================================================
-          最下部固定：Tesla Model 3 スタイル 決済・サマリーバー
+          最下部固定：Tesla Model 3 スタイル 決済・サマリーバー（白ベース統一）
           ・左：ロッド × リール 構成タイトル ＆ サブ構成
           ・右：¥218,500 ∨ (購入参考価格) ＋ 青い「今すぐ注文」ボタン (#3E6AE1)
          ================================================================= */}
       {route.view !== 'home' && (
-        <footer
-          className={`sticky bottom-0 z-40 shrink-0 px-4 sm:px-8 lg:px-12 py-3.5 transition-colors duration-300 ${
-            isDay
-              ? 'bg-white border-t border-black/10 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] text-[#171A20]'
-              : 'bg-[#151515]/95 backdrop-blur-xl border-t border-white/10 text-white'
-          }`}
-        >
+        <footer className="sticky bottom-0 z-40 shrink-0 px-4 sm:px-8 lg:px-12 py-3.5 bg-white border-t border-black/10 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] text-[#171A20]">
           {/* 価格内訳ポップオーバー（¥218,500 ∨ をクリックした時に展開） */}
           {isPriceBreakdownOpen && (
-            <div
-              className={`max-w-[1680px] mx-auto mb-3 p-4 rounded-2xl border shadow-xl transition-all ${
-                isDay
-                  ? 'bg-[#F8F9FA] border-black/10 text-[#171A20]'
-                  : 'bg-[#222222] border-white/15 text-white'
-              }`}
-            >
-              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-current/10">
+            <div className="max-w-[1680px] mx-auto mb-3 p-4 rounded-2xl border border-black/10 bg-[#F8F9FA] text-[#171A20] shadow-xl transition-all">
+              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-black/10">
                 <span className="text-xs font-bold tracking-wider uppercase">
                   選択中の4点構成 価格内訳（税込・Amazon参考価格）
                 </span>
@@ -1130,12 +939,10 @@ export const TackleBuilder: React.FC = () => {
                   return (
                     <div
                       key={cat}
-                      className={`p-3 rounded-xl flex items-center justify-between gap-2 ${
-                        isDay ? 'bg-white border border-black/5' : 'bg-[#151515] border border-white/10'
-                      }`}
+                      className="p-3 rounded-xl flex items-center justify-between gap-2 bg-white border border-black/5"
                     >
                       <div className="min-w-0">
-                        <div className="text-[10px] opacity-60 uppercase">{cat}</div>
+                        <div className="text-[10px] text-[#5C5E62] uppercase">{cat}</div>
                         <div className="font-medium truncate">{p.shortName}</div>
                       </div>
                       <div className="text-right shrink-0">
@@ -1166,19 +973,11 @@ export const TackleBuilder: React.FC = () => {
                 <span className="text-lg font-bold tracking-tight truncate">
                   {rig.rod?.shortName} × {rig.reel?.shortName}
                 </span>
-                <span
-                  className={`text-xs font-normal ${
-                    isDay ? 'text-[#5C5E62]' : 'text-white/60'
-                  }`}
-                >
+                <span className="text-xs font-normal text-[#5C5E62]">
                   {targetProfile.badge}
                 </span>
               </div>
-              <div
-                className={`text-xs truncate mt-0.5 ${
-                  isDay ? 'text-[#5C5E62]' : 'text-white/60'
-                }`}
-              >
+              <div className="text-xs truncate mt-0.5 text-[#5C5E62]">
                 {rig.line?.shortName} ・ {rig.lure?.shortName} ・ 総重量 {totalWeightG}g
               </div>
             </div>
@@ -1201,11 +1000,7 @@ export const TackleBuilder: React.FC = () => {
                     }`}
                   />
                 </div>
-                <div
-                  className={`text-[11px] ${
-                    isDay ? 'text-[#5C5E62]' : 'text-white/55'
-                  }`}
-                >
+                <div className="text-[11px] text-[#5C5E62]">
                   購入価格（4点合計）
                 </div>
               </button>
@@ -1237,7 +1032,7 @@ export const TackleBuilder: React.FC = () => {
          ================================================================= */}
       {featureModalIndex !== null && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setFeatureModalIndex(null)}
         >
           <div
@@ -1338,7 +1133,7 @@ export const TackleBuilder: React.FC = () => {
          ================================================================= */}
       {isCompareModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
           onClick={() => setIsCompareModalOpen(false)}
         >
           <div
@@ -1363,7 +1158,6 @@ export const TackleBuilder: React.FC = () => {
               </button>
             </div>
 
-            {/* 比較カテゴリ切り替えタブ */}
             <div className="flex items-center gap-2">
               {CATEGORY_ORDER.map((cat) => (
                 <button
@@ -1381,7 +1175,6 @@ export const TackleBuilder: React.FC = () => {
               ))}
             </div>
 
-            {/* 選択中カテゴリのスペック差分 */}
             <div className="rounded-2xl bg-[#F4F4F4] p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-bold">
@@ -1417,7 +1210,6 @@ export const TackleBuilder: React.FC = () => {
               </div>
             </div>
 
-            {/* 5項目 総合戦闘力テレメトリー */}
             <div className="space-y-3">
               <h4 className="text-sm font-bold flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-[#3E6AE1]" />

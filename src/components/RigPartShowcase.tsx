@@ -2,13 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { AnyRigPart, RigState, TargetFishProfile } from '../data/rigCatalog';
 
-export type StudioTheme = 'day' | 'night';
-
 interface RigPartShowcaseProps {
   part: AnyRigPart;
   isSelected?: boolean;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'checkout' | 'swatch';
-  theme?: StudioTheme;
 }
 
 const LOCAL_FALLBACK_MAP: Record<string, string> = {
@@ -37,14 +34,13 @@ export function resolvePartStudioImage(part: AnyRigPart, useFallback = false): s
 }
 
 /**
- * Tesla / Apple スタイルのクリーンな白スタジオ背景を活かしたプロダクト・ショーケース
- * 白背景スタジオ写真に mix-blend-multiply を適用することで、金属光沢・シルバー・ホログラムを一切損なわずに背景へ溶け込ませる
+ * Tesla スタイルのクリーンな白スタジオ背景を活かしたプロダクト・ショーケース
+ * 白背景スタジオ写真に mix-blend-multiply を適用し、金属光沢・シルバー・ホログラムを損なわずに背景へ溶け込ませる
  */
 export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
   part,
   isSelected = false,
   size = 'md',
-  theme = 'day',
 }) => {
   const [useFallback, setUseFallback] = useState(false);
 
@@ -56,7 +52,7 @@ export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
 
   if (size === 'swatch') {
     return (
-      <div className="relative w-full h-full rounded-full bg-white overflow-hidden flex items-center justify-center p-1.5">
+      <div className="relative w-full h-full rounded-full bg-white overflow-hidden flex items-center justify-center p-1.5 shadow-inner border border-black/5">
         <img
           src={imgSrc}
           alt={part.shortName}
@@ -81,18 +77,11 @@ export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
       ? 'w-full h-52 sm:h-64 p-5 rounded-2xl'
       : 'w-full h-36 sm:h-40 p-3.5 rounded-xl';
 
-  const containerStyle =
-    theme === 'day'
-      ? isSelected
-        ? 'bg-white border border-[#171A20]/15 shadow-sm'
-        : 'bg-white border border-black/5'
-      : isSelected
-      ? 'bg-white border-2 border-[#00E5FF] shadow-[0_0_20px_rgba(0,229,255,0.25)]'
-      : 'bg-white/95 border border-white/15';
-
   return (
     <div
-      className={`relative overflow-hidden flex items-center justify-center transition-all duration-300 ${sizeClass} ${containerStyle}`}
+      className={`relative overflow-hidden flex items-center justify-center transition-all duration-300 bg-white ${sizeClass} ${
+        isSelected ? 'border border-[#171A20]/15 shadow-sm' : 'border border-black/5'
+      }`}
       style={{
         background:
           'radial-gradient(circle at 50% 50%, #FFFFFF 65%, #F6F7F9 100%)',
@@ -112,24 +101,13 @@ export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
 };
 
 // ============================================================================
-// Tesla Model 3 風 メイン・スタジオ・コンフィギュレーター・ステージ
+// Tesla Model 3 風 メイン・スタジオ・コンフィギュレーター・ステージ（白スタジオ統一）
 // （引き出し線＋[＋]コールアウト ＆ 下部 < ● ○ ○ ○ ○ > カルーセル搭載）
 // ============================================================================
-
-export interface CalloutItem {
-  id: string;
-  label: string;
-  subLabel?: string;
-  positionClass: string;
-  lineDirection: 'top' | 'bottom';
-  lineHeightClass?: string;
-  featureIndex: number;
-}
 
 interface TeslaHeroConfiguratorStageProps {
   rig: RigState;
   target: TargetFishProfile;
-  theme: StudioTheme;
   activeSlide: number;
   onChangeSlide: (slideIndex: number) => void;
   onOpenFeatureModal: (featureIndex?: number) => void;
@@ -139,7 +117,6 @@ interface TeslaHeroConfiguratorStageProps {
 export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProps> = ({
   rig,
   target,
-  theme,
   activeSlide,
   onChangeSlide,
   onOpenFeatureModal,
@@ -188,35 +165,19 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
     onChangeSlide((activeSlide + 1) % totalSlides);
   };
 
-  const isDay = theme === 'day';
-
   return (
-    <div
-      className={`relative w-full h-full flex flex-col justify-between select-none transition-colors duration-300 ${
-        isDay ? 'bg-white text-[#171A20]' : 'bg-[#111215] text-white'
-      }`}
-    >
+    <div className="relative w-full h-full flex flex-col justify-between select-none bg-white text-[#171A20]">
       {/* 上部微細ステータスラベル（PCのみ控えめに表示） */}
       <div className="hidden sm:flex items-center justify-between px-6 pt-4 z-20">
         <div className="flex items-center gap-2.5">
-          <span
-            className={`text-[11px] font-medium tracking-widest uppercase px-3 py-1 rounded-full ${
-              isDay
-                ? 'bg-[#F4F4F4] text-[#5C5E62]'
-                : 'bg-white/10 text-white/70'
-            }`}
-          >
+          <span className="text-[11px] font-medium tracking-widest uppercase px-3 py-1 rounded-full bg-[#F4F4F4] text-[#5C5E62]">
             {slideLabels[activeSlide]}
           </span>
           <span
             className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full ${
               isAllCompatible
-                ? isDay
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                : isDay
-                ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
             }`}
           >
             {isAllCompatible ? (
@@ -242,12 +203,8 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
               onClick={() => onChangeSlide(idx)}
               className={`px-2.5 py-1 rounded-md text-[11px] font-oswald tracking-wider transition-all ${
                 activeSlide === idx
-                  ? isDay
-                    ? 'bg-[#171A20] text-white font-semibold'
-                    : 'bg-[#00E5FF] text-[#111215] font-bold'
-                  : isDay
-                  ? 'text-[#5C5E62] hover:bg-[#F4F4F4]'
-                  : 'text-white/50 hover:bg-white/10'
+                  ? 'bg-[#171A20] text-white font-semibold'
+                  : 'text-[#5C5E62] hover:bg-[#F4F4F4]'
               }`}
             >
               {tab}
@@ -260,16 +217,11 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
           中央：巨大スタジオ・フォトキャンバス ＋ Tesla風「引き出し線＋[＋]」コールアウト
          ================================================================= */}
       <div className="relative flex-1 min-h-[270px] sm:min-h-[440px] lg:min-h-[520px] w-full flex items-center justify-center px-4 sm:px-10 py-2 overflow-hidden">
-        {/* Nightモード時のスタジオ・スポットライト・ステージ（白背景写真を美しく浮かび上がらせる純白スタジオポディウム） */}
         <div
-          className={`relative w-full max-w-[920px] h-full min-h-[250px] sm:min-h-[400px] lg:min-h-[470px] rounded-3xl flex items-center justify-center transition-all duration-500 ${
-            isDay
-              ? 'bg-white'
-              : 'bg-white text-[#171A20] shadow-[0_0_90px_rgba(0,229,255,0.12),0_25px_60px_rgba(0,0,0,0.85)] border border-white/20'
-          }`}
+          className="relative w-full max-w-[920px] h-full min-h-[250px] sm:min-h-[400px] lg:min-h-[470px] rounded-3xl flex items-center justify-center bg-white"
           style={{
             background:
-              'radial-gradient(circle at 50% 50%, #FFFFFF 70%, #F7F8FA 100%)',
+              'radial-gradient(circle at 50% 50%, #FFFFFF 75%, #F8F9FA 100%)',
           }}
         >
           {/* ---------------- SLIDE 0: ロッド × リール 統合スタジオビュー ---------------- */}
@@ -311,7 +263,6 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
 
               {/* メイン・デュアルフォトコンポジット（左〜中央：ロッド、中央〜右：大型リール） */}
               <div className="relative z-10 w-full max-w-[780px] h-[220px] sm:h-[320px] lg:h-[370px] flex items-center justify-center">
-                {/* 背景〜左側に伸びるキャスティングロッド写真 */}
                 <div
                   onClick={() => onChangeSlide(2)}
                   title="クリックしてロッド単体を拡大"
@@ -327,7 +278,6 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                   />
                 </div>
 
-                {/* 手前右側に鎮座するフラッグシップ・スピニングリール写真 */}
                 <div
                   onClick={() => onChangeSlide(1)}
                   title="クリックしてリール単体を拡大"
@@ -620,40 +570,26 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
           下部：Tesla Model 3 スタイル カルーセルコントロール (< ● ○ ○ ○ ○ >)
          ================================================================= */}
       <div className="relative z-20 px-6 pb-3 sm:pb-6 flex items-center justify-between">
-        {/* 左下：Teslaの左下の四角いアイコンボタン位置（スペック・機能詳細モーダル起動） */}
         <button
           type="button"
           onClick={() => onOpenFeatureModal(0)}
           title="機能・物理適合テレメトリーを表示"
-          className={`hidden sm:flex w-10 h-9 rounded-md items-center justify-center transition-colors ${
-            isDay
-              ? 'bg-[#8E8E93]/80 hover:bg-[#171A20] text-white'
-              : 'bg-white/15 hover:bg-white/25 text-white'
-          }`}
+          className="hidden sm:flex w-10 h-9 rounded-md items-center justify-center transition-colors bg-[#8E8E93]/80 hover:bg-[#171A20] text-white"
         >
           <ShieldCheck className="w-4 h-4" />
         </button>
 
-        {/* 中央：< [ ● ○ ○ ○ ○ ] > */}
         <div className="mx-auto flex items-center gap-3">
           <button
             type="button"
             onClick={handlePrev}
             aria-label="前のスライド"
-            className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
-              isDay
-                ? 'bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]'
-                : 'bg-white/10 hover:bg-white/20 text-white'
-            }`}
+            className="w-9 h-9 rounded-md flex items-center justify-center transition-colors bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]"
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.2]" />
           </button>
 
-          <div
-            className={`h-9 px-4 rounded-md flex items-center gap-2.5 ${
-              isDay ? 'bg-[#F4F4F4]' : 'bg-white/10'
-            }`}
-          >
+          <div className="h-9 px-4 rounded-md flex items-center gap-2.5 bg-[#F4F4F4]">
             {Array.from({ length: totalSlides }).map((_, idx) => {
               const isCurrent = activeSlide === idx;
               return (
@@ -664,12 +600,8 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                   aria-label={`スライド ${idx + 1}: ${slideLabels[idx]}`}
                   className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
                     isCurrent
-                      ? isDay
-                        ? 'bg-[#171A20] scale-110'
-                        : 'bg-white scale-110'
-                      : isDay
-                      ? 'bg-[#B5B6B8] hover:bg-[#757678]'
-                      : 'bg-white/30 hover:bg-white/60'
+                      ? 'bg-[#171A20] scale-110'
+                      : 'bg-[#B5B6B8] hover:bg-[#757678]'
                   }`}
                 />
               );
@@ -680,17 +612,12 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
             type="button"
             onClick={handleNext}
             aria-label="次のスライド"
-            className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
-              isDay
-                ? 'bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]'
-                : 'bg-white/10 hover:bg-white/20 text-white'
-            }`}
+            className="w-9 h-9 rounded-md flex items-center justify-center transition-colors bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]"
           >
             <ChevronRight className="w-4 h-4 stroke-[2.2]" />
           </button>
         </div>
 
-        {/* 右側バランス用ダミースペーサー */}
         <div className="hidden sm:block w-10" />
       </div>
     </div>
