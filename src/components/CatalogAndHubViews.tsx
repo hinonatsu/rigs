@@ -2,148 +2,75 @@ import React, { useState } from 'react';
 import {
   Activity,
   ArrowRight,
-  Camera,
+  ChevronDown,
   Crosshair,
-  Eye,
+  Fish,
   Flame,
-  Gauge,
   MapPin,
-  Maximize2,
   ShieldCheck,
-  ShoppingBag,
-  Sparkles,
   Waves,
-  X,
   Zap,
 } from 'lucide-react';
 import {
   ALL_PARTS,
   RIG_PRESETS,
-  TargetFishGalleryItem,
   TargetFishProfile,
   TargetId,
 } from '../data/rigCatalog';
 
 interface TargetSelectHomeViewProps {
-  currentTargetId: TargetId;
+  currentTargetId?: TargetId;
   onSelectTargetAndGoGarage: (targetId: TargetId) => void;
-  onSelectTargetAndGoCheckout: (targetId: TargetId) => void;
+  onSelectTargetAndGoCheckout?: (targetId: TargetId) => void;
 }
 
-// サイト上部やモーダルで一覧できる全6種の海洋リアルフォト図鑑データ
-const OCEAN_WILDLIFE_SHOWCASE: {
-  id: string;
-  targetId: TargetId;
-  name: string;
-  subLabel: string;
-  weightText: string;
-  image: string;
-  description: string;
-}[] = [
+// 魚種名を「主役タイトル」と「補足クラス表記」に分離してジャンプ率を高めるヘルパー
+const DISPLAY_TITLE_MAP: Record<
+  TargetId,
   {
-    id: 'showcase-hiramasa',
-    targetId: 'pe6',
-    name: '近海ヒラマサ',
-    subLabel: '黄金のストライプ・表層バイト',
-    weightText: '10〜20kg級',
-    image: './images/fish/target-pe6-hiramasa.jpg',
-    description:
-      '太陽光を浴びてコバルトブルーの表層を割るヒラマサ。ヒット直後に時速45kmで海底の荒根へ突っ込むため、初動3秒を止める14000番XG＆PE6号が基準となります。',
+    mainSpecies: string;
+    subSpecies: string;
+  }
+> = {
+  pe6: {
+    mainSpecies: '近海ヒラマサ ＆ キハダ',
+    subSpecies: 'ヒラマサ 10〜20kg / キハダマグロ 20〜40kg',
   },
-  {
-    id: 'showcase-kihada',
-    targetId: 'pe6',
-    name: 'キハダマグロ',
-    subLabel: '鮮烈な黄金の第二背鰭',
-    weightText: '20〜40kg級',
-    image: './images/fish/sub-kihada.jpg',
-    description:
-      '相模湾・三重沖・玄界灘で熱い戦いを繰り広げるキハダマグロ。誘い出しやナブラ撃ちで水面を炸裂させ、強烈な横走りと持久戦でアングラーを試します。',
+  pe8: {
+    mainSpecies: '大型クロマグロ ＆ オオマサ',
+    subSpecies: 'クロマグロ 40〜80kg / オオマサ 20〜30kg超',
   },
-  {
-    id: 'showcase-bluefin',
-    targetId: 'pe8',
-    name: '大型クロマグロ',
-    subLabel: '深淵から突き上げる黒き弾丸',
-    weightText: '40〜80kg級',
-    image: './images/fish/target-pe8-bluefin.jpg',
-    description:
-      '泡の渦（キャビテーション）を纏いながら急浮上する大型クロマグロ。18000番リール＆PE8号300m、そして針込112g超のプラグを振り抜くパワーロッドが必須です。',
+  pe10: {
+    mainSpecies: '100kg超クロマグロ ＆ GT',
+    subSpecies: 'モンスターマグロ 80〜150kg超 / 離島遠征GT',
   },
-  {
-    id: 'showcase-monster',
-    targetId: 'pe10',
-    name: '100kg超モンスターマグロ',
-    subLabel: '海面大爆発・極限の最終決戦',
-    weightText: '80〜150kg超',
-    image: './images/fish/target-pe10-monster.jpg',
-    description:
-      '竜飛崎・松前・離島海域で荒波を割って跳躍する100kg超の怪物。15kg超のドラグ負荷と摩擦熱に耐え抜く20000番リール＆耐熱PE10号だけが許される世界です。',
-  },
-  {
-    id: 'showcase-gt',
-    targetId: 'pe10',
-    name: 'ロウニンアジ (GT)',
-    subLabel: 'シャローリーフの銀鱗鎧武者',
-    weightText: '30〜60kg超',
-    image: './images/fish/sub-gt.jpg',
-    description:
-      'サンゴ礁のドロップオフや白波が砕けるリーフエッジを支配するGT（ジャイアントトレバリー）。太軸フックをものともしない圧倒的な顎の力と引きを誇ります。',
-  },
-  {
-    id: 'showcase-nabura',
-    targetId: 'pe8',
-    name: '沸騰ナブラ＆シイラパターン',
-    subLabel: '捕食スイッチを入れるベイト群',
-    weightText: '160〜240mm超',
-    image: './images/fish/bait-nabura.jpg',
-    description:
-      'マイワシ・トビウオ・サンマのベイトボールと、逃げ惑うシイラ。その日魚が偏食しているベイトサイズにルアーの全長・波動を合わせることが最大の攻略鍵です。',
-  },
-];
+};
 
 export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
-  currentTargetId,
   onSelectTargetAndGoGarage,
-  onSelectTargetAndGoCheckout,
 }) => {
-  // 各ターゲットカードで現在表示しているギャラリー画像のインデックス
-  const [activePhotoIdxByTarget, setActivePhotoIdxByTarget] = useState<Record<TargetId, number>>({
-    pe6: 0,
-    pe8: 0,
-    pe10: 0,
-  });
-
-  // ホバー中のターゲットID（背景アンビエント連動用）
+  // ホバー中のターゲットID（背景アンビエント連動＆PC段階的開示用）
   const [hoveredTargetId, setHoveredTargetId] = useState<TargetId | null>(null);
 
-  // 魚体拡大ライトボックスモーダル状態
-  const [lightboxData, setLightboxData] = useState<{
-    target: TargetFishProfile;
-    photo: TargetFishGalleryItem;
-  } | null>(null);
+  // モバイル用：詳細スペックのアコーディオン開閉状態
+  const [expandedMobileTargetId, setExpandedMobileTargetId] = useState<TargetId | null>(null);
 
   const activeAmbientTarget =
-    RIG_PRESETS.find((t) => t.id === (hoveredTargetId ?? currentTargetId)) ?? RIG_PRESETS[0];
+    RIG_PRESETS.find((t) => t.id === hoveredTargetId) ?? RIG_PRESETS[0];
 
-  const handleSelectPhoto = (
-    e: React.MouseEvent,
-    targetId: TargetId,
-    photoIdx: number
-  ) => {
+  const toggleMobileDetails = (e: React.MouseEvent, targetId: TargetId) => {
     e.stopPropagation();
-    setActivePhotoIdxByTarget((prev) => ({
-      ...prev,
-      [targetId]: photoIdx,
-    }));
+    setExpandedMobileTargetId((prev) => (prev === targetId ? null : targetId));
   };
 
   return (
-    <div className="relative flex-1 min-h-0 flex flex-col justify-between gap-3.5 py-1">
+    <div className="relative flex-1 min-h-0 flex flex-col justify-between gap-6 sm:gap-8 py-2 sm:py-4">
       {/* ==================== 背景アンビエント水中フォトレイヤー ==================== */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-20 transition-opacity duration-700"
+        className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ${
+          hoveredTargetId ? 'opacity-25' : 'opacity-10'
+        }`}
       >
         <img
           src={activeAmbientTarget.heroImage}
@@ -153,75 +80,27 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-[#151515] via-[#151515]/85 to-[#151515]" />
       </div>
 
-      {/* ==================== 上部：タイトル ＆ 海洋魚種・ベイト実写図鑑ストリップ ==================== */}
-      <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-white/10 pb-3 shrink-0">
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.2em] text-[#00E5FF]">
+      {/* ==================== 上部：STEP 01 タイトルヘッダー（ノイズを削ぎ落とし選択に集中） ==================== */}
+      <div className="relative z-10 border-b border-white/10 pb-5 sm:pb-6 shrink-0">
+        <div className="space-y-2 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/40 text-xs font-mono font-bold tracking-[0.18em] text-[#00E5FF]">
             <Crosshair className="w-3.5 h-3.5 animate-pulse" />
-            <span>STEP 01 // SELECT TARGET MONSTER & OCEAN FIELD</span>
+            <span>STEP 01 // SELECT TARGET MONSTER</span>
           </div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-normal tracking-wide text-[#FFFFFF] flex flex-wrap items-baseline gap-2.5">
-            <span>どのモンスターを釣りに行きますか？</span>
-            <span className="text-xs sm:text-sm font-light text-[#00E5FF]">
-              — 水面を割る巨魚を選択して100%物理適合タックルを装備 —
-            </span>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#FFFFFF] leading-tight">
+            どのモンスターを釣りに行きますか？
           </h1>
-        </div>
-
-        {/* 右上：6種のリアル水中フォト・クイック図鑑ストリップ */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 xl:pb-0">
-          <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-[#00E5FF] shrink-0 px-2 py-1 rounded-lg bg-[#222222] border border-[#00E5FF]/30">
-            <Camera className="w-3 h-3" />
-            <span>OCEAN GALLERY</span>
-          </div>
-          {OCEAN_WILDLIFE_SHOWCASE.map((item) => {
-            const parentTarget =
-              RIG_PRESETS.find((t) => t.id === item.targetId) ?? RIG_PRESETS[0];
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() =>
-                  setLightboxData({
-                    target: parentTarget,
-                    photo: {
-                      url: item.image,
-                      label: `${item.name}（${item.weightText}）`,
-                      tag: item.subLabel,
-                      caption: item.description,
-                    },
-                  })
-                }
-                className="group/thumb relative shrink-0 flex items-center gap-2 pr-2.5 pl-1 py-1 rounded-xl bg-[#222222]/90 hover:bg-[#222222] border border-white/10 hover:border-[#00E5FF] transition-all"
-                title={`${item.name}の水中写真を拡大表示`}
-              >
-                <div className="w-10 h-7 rounded-lg overflow-hidden relative border border-white/15 shrink-0">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-300"
-                  />
-                </div>
-                <div className="text-left">
-                  <div className="text-[10px] font-medium text-[#FFFFFF] group-hover/thumb:text-[#00E5FF] transition-colors leading-tight">
-                    {item.name}
-                  </div>
-                  <div className="text-[9px] text-[#A0A0A0] leading-tight">
-                    {item.weightText}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+          <p className="text-xs sm:text-sm text-[#A0A0A0] leading-relaxed">
+            狙うターゲットを選択してください。100%物理適合する推奨タックル4点セットが自動構成されます。
+          </p>
         </div>
       </div>
 
-      {/* ==================== メイン：3つのターゲット魚種・大迫力ビジュアルカード ==================== */}
-      <div className="relative z-10 flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+      {/* ==================== メイン：3つのターゲット選択カード（段階的開示 ＆ 強アフォーダンスCTA） ==================== */}
+      <div className="relative z-10 flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
         {RIG_PRESETS.map((target: TargetFishProfile, idx: number) => {
-          const isCurrent = currentTargetId === target.id;
-          const activePhotoIdx = activePhotoIdxByTarget[target.id] ?? 0;
-          const activePhoto = target.gallery[activePhotoIdx] ?? target.gallery[0];
+          const displayTitle = DISPLAY_TITLE_MAP[target.id];
+          const isMobileExpanded = expandedMobileTargetId === target.id;
 
           const pReel = ALL_PARTS.find((p) => p.id === target.rigIds.reel);
           const pRod = ALL_PARTS.find((p) => p.id === target.rigIds.rod);
@@ -241,363 +120,215 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
               onMouseLeave={() => setHoveredTargetId(null)}
               role="button"
               tabIndex={0}
+              aria-label={`${displayTitle.mainSpecies}（${target.badge}）を選択してタックルを組む`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   onSelectTargetAndGoGarage(target.id);
                 }
               }}
-              className={`group rounded-2xl bg-[#222222]/95 backdrop-blur-md overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 flex flex-col justify-between ${
-                isCurrent
-                  ? 'border-2 border-[#00E5FF] shadow-[0_0_30px_rgba(0,229,255,0.35)]'
-                  : 'border border-white/15 hover:border-[#00E5FF]/90 hover:shadow-[0_0_28px_rgba(0,229,255,0.28)]'
-              }`}
+              className="group relative rounded-2xl bg-[#222222]/95 backdrop-blur-md overflow-hidden cursor-pointer border border-white/15 hover:border-[#00E5FF] shadow-[0_12px_32px_-10px_rgba(0,0,0,0.6)] hover:shadow-[0_0_36px_rgba(0,229,255,0.38)] transition-all duration-300 ease-out hover:-translate-y-1.5 flex flex-col justify-between"
             >
-              <div>
+              {/* =========================================================
+                  1. ヒーロービジュアル ＆ 常時表示コア情報（第1階層：LV・魚種名・海域のみ）
+                 ========================================================= */}
+              <div className="relative h-72 sm:h-80 lg:h-96 w-full overflow-hidden bg-[#151515]">
+                {/* メイン魚種ビジュアル（ホバーでダイナミックズーム） */}
+                <img
+                  src={target.heroImage}
+                  alt={target.fishName}
+                  className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
+                />
+
+                {/* コントラスト確保のためのグラデーションオーバーレイ */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-[#151515]/55 to-black/40" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,229,255,0.28),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* 【常時表示①】上部：対象クラス（LV） ＆ 推奨基準バッジ */}
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-20">
+                  <span className="px-3.5 py-1.5 rounded-full bg-[#151515]/90 backdrop-blur-md border border-white/25 text-xs sm:text-sm font-mono font-bold text-[#FFFFFF] tracking-wider shadow-md">
+                    LV.0{idx + 1} // {target.weightRange}
+                  </span>
+
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#151515]/90 backdrop-blur-md border border-[#00E5FF] text-[#00E5FF] text-xs font-bold tracking-wider shadow-[0_0_15px_rgba(0,229,255,0.35)]">
+                    <Waves className="w-3.5 h-3.5 shrink-0" />
+                    <span>{target.badge}</span>
+                  </span>
+                </div>
+
                 {/* =========================================================
-                    1. 大迫力リアル水中・水面ヒーロービジュアルエリア
+                    【段階的開示（Progressive Disclosure）】
+                    PCホバー時のみフワッと浮かび上がるマニアック戦闘データ（第2階層）
                    ========================================================= */}
-                <div className="relative h-48 sm:h-56 lg:h-48 xl:h-56 w-full overflow-hidden bg-[#151515]">
-                  {/* メイン魚種イメージ画像（ホバーでダイナミックズーム） */}
-                  <img
-                    src={activePhoto.url}
-                    alt={target.fishName}
-                    className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
-                  />
-
-                  {/* 水面の輝き＆下部ダークグラデーションオーバーレイ */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#222222] via-[#151515]/35 to-black/30" />
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,229,255,0.22),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                  {/* 上部オーバーレイ：推奨基準バッジ ＆ LEVEL・拡大ボタン */}
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#151515]/90 backdrop-blur-md border border-[#00E5FF] text-[#00E5FF] text-[11px] font-bold tracking-wider shadow-[0_0_15px_rgba(0,229,255,0.4)]">
-                      <Waves className="w-3.5 h-3.5" />
-                      {target.badge}
+                <div
+                  aria-hidden="true"
+                  className="hidden lg:flex absolute inset-x-4 top-16 z-20 rounded-xl bg-[#151515]/92 backdrop-blur-md border border-[#00E5FF]/60 p-4 shadow-[0_12px_28px_rgba(0,0,0,0.85)] opacity-0 translate-y-3 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out flex-col gap-3"
+                >
+                  <div className="flex items-center justify-between text-xs border-b border-white/10 pb-2">
+                    <span className="font-mono font-bold text-[#00E5FF] tracking-wider">
+                      COMBAT TELEMETRY // 実戦負荷データ
                     </span>
+                    <span className="text-[#A0A0A0] font-mono">
+                      {target.waterDepthText.split('//')[0]}
+                    </span>
+                  </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-2.5 py-1 rounded-full bg-[#151515]/85 backdrop-blur-md border border-white/20 text-[10px] font-mono font-semibold text-[#FFFFFF]">
-                        LV.0{idx + 1} // {target.weightRange}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLightboxData({ target, photo: activePhoto });
-                        }}
-                        className="p-1.5 rounded-full bg-[#151515]/85 hover:bg-[#00E5FF] text-[#FFFFFF] hover:text-[#151515] border border-white/20 hover:border-[#00E5FF] transition-colors"
-                        title="魚の水中写真を拡大表示"
-                        aria-label={`${target.fishName}の写真を拡大表示`}
-                      >
-                        <Maximize2 className="w-3.5 h-3.5" />
-                      </button>
+                  {/* 3大マニアック数値（時速・ドラグ負荷・キャスト数） */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-lg bg-[#222222] p-2.5 border border-white/10">
+                      <div className="text-xs text-[#A0A0A0] flex items-center justify-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-[#00E5FF]" />
+                        <span>初動時速</span>
+                      </div>
+                      <div className="text-sm font-mono font-bold text-[#FFFFFF] mt-1 tabular-nums">
+                        {target.strikeSpeedKmh}km/h
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg bg-[#222222] p-2.5 border border-[#00E5FF]/30">
+                      <div className="text-xs text-[#A0A0A0] flex items-center justify-center gap-1">
+                        <Flame className="w-3.5 h-3.5 text-[#FF9900]" />
+                        <span>初動負荷</span>
+                      </div>
+                      <div className="text-sm font-mono font-bold text-[#00E5FF] mt-1 tabular-nums">
+                        約{target.initialRunLoadKg}kg
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg bg-[#222222] p-2.5 border border-white/10">
+                      <div className="text-xs text-[#A0A0A0] flex items-center justify-center gap-1">
+                        <Activity className="w-3.5 h-3.5 text-[#00E5FF]" />
+                        <span>1日投数</span>
+                      </div>
+                      <div className="text-sm font-mono font-bold text-[#FFFFFF] mt-1 tabular-nums">
+                        約{target.dailyCastCount}投
+                      </div>
                     </div>
                   </div>
 
-                  {/* 画像下部オーバーレイ：キャッチコピー ＆ 魚種タイトル */}
-                  <div className="absolute bottom-2.5 left-3.5 right-3.5 z-10 space-y-0.5">
-                    <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wider text-[#00E5FF] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                      <Sparkles className="w-3 h-3" />
-                      <span>{target.catchCopy}</span>
-                    </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-[#FFFFFF] group-hover:text-[#00E5FF] transition-colors leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-                      {target.fishName}
-                    </h2>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#FFFFFF]/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-[#00E5FF]" />
-                        {target.field}
-                      </span>
-                    </div>
+                  {/* アイコン化した捕食ベイトサイズ */}
+                  <div className="flex items-center gap-2 text-xs text-[#FFFFFF] bg-[#222222]/90 rounded-lg px-3 py-2 border border-white/10">
+                    <Fish className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                    <span className="text-[#A0A0A0] shrink-0">捕食ベイト:</span>
+                    <span className="font-medium text-[#00E5FF] truncate">
+                      {target.baitSizeMm}
+                    </span>
                   </div>
                 </div>
 
-                {/* =========================================================
-                    2. マルチアングル水中写真スイッチャー（3枚サムネイル切替）
-                   ========================================================= */}
-                <div className="px-4 pt-2.5 pb-1 bg-[#1A1A1A] border-b border-white/10">
-                  <div className="grid grid-cols-3 gap-2">
-                    {target.gallery.map((photo, pIdx) => {
-                      const isPhotoActive = activePhotoIdx === pIdx;
-                      return (
-                        <button
-                          key={photo.label}
-                          type="button"
-                          onClick={(e) => handleSelectPhoto(e, target.id, pIdx)}
-                          onMouseEnter={() =>
-                            setActivePhotoIdxByTarget((prev) => ({
-                              ...prev,
-                              [target.id]: pIdx,
-                            }))
-                          }
-                          className={`group/ sub relative rounded-lg overflow-hidden border text-left transition-all flex items-center gap-1.5 p-1 ${
-                            isPhotoActive
-                              ? 'bg-[#222222] border-[#00E5FF] shadow-[0_0_10px_rgba(0,229,255,0.3)]'
-                              : 'bg-[#151515]/80 border-white/10 opacity-75 hover:opacity-100 hover:border-white/30'
-                          }`}
-                        >
-                          <img
-                            src={photo.url}
-                            alt={photo.label}
-                            className="w-9 h-7 rounded object-cover shrink-0"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[8px] font-mono text-[#00E5FF] truncate leading-tight">
-                              {photo.tag}
-                            </div>
-                            <div className="text-[10px] font-medium text-[#FFFFFF] truncate leading-tight">
-                              {photo.label}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-[10px] text-[#A0A0A0] mt-1.5 line-clamp-1 flex items-center gap-1">
-                    <Eye className="w-3 h-3 text-[#00E5FF] shrink-0" />
-                    <span>{activePhoto.caption}</span>
-                  </p>
-                </div>
-
-                {/* =========================================================
-                    3. 魚の戦闘力パラメータ ＆ 捕食ベイト・推奨タックル
-                   ========================================================= */}
-                <div className="p-4 space-y-3">
-                  {/* 魚の戦闘力パラメータ（ゲームステータス風 3セル） */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded-xl bg-[#151515] border border-white/10 px-2.5 py-2">
-                      <div className="flex items-center gap-1 text-[10px] text-[#A0A0A0]">
-                        <Zap className="w-3 h-3 text-[#00E5FF]" />
-                        <span>初動突っ込み</span>
-                      </div>
-                      <div className="text-xs sm:text-sm font-semibold text-[#FFFFFF] tabular-nums mt-0.5">
-                        時速 {target.strikeSpeedKmh}km
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-[#151515] border border-white/10 px-2.5 py-2">
-                      <div className="flex items-center gap-1 text-[10px] text-[#A0A0A0]">
-                        <Flame className="w-3 h-3 text-[#FF9900]" />
-                        <span>初動ドラグ負荷</span>
-                      </div>
-                      <div className="text-xs sm:text-sm font-semibold text-[#00E5FF] tabular-nums mt-0.5">
-                        約 {target.initialRunLoadKg}kg
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-[#151515] border border-white/10 px-2.5 py-2">
-                      <div className="flex items-center gap-1 text-[10px] text-[#A0A0A0]">
-                        <Activity className="w-3 h-3 text-[#00E5FF]" />
-                        <span>1日のキャスト</span>
-                      </div>
-                      <div className="text-xs sm:text-sm font-semibold text-[#FFFFFF] tabular-nums mt-0.5">
-                        約 {target.dailyCastCount}投
-                      </div>
-                    </div>
+                {/* 【常時表示②・③】下部：高ジャンプ率の魚種名 ＆ 対象海域 */}
+                <div className="absolute bottom-4 left-5 right-5 z-10 space-y-2">
+                  <div className="text-xs font-medium text-[#00E5FF] tracking-wide drop-shadow">
+                    {displayTitle.subSpecies}
                   </div>
 
-                  {/* 魚の習性 ＆ 捕食ベイト実写サムネイル付きボックス */}
-                  <div className="rounded-xl bg-[#151515] border-l-2 border-l-[#00E5FF] border border-white/5 p-2.5 flex items-center gap-2.5">
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const baitPhoto = target.gallery[2] ?? target.gallery[0];
-                        setLightboxData({ target, photo: baitPhoto });
-                      }}
-                      className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-[#00E5FF]/40 group/bait"
-                      title="捕食ベイト・ナブラの水中写真を拡大"
-                    >
-                      <img
-                        src={(target.gallery[2] ?? target.gallery[0]).url}
-                        alt="捕食ベイト"
-                        className="w-full h-full object-cover group-hover/bait:scale-110 transition-transform"
-                      />
-                      <span className="absolute bottom-0 inset-x-0 bg-black/75 text-[8px] text-center text-[#00E5FF] font-mono py-0.5">
-                        BAIT
-                      </span>
-                    </div>
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <div className="text-[10px] font-semibold text-[#00E5FF] tracking-wider flex items-center gap-1">
-                        <Gauge className="w-3 h-3 shrink-0" />
-                        <span className="truncate">FISH HABIT & BAIT // 習性と捕食ベイト</span>
-                      </div>
-                      <p className="text-[11px] font-light text-[#FFFFFF]/90 leading-snug line-clamp-2">
-                        {target.fishHabit}
-                      </p>
-                      <p className="text-[10px] font-medium text-[#00E5FF] truncate">
-                        ★ 捕食ベイト: {target.baitSizeMm}
-                      </p>
-                    </div>
-                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-[#FFFFFF] group-hover:text-[#00E5FF] transition-colors tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+                    {displayTitle.mainSpecies}
+                  </h2>
 
-                  {/* 自動セットされる推奨タックル一式 */}
-                  <div className="rounded-xl bg-[#151515]/90 border border-white/10 p-2.5 space-y-1">
-                    <div className="flex items-center justify-between text-[10px] pb-1 border-b border-white/10">
-                      <span className="text-[#00E5FF] font-medium flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" />
-                        推奨ベース装備（100%物理適合）
-                      </span>
-                      <span className="text-[#FFFFFF] tabular-nums font-semibold">
-                        合計 ¥{totalPrice.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 pt-0.5">
-                      {[
-                        { step: '01 REEL', name: pReel?.shortName },
-                        { step: '02 ROD', name: pRod?.shortName },
-                        { step: '03 LINE', name: pLine?.shortName },
-                        { step: '04 LURE', name: pLure?.shortName },
-                      ].map((slot) => (
-                        <div
-                          key={slot.step}
-                          className="flex items-center justify-between text-[10px] gap-1 min-w-0"
-                        >
-                          <span className="text-[#00E5FF] font-mono text-[9px] shrink-0">
-                            {slot.step}
-                          </span>
-                          <span className="text-[#FFFFFF] font-light truncate">
-                            {slot.name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="pt-1 flex items-center gap-2 text-xs sm:text-sm font-medium text-[#FFFFFF]/90 drop-shadow">
+                    <MapPin className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                    <span className="truncate">{target.field}</span>
                   </div>
                 </div>
               </div>
 
               {/* =========================================================
-                  4. アクションボタン
+                  2. カード下部：価格アンカー ＆ モバイル用折りたたみ ＆ 明確な単一CTAボタン
                  ========================================================= */}
-              <div className="px-4 pb-4 pt-1 space-y-2">
+              <div className="p-5 sm:p-6 bg-[#222222] space-y-4">
+                {/* 推奨4点セット参考価格バー（1行でスッキリ表示） */}
+                <div className="flex items-center justify-between text-xs sm:text-sm pb-3 border-b border-white/10">
+                  <span className="text-[#A0A0A0] flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                    <span>推奨4点フルセット基準価格</span>
+                  </span>
+                  <span className="font-mono font-bold text-base text-[#FFFFFF] tabular-nums">
+                    ¥{totalPrice.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* モバイル・タブレット（lg未満）専用：文字潰れを防ぐアコーディオン展開 */}
+                <div className="lg:hidden">
+                  <button
+                    type="button"
+                    onClick={(e) => toggleMobileDetails(e, target.id)}
+                    aria-expanded={isMobileExpanded}
+                    className="w-full py-2.5 px-3.5 rounded-xl bg-[#151515] border border-white/10 text-xs font-medium text-[#A0A0A0] hover:text-[#FFFFFF] flex items-center justify-between transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Zap className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <span>実戦データ（時速・負荷・捕食ベイト）を見る</span>
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#00E5FF] transition-transform duration-200 ${
+                        isMobileExpanded ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {isMobileExpanded && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-2.5 p-3.5 rounded-xl bg-[#151515] border border-[#00E5FF]/40 space-y-3"
+                    >
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="rounded-lg bg-[#222222] p-2">
+                          <div className="text-xs text-[#A0A0A0]">初動時速</div>
+                          <div className="text-sm font-mono font-bold text-[#FFFFFF] mt-0.5">
+                            {target.strikeSpeedKmh}km
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-[#222222] p-2">
+                          <div className="text-xs text-[#A0A0A0]">初動負荷</div>
+                          <div className="text-sm font-mono font-bold text-[#00E5FF] mt-0.5">
+                            約{target.initialRunLoadKg}kg
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-[#222222] p-2">
+                          <div className="text-xs text-[#A0A0A0]">1日投数</div>
+                          <div className="text-sm font-mono font-bold text-[#FFFFFF] mt-0.5">
+                            約{target.dailyCastCount}投
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-[#FFFFFF] bg-[#222222] rounded-lg px-3 py-2">
+                        <Fish className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                        <span className="text-[#00E5FF] font-medium">
+                          ベイト: {target.baitSizeMm}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 【改善点3】明確な単一プライマリCTAボタン（エレクトリックブルー発光＋矢印アニメーション） */}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelectTargetAndGoGarage(target.id);
                   }}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-bold tracking-wider shadow-[0_0_15px_rgba(0,229,255,0.4)] group-hover:shadow-[0_0_24px_rgba(0,229,255,0.75)] transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-4 px-5 rounded-xl bg-[#00E5FF]/15 border-2 border-[#00E5FF] text-[#00E5FF] group-hover:bg-[#00E5FF] group-hover:text-[#151515] shadow-[0_0_20px_rgba(0,229,255,0.25)] group-hover:shadow-[0_0_30px_rgba(0,229,255,0.8)] transition-all duration-300 flex items-center justify-between gap-3"
                 >
-                  <span>この魚を釣る推奨タックルを見る・比較する</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectTargetAndGoCheckout(target.id);
-                  }}
-                  className="w-full py-1.5 px-3 rounded-lg bg-[#151515] hover:bg-white/5 border border-white/10 hover:border-[#00E5FF]/50 text-[11px] font-light text-[#A0A0A0] hover:text-[#FFFFFF] transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <ShoppingBag className="w-3 h-3 text-[#00E5FF]" />
-                  <span>変更せず推奨4点セットのまま購入へ進む</span>
+                  <div className="flex flex-col items-start text-left">
+                    <span className="font-mono text-xs font-extrabold tracking-[0.16em] uppercase leading-none">
+                      SELECT TARGET
+                    </span>
+                    <span className="text-sm font-bold tracking-wide mt-1 leading-none">
+                      このターゲットで組む
+                    </span>
+                  </div>
+                  <span className="w-9 h-9 rounded-lg bg-[#00E5FF]/20 group-hover:bg-[#151515]/15 flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:translate-x-1.5">
+                    <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+                  </span>
                 </button>
               </div>
             </article>
           );
         })}
       </div>
-
-      {/* ==================== フルスクリーン水中写真ライトボックス（魚体拡大モーダル） ==================== */}
-      {lightboxData && (
-        <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={() => setLightboxData(null)}
-        >
-          <div
-            className="relative max-w-4xl w-full rounded-2xl bg-[#1A1A1A] border-2 border-[#00E5FF] shadow-[0_0_50px_rgba(0,229,255,0.35)] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative aspect-video w-full bg-black">
-              <img
-                src={lightboxData.photo.url}
-                alt={lightboxData.photo.label}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-black/40" />
-
-              <button
-                type="button"
-                onClick={() => setLightboxData(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-[#151515]/85 hover:bg-[#00E5FF] text-[#FFFFFF] hover:text-[#151515] border border-white/20 transition-colors"
-                aria-label="閉じる"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="absolute bottom-4 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#00E5FF] text-[#151515] text-[10px] font-mono font-bold tracking-wider">
-                    {lightboxData.photo.tag} // {lightboxData.target.badge}
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-[#FFFFFF] drop-shadow-md">
-                    {lightboxData.photo.label}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#FFFFFF]/90 max-w-2xl leading-relaxed">
-                    {lightboxData.photo.caption}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const targetId = lightboxData.target.id;
-                    setLightboxData(null);
-                    onSelectTargetAndGoGarage(targetId);
-                  }}
-                  className="shrink-0 px-5 py-3 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-bold tracking-wider shadow-[0_0_20px_rgba(0,229,255,0.5)] hover:opacity-95 transition-all flex items-center gap-2"
-                >
-                  <span>この魚の推奨タックルを見る</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* モーダル下部の他アングル写真サムネイル一覧 */}
-            <div className="p-4 bg-[#151515] border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 overflow-x-auto">
-                <span className="text-[11px] font-mono text-[#A0A0A0] mr-1">
-                  ALL OCEAN PHOTOS:
-                </span>
-                {OCEAN_WILDLIFE_SHOWCASE.map((item) => {
-                  const isSelected = lightboxData.photo.url === item.image;
-                  const parentTarget =
-                    RIG_PRESETS.find((t) => t.id === item.targetId) ?? RIG_PRESETS[0];
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() =>
-                        setLightboxData({
-                          target: parentTarget,
-                          photo: {
-                            url: item.image,
-                            label: `${item.name}（${item.weightText}）`,
-                            tag: item.subLabel,
-                            caption: item.description,
-                          },
-                        })
-                      }
-                      className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all ${
-                        isSelected
-                          ? 'bg-[#222222] border-[#00E5FF] text-[#00E5FF]'
-                          : 'bg-[#222222]/50 border-white/10 text-[#FFFFFF] opacity-70 hover:opacity-100'
-                      }`}
-                    >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-10 h-7 rounded object-cover"
-                      />
-                      <span className="text-xs font-medium whitespace-nowrap">
-                        {item.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

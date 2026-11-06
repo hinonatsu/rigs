@@ -36,7 +36,7 @@ export const GearSchematic: React.FC<GearSchematicProps> = ({ item, compact = fa
         <div className="absolute inset-0 bg-gradient-to-tr from-[#1A1A1A]/80 via-transparent to-[#00E5FF]/10 pointer-events-none" />
         <svg
           viewBox="0 0 180 96"
-          className="w-full h-full p-1.5 relative z-10"
+          className="w-full h-full p-2 relative z-10"
           role="img"
           aria-label={`${item.brand} ${item.modelName} 寸法図`}
         >
@@ -150,7 +150,7 @@ export const GearSchematic: React.FC<GearSchematicProps> = ({ item, compact = fa
         <div className="absolute inset-0 bg-gradient-to-tr from-[#1A1A1A]/80 via-transparent to-[#00E5FF]/10 pointer-events-none" />
         <svg
           viewBox="0 0 220 76"
-          className="w-full h-full p-1.5 relative z-10"
+          className="w-full h-full p-2 relative z-10"
           role="img"
           aria-label={`${item.brand} ${item.modelName} ロッド構造図`}
         >
@@ -247,7 +247,7 @@ export const GearSchematic: React.FC<GearSchematicProps> = ({ item, compact = fa
         />
         <svg
           viewBox="0 0 180 76"
-          className="w-full h-full p-1.5 relative z-10"
+          className="w-full h-full p-2 relative z-10"
           role="img"
           aria-label={`${item.brand} ${item.modelName} スプール図`}
         >
@@ -328,7 +328,7 @@ export const GearSchematic: React.FC<GearSchematicProps> = ({ item, compact = fa
       />
       <svg
         viewBox="0 0 200 76"
-        className="w-full h-full p-1.5 relative z-10"
+        className="w-full h-full p-2 relative z-10"
         role="img"
         aria-label={`${item.brand} ${item.modelName} 構造図`}
       >
@@ -452,8 +452,8 @@ export const RodWeightWindowBar: React.FC<{
   const isSweet = totalLureWeightG >= lureSweetMinG && totalLureWeightG <= lureSweetMaxG;
 
   return (
-    <div className="mt-3 pt-2.5 border-t border-white/10">
-      <div className="flex items-center justify-between text-xs mb-1.5">
+    <div className="mt-4 pt-4 border-t border-white/10">
+      <div className="flex items-center justify-between text-xs mb-2 leading-relaxed">
         <span className="text-slate-300 font-jp font-normal">
           ロッド許容:{' '}
           <strong className="font-oswald tracking-wider text-white font-semibold">
@@ -488,7 +488,7 @@ export const RodWeightWindowBar: React.FC<{
         />
         {/* Current Lure Weight Marker */}
         <div
-          className={`absolute top-0 bottom-0 w-2 -ml-1 rounded-full shadow-[0_0_10px_#00E5FF] ${
+          className={`absolute top-0 bottom-0 w-2 -translate-x-1/2 rounded-full shadow-[0_0_10px_#00E5FF] ${
             isOut ? 'bg-rose-500' : isSweet ? 'bg-[#00E5FF]' : 'bg-amber-400'
           }`}
           style={{ left: `${currentPct}%` }}

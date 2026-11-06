@@ -86,27 +86,27 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
   };
 
   return (
-    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 py-1 items-stretch">
+    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 py-4 items-stretch">
       {/* ==================== 左カラム (5 cols): 対ターゲット最終ステータス ＆ URL共有 ==================== */}
-      <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-5 space-y-4">
-        <div className="space-y-4">
+      <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-6 sm:p-8 space-y-6">
+        <div className="space-y-6">
           {/* ヘッダー */}
-          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
-            <div>
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.18em] text-[#00E5FF]">
+          <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-[#00E5FF] leading-relaxed">
                 <Crosshair className="w-3.5 h-3.5" />
                 <span>STEP 03 // FINAL LOADOUT BRIEFING</span>
               </div>
-              <h1 className="text-lg sm:text-xl font-normal text-[#FFFFFF] mt-0.5">
+              <h1 className="text-lg sm:text-xl font-normal text-[#FFFFFF] leading-relaxed">
                 最終装備ステータス ＆ 一括購入
               </h1>
             </div>
             <button
               type="button"
               onClick={() => onBackToGarage()}
-              className="px-3 py-1.5 rounded-xl bg-[#151515] border border-white/15 hover:border-[#00E5FF] text-[11px] text-[#FFFFFF] transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 rounded-xl bg-[#151515] border border-white/15 hover:border-[#00E5FF] text-xs text-[#FFFFFF] transition-colors flex items-center gap-2 shrink-0 leading-4"
             >
-              <ArrowLeft className="w-3 h-3 text-[#00E5FF]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-[#00E5FF]" />
               <span>装備比較へ戻る</span>
             </button>
           </div>
@@ -117,15 +117,15 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
               isAllSelectedCompatible ? 'border-[#00E5FF]/70' : 'border-rose-500/60'
             }`}
           >
-            <div className="relative h-28 w-full overflow-hidden">
+            <div className="relative h-32 w-full overflow-hidden">
               <img
                 src={target.heroImage}
                 alt={target.fishName}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#151515] via-[#151515]/45 to-black/30" />
-              <div className="absolute top-2.5 left-3 right-3 flex items-center justify-between gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#151515]/90 border border-[#00E5FF]/60 text-[10px] font-semibold text-[#00E5FF] flex items-center gap-1">
+              <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
+                <span className="px-2 py-0 leading-6 rounded-full bg-[#151515]/90 border border-[#00E5FF]/60 text-[10px] font-semibold text-[#00E5FF] flex items-center gap-2">
                   {isAllSelectedCompatible ? (
                     <ShieldCheck className="w-3.5 h-3.5 text-[#00E5FF]" />
                   ) : (
@@ -133,32 +133,32 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                   )}
                   <span>{target.badge}</span>
                 </span>
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#151515]/90 border border-[#00E5FF]/40 text-[#00E5FF] font-semibold">
+                <span className="text-[10px] px-2 py-0 leading-6 rounded-full bg-[#151515]/90 border border-[#00E5FF]/40 text-[#00E5FF] font-semibold">
                   {isAllSelectedCompatible ? '100% 物理適合' : '要調整'}
                 </span>
               </div>
-              <div className="absolute bottom-2 left-3 right-3">
-                <div className="text-xs sm:text-sm font-bold text-[#FFFFFF] drop-shadow-md">
+              <div className="absolute bottom-2 left-4 right-4">
+                <div className="text-xs sm:text-sm font-bold text-[#FFFFFF] drop-shadow-md leading-relaxed">
                   TARGET: {target.fishName}
                 </div>
               </div>
             </div>
-            <div className="p-3 pt-2 grid grid-cols-3 gap-2 text-center">
-              <div className="bg-[#222222] rounded-lg p-2 border border-white/5">
-                <div className="text-[10px] text-[#A0A0A0]">推奨初期ドラグ</div>
-                <div className="text-xs font-semibold text-[#00E5FF] tabular-nums mt-0.5">
+            <div className="p-4 grid grid-cols-3 gap-2 text-center">
+              <div className="bg-[#222222] rounded-lg p-4 border border-white/5 space-y-2">
+                <div className="text-[11px] text-[#A0A0A0] leading-relaxed">推奨初期ドラグ</div>
+                <div className="text-xs font-semibold text-[#00E5FF] tabular-nums leading-relaxed">
                   {recommendedDragText}
                 </div>
               </div>
-              <div className="bg-[#222222] rounded-lg p-2 border border-white/5">
-                <div className="text-[10px] text-[#A0A0A0]">装備総重量</div>
-                <div className="text-xs font-semibold text-[#FFFFFF] tabular-nums mt-0.5">
+              <div className="bg-[#222222] rounded-lg p-4 border border-white/5 space-y-2">
+                <div className="text-[11px] text-[#A0A0A0] leading-relaxed">装備総重量</div>
+                <div className="text-xs font-semibold text-[#FFFFFF] tabular-nums leading-relaxed">
                   {totalWeightG}g
                 </div>
               </div>
-              <div className="bg-[#222222] rounded-lg p-2 border border-white/5">
-                <div className="text-[10px] text-[#A0A0A0]">針込ルアー重量</div>
-                <div className="text-xs font-semibold text-[#FFFFFF] tabular-nums mt-0.5">
+              <div className="bg-[#222222] rounded-lg p-4 border border-white/5 space-y-2">
+                <div className="text-[11px] text-[#A0A0A0] leading-relaxed">針込ルアー重量</div>
+                <div className="text-xs font-semibold text-[#FFFFFF] tabular-nums leading-relaxed">
                   {rig.lure?.totalWeightG ?? 0}g
                 </div>
               </div>
@@ -166,18 +166,18 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
           </div>
 
           {/* 対ターゲット 5項目ゲームステータスゲージ */}
-          <div className="rounded-xl bg-[#151515] border border-white/10 p-3.5 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold tracking-wider text-[#FFFFFF] flex items-center gap-1.5">
+          <div className="rounded-xl bg-[#151515] border border-white/10 p-6 space-y-4">
+            <div className="flex items-center justify-between leading-relaxed">
+              <span className="text-[11px] font-semibold tracking-wider text-[#FFFFFF] flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" />
                 <span>VS TARGET COMBAT PARAMETERS</span>
               </span>
               <button
                 type="button"
                 onClick={onResetToRecommended}
-                className="text-[10px] text-[#A0A0A0] hover:text-[#00E5FF] flex items-center gap-1"
+                className="text-[11px] text-[#A0A0A0] hover:text-[#00E5FF] flex items-center gap-2"
               >
-                <RotateCcw className="w-2.5 h-2.5" />
+                <RotateCcw className="w-3 h-3" />
                 <span>推奨ベースに戻す</span>
               </button>
             </div>
@@ -185,17 +185,17 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             {combatStats.map((stat) => {
               const diff = stat.score - stat.baseScore;
               return (
-                <div key={stat.id} className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px]">
+                <div key={stat.id} className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] leading-relaxed">
                     <div>
                       <span className="font-mono font-semibold text-[#FFFFFF]">{stat.label}</span>
-                      <span className="text-[#A0A0A0] ml-1.5 text-[10px]">{stat.subLabel}</span>
+                      <span className="text-[#A0A0A0] ml-2 text-[11px]">{stat.subLabel}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 tabular-nums">
-                      <span className="text-[10px] text-[#A0A0A0]">{stat.metricText}</span>
+                    <div className="flex items-center gap-2 tabular-nums">
+                      <span className="text-[11px] text-[#A0A0A0]">{stat.metricText}</span>
                       {diff !== 0 && (
                         <span
-                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                          className={`text-[10px] font-bold px-2 py-0 leading-6 rounded ${
                             diff > 0
                               ? 'bg-[#00E5FF]/20 text-[#00E5FF]'
                               : 'bg-amber-500/20 text-amber-300'
@@ -219,13 +219,13 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
         </div>
 
         {/* 合計金額 ＆ URL共有ボックス */}
-        <div className="pt-3 border-t border-white/10 space-y-3">
-          <div className="flex items-baseline justify-between">
-            <div>
-              <span className="text-[11px] font-light text-[#A0A0A0] block">
+        <div className="pt-6 border-t border-white/10 space-y-4">
+          <div className="flex items-baseline justify-between gap-4">
+            <div className="space-y-2">
+              <span className="text-xs font-light text-[#A0A0A0] block leading-relaxed">
                 最終装備 合計参考金額
               </span>
-              <span className="text-[10px] text-[#00E5FF]">
+              <span className="text-[11px] text-[#00E5FF] block leading-relaxed">
                 {priceDiffFromBase === 0
                   ? '推奨ベースと同額'
                   : priceDiffFromBase > 0
@@ -233,16 +233,16 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                   : `推奨ベースより -¥${Math.abs(priceDiffFromBase).toLocaleString()} お得`}
               </span>
             </div>
-            <div className="text-2xl sm:text-3xl font-light text-[#FFFFFF] tabular-nums">
+            <div className="text-2xl sm:text-3xl font-light text-[#FFFFFF] tabular-nums leading-relaxed">
               ¥{totalValue.toLocaleString()}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-4">
             <button
               type="button"
               onClick={handleCopyUrl}
-              className="py-2.5 px-3 rounded-xl bg-[#151515] border border-[#00E5FF]/50 hover:border-[#00E5FF] text-xs text-[#00E5FF] font-medium transition-colors flex items-center justify-center gap-1.5"
+              className="py-4 px-4 rounded-xl bg-[#151515] border border-[#00E5FF]/50 hover:border-[#00E5FF] text-xs text-[#00E5FF] font-medium transition-colors flex items-center justify-center gap-2 leading-4"
             >
               {urlCopied ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
               <span>{urlCopied ? 'URLコピー完了' : '装備共有URLをコピー'}</span>
@@ -250,7 +250,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             <button
               type="button"
               onClick={handleCopyText}
-              className="py-2.5 px-3 rounded-xl bg-[#151515] border border-white/15 hover:border-[#00E5FF] text-xs text-[#FFFFFF] font-light transition-colors flex items-center justify-center gap-1.5"
+              className="py-4 px-4 rounded-xl bg-[#151515] border border-white/15 hover:border-[#00E5FF] text-xs text-[#FFFFFF] font-light transition-colors flex items-center justify-center gap-2 leading-4"
             >
               {textCopied ? <Check className="w-3.5 h-3.5 text-[#00E5FF]" /> : <Share2 className="w-3.5 h-3.5 text-[#00E5FF]" />}
               <span>{textCopied ? 'テキストコピー済' : '仕様書テキストをコピー'}</span>
@@ -260,27 +260,27 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
       </div>
 
       {/* ==================== 右カラム (7 cols): 4スロット装備 ＋ Amazon購入リスト ==================== */}
-      <div className="lg:col-span-7 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-5 space-y-3">
-        <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
-          <div>
-            <span className="text-[10px] font-semibold tracking-[0.18em] text-[#FF9900]">
+      <div className="lg:col-span-7 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-6 sm:p-8 space-y-6">
+        <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div className="space-y-2">
+            <span className="text-[10px] font-semibold tracking-[0.18em] text-[#FF9900] block leading-relaxed">
               AMAZON.CO.JP OFFICIAL AFFILIATE LINKS
             </span>
-            <h2 className="text-base sm:text-lg font-normal text-[#FFFFFF]">
+            <h2 className="text-base sm:text-lg font-normal text-[#FFFFFF] leading-relaxed">
               決定した4スロット装備 ＆ 適合リーダー・フック購入リスト
             </h2>
           </div>
           <button
             type="button"
             onClick={onBackToTargetSelect}
-            className="text-[11px] font-light text-[#A0A0A0] hover:text-[#00E5FF] underline"
+            className="text-xs font-light text-[#A0A0A0] hover:text-[#00E5FF] underline leading-relaxed"
           >
             釣る魚を選び直す
           </button>
         </div>
 
-        {/* 4スロットのコンパクト購入カードリスト */}
-        <div className="flex-1 min-h-0 flex flex-col justify-between gap-2.5">
+        {/* 4スロットの購入カードリスト */}
+        <div className="flex-1 min-h-0 flex flex-col justify-between gap-4">
           {CATEGORY_ORDER.map((cat) => {
             const meta = STEP_META[cat];
             const item = rig[cat];
@@ -297,18 +297,18 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             return (
               <div
                 key={cat}
-                className={`rounded-xl bg-[#151515] border p-3.5 flex flex-col justify-between gap-2 ${
+                className={`rounded-xl bg-[#151515] border p-6 flex flex-col justify-between gap-4 ${
                   compatible ? 'border-white/10 hover:border-[#00E5FF]/50' : 'border-rose-500/60'
                 }`}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="min-w-0 space-y-0.5">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-[#00E5FF] font-mono">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="min-w-0 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2 leading-relaxed">
+                      <span className="text-xs font-bold text-[#00E5FF] font-mono">
                         {meta.stepNum} {meta.label}
                       </span>
                       <span
-                        className={`text-[10px] px-2 py-0.2 rounded-full font-semibold ${
+                        className={`text-[10px] px-2 py-0 leading-6 rounded-full font-semibold ${
                           isCustomized
                             ? 'bg-[#00E5FF] text-[#151515]'
                             : 'bg-white/10 text-[#A0A0A0]'
@@ -316,25 +316,25 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                       >
                         {isCustomized ? `変更済 (元: ${baseItem?.shortName})` : '推奨ベース'}
                       </span>
-                      <span className="text-[11px] font-light text-[#FFFFFF] tabular-nums">
+                      <span className="text-xs font-light text-[#FFFFFF] tabular-nums">
                         ¥{item.price.toLocaleString()}
                       </span>
                     </div>
 
-                    <div className="text-sm font-normal text-[#FFFFFF] truncate">
+                    <div className="text-sm sm:text-base font-normal text-[#FFFFFF] truncate leading-relaxed">
                       {item.brand} — {item.name}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <div className="flex flex-wrap items-center gap-2 leading-relaxed">
                       {item.propertyTags.map((tag) => (
                         <span
                           key={tag}
-                          className="text-[10px] px-2 py-0.2 rounded bg-[#222222] border border-white/10 text-[#00E5FF]"
+                          className="text-[10px] px-2 py-0 leading-6 rounded bg-[#222222] border border-white/10 text-[#00E5FF]"
                         >
                           {tag}
                         </span>
                       ))}
-                      <span className="text-[10px] text-[#A0A0A0]">({reason})</span>
+                      <span className="text-[11px] text-[#A0A0A0]">({reason})</span>
                     </div>
                   </div>
 
@@ -343,7 +343,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onBackToGarage(cat)}
-                      className="px-3 py-2 rounded-lg bg-[#222222] border border-white/15 hover:border-[#00E5FF] text-[11px] text-[#FFFFFF] transition-colors"
+                      className="px-4 py-2 rounded-lg bg-[#222222] border border-white/15 hover:border-[#00E5FF] text-xs text-[#FFFFFF] transition-colors leading-6"
                     >
                       変更・比較
                     </button>
@@ -351,28 +351,28 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                       href={mainAmazonUrl}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
-                      className="px-4 py-2 rounded-lg bg-[#FF9900] hover:bg-[#FF9900]/90 text-[#151515] text-xs font-bold tracking-wider transition-transform hover:scale-105 flex items-center gap-1.5 shadow-[0_0_12px_rgba(255,153,0,0.3)]"
+                      className="px-4 py-2 rounded-lg bg-[#FF9900] hover:bg-[#FF9900]/90 text-[#151515] text-xs font-bold tracking-wider transition-transform hover:scale-105 flex items-center gap-2 shadow-[0_0_12px_rgba(255,153,0,0.3)] leading-6"
                     >
                       <span>Amazonで購入</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
                 </div>
 
                 {/* 適合サブパーツ（ショックリーダー・太軸フック）の購入リンク */}
                 {subAmazonUrl && item.amazon.subItemLabel && (
-                  <div className="pt-2 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                    <span className="text-[11px] font-light text-[#00E5FF]">
+                  <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-xs font-light text-[#00E5FF] leading-relaxed">
                       ＋ 必須ペア金具：{item.amazon.subItemLabel}
                     </span>
                     <a
                       href={subAmazonUrl}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
-                      className="self-start sm:self-auto px-2.5 py-1 rounded bg-[#222222] hover:bg-[#FF9900]/20 border border-[#FF9900]/50 text-[10px] font-medium text-[#FF9900] transition-colors inline-flex items-center gap-1"
+                      className="self-start sm:self-auto px-4 py-2 rounded-lg bg-[#222222] hover:bg-[#FF9900]/20 border border-[#FF9900]/50 text-[11px] font-medium text-[#FF9900] transition-colors inline-flex items-center gap-2 leading-4"
                     >
                       <span>適合サブパーツもAmazonで見る</span>
-                      <ExternalLink className="w-2.5 h-2.5" />
+                      <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
                 )}
@@ -381,8 +381,8 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
           })}
         </div>
 
-        {/* Amazonアソシエイト規約表記（1行コンパクト） */}
-        <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] font-light text-[#A0A0A0]">
+        {/* Amazonアソシエイト規約表記 */}
+        <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-light text-[#A0A0A0] leading-relaxed">
           <span>
             Amazonのアソシエイトとして、RIGs（リグス）は適格販売により収入を得ています。
           </span>

@@ -65,21 +65,21 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
   return (
     <aside
       aria-label="マイタックルボックス・物理互換性ドック"
-      className="w-full flex flex-col gap-4 sm:gap-5"
+      className="w-full flex flex-col gap-6"
     >
       {/* ==================== BENTO CARD 1: DOCK HEADER & OVERVIEW ==================== */}
-      <div className="bento-glass-card rounded-2xl p-5 flex items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2.5">
+      <div className="bento-glass-card rounded-2xl p-6 flex items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 leading-relaxed">
             <span className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF] inline-block" />
             <h2 className="font-inter text-base sm:text-lg font-bold tracking-wider uppercase text-white">
               MY TACKLE BENTO
             </h2>
-            <span className="font-oswald text-xs tracking-wider px-2.5 py-0.5 rounded-full bg-[#1A1A1A] border border-[#00E5FF]/50 text-[#00E5FF] font-semibold">
+            <span className="font-oswald text-xs tracking-wider px-2 py-0 leading-6 rounded-full bg-[#1A1A1A] border border-[#00E5FF]/50 text-[#00E5FF] font-semibold">
               {evaluation.completedSlotsCount} / 4 SLOTS
             </span>
           </div>
-          <p className="font-jp text-xs font-normal text-slate-200 mt-1">
+          <p className="font-jp text-xs font-normal text-slate-200 leading-relaxed">
             選択済みパーツの物理整合性・糸巻き量・針込ルアー重量をリアルタイム監視
           </p>
         </div>
@@ -87,7 +87,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
         <button
           type="button"
           onClick={onClearBuild}
-          className="cyber-float-hover shrink-0 text-xs font-jp font-medium text-slate-200 hover:text-white flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/15 bg-[#1A1A1A]/80"
+          className="cyber-float-hover shrink-0 text-xs font-jp font-medium text-slate-200 hover:text-white flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 bg-[#1A1A1A]/80 leading-4"
           title="構成をすべてリセット"
         >
           <RotateCcw className="w-3.5 h-3.5 text-[#00E5FF]" />
@@ -96,7 +96,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
       </div>
 
       {/* ==================== BENTO CARD 2: 4 RIGGING SLOTS BENTO STACK ==================== */}
-      <div className="grid grid-cols-1 gap-3.5">
+      <div className="grid grid-cols-1 gap-4">
         {/* -------------------- SLOT 01: REEL -------------------- */}
         <div
           role="button"
@@ -108,37 +108,37 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
               onSelectTab('reel');
             }
           }}
-          className={`cyber-float-hover cursor-pointer rounded-2xl p-4 sm:p-5 ${
+          className={`cyber-float-hover cursor-pointer rounded-2xl p-6 ${
             isSlotActive('reel') ? 'bento-glass-active' : 'bento-glass-card'
           }`}
         >
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="font-inter text-[11px] font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-md bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/40">
+              <span className="font-inter text-[11px] font-bold tracking-widest uppercase px-2 py-0 leading-6 rounded-md bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/40">
                 01 REEL
               </span>
-              <span className="font-jp text-xs font-medium text-slate-200">
+              <span className="font-jp text-xs font-medium text-slate-200 leading-relaxed">
                 主軸スピニングリール
               </span>
             </div>
             {build.reel && (
-              <span className="font-oswald text-lg font-semibold text-white tracking-wide tabular-nums">
+              <span className="font-oswald text-lg font-semibold text-white tracking-wide tabular-nums leading-relaxed">
                 ¥{build.reel.priceJpy.toLocaleString()}
               </span>
             )}
           </div>
 
           {build.reel ? (
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-4">
               <GearSchematic item={build.reel} compact />
-              <div className="flex-1 min-w-0">
-                <div className="font-inter text-[11px] font-bold text-[#00E5FF] uppercase tracking-widest">
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="font-inter text-[11px] font-bold text-[#00E5FF] uppercase tracking-widest leading-relaxed">
                   {build.reel.brand}
                 </div>
-                <div className="font-inter text-base font-bold text-white truncate mt-0.5">
+                <div className="font-inter text-base font-bold text-white truncate leading-relaxed">
                   {build.reel.modelName}
                 </div>
-                <div className="font-jp text-xs text-slate-200 mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <div className="font-jp text-xs text-slate-200 flex flex-wrap items-center gap-x-2 gap-y-2 leading-relaxed">
                   <span>
                     自重{' '}
                     <strong className="font-oswald text-white font-semibold tracking-wide">
@@ -174,7 +174,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
               </button>
             </div>
           ) : (
-            <div className="py-2.5 flex items-center justify-between text-xs font-jp text-slate-200">
+            <div className="py-2 flex items-center justify-between text-xs font-jp text-slate-200 leading-relaxed">
               <span>リールを選択してください（14000番〜20000番）</span>
               <ChevronRight className="w-4 h-4 text-[#00E5FF]" />
             </div>
@@ -192,37 +192,37 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
               onSelectTab('rod');
             }
           }}
-          className={`cyber-float-hover cursor-pointer rounded-2xl p-4 sm:p-5 ${
+          className={`cyber-float-hover cursor-pointer rounded-2xl p-6 ${
             isSlotActive('rod') ? 'bento-glass-active' : 'bento-glass-card'
           }`}
         >
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="font-inter text-[11px] font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-md bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/40">
+              <span className="font-inter text-[11px] font-bold tracking-widest uppercase px-2 py-0 leading-6 rounded-md bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/40">
                 02 ROD
               </span>
-              <span className="font-jp text-xs font-medium text-slate-200">
+              <span className="font-jp text-xs font-medium text-slate-200 leading-relaxed">
                 オフショアキャスティングロッド
               </span>
             </div>
             {build.rod && (
-              <span className="font-oswald text-lg font-semibold text-white tracking-wide tabular-nums">
+              <span className="font-oswald text-lg font-semibold text-white tracking-wide tabular-nums leading-relaxed">
                 ¥{build.rod.priceJpy.toLocaleString()}
               </span>
             )}
           </div>
 
           {build.rod ? (
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-4">
               <GearSchematic item={build.rod} compact />
-              <div className="flex-1 min-w-0">
-                <div className="font-inter text-[11px] font-bold text-[#00E5FF] uppercase tracking-widest">
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="font-inter text-[11px] font-bold text-[#00E5FF] uppercase tracking-widest leading-relaxed">
                   {build.rod.brand}
                 </div>
-                <div className="font-inter text-base font-bold text-white truncate mt-0.5">
+                <div className="font-inter text-base font-bold text-white truncate leading-relaxed">
                   {build.rod.modelName}
                 </div>
-                <div className="font-jp text-xs text-slate-200 mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <div className="font-jp text-xs text-slate-200 flex flex-wrap items-center gap-x-2 gap-y-2 leading-relaxed">
                   <span className="font-oswald text-white font-semibold tracking-wide">
                     {build.rod.specs.lengthFtIn} ({build.rod.specs.weightG}g)
                   </span>
@@ -255,7 +255,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
               </button>
             </div>
           ) : (
-            <div className="py-2.5 flex items-center justify-between text-xs font-jp text-slate-200">
+            <div className="py-2 flex items-center justify-between text-xs font-jp text-slate-200 leading-relaxed">
               <span>適合ロッドを選択してください</span>
               <ChevronRight className="w-4 h-4 text-[#00E5FF]" />
             </div>
@@ -273,21 +273,21 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
               onSelectTab('line_pe');
             }
           }}
-          className={`cyber-float-hover cursor-pointer rounded-2xl p-4 sm:p-5 ${
+          className={`cyber-float-hover cursor-pointer rounded-2xl p-6 ${
             isSlotActive('line') ? 'bento-glass-active' : 'bento-glass-card'
           }`}
         >
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="font-inter text-[11px] font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-md bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/40">
+              <span className="font-inter text-[11px] font-bold tracking-widest uppercase px-2 py-0 leading-6 rounded-md bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/40">
                 03 LINE
               </span>
-              <span className="font-jp text-xs font-medium text-slate-200">
+              <span className="font-jp text-xs font-medium text-slate-200 leading-relaxed">
                 PEライン ＋ 適合リーダー
               </span>
             </div>
             {(build.peLine || build.shockLeader) && (
-              <span className="font-oswald text-lg font-semibold text-white tracking-wide tabular-nums">
+              <span className="font-oswald text-lg font-semibold text-white tracking-wide tabular-nums leading-relaxed">
                 ¥
                 {(
                   (build.peLine?.priceJpy ?? 0) + (build.shockLeader?.priceJpy ?? 0)
@@ -298,16 +298,16 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
 
           {build.peLine ? (
             <div>
-              <div className="flex items-center gap-3.5">
+              <div className="flex items-center gap-4">
                 <GearSchematic item={build.peLine} compact />
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-inter text-[11px] font-bold text-[#00E5FF] uppercase tracking-widest">
+                    <span className="font-inter text-[11px] font-bold text-[#00E5FF] uppercase tracking-widest leading-relaxed">
                       {build.peLine.brand}
                     </span>
                     {evaluation.spoolFillRatioPercent !== null && (
                       <span
-                        className={`font-oswald text-xs px-2 py-0.5 rounded-md border tracking-wide ${
+                        className={`font-oswald text-xs px-2 py-0 leading-6 rounded-md border tracking-wide ${
                           evaluation.spoolFillRatioPercent === 100
                             ? 'bg-[#00E5FF]/15 border-[#00E5FF] text-[#00E5FF]'
                             : evaluation.spoolFillRatioPercent > 100
@@ -319,10 +319,10 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="font-inter text-base font-bold text-white truncate mt-0.5">
+                  <div className="font-inter text-base font-bold text-white truncate leading-relaxed">
                     {build.peLine.modelName}
                   </div>
-                  <div className="font-jp text-xs text-slate-200 mt-1">
+                  <div className="font-jp text-xs text-slate-200 leading-relaxed">
                     PE{' '}
                     <strong className="font-oswald text-white font-semibold">
                       {build.peLine.specs.peNumber}
@@ -356,14 +356,14 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
                   e.stopPropagation();
                   onSelectTab('line_leader');
                 }}
-                className={`mt-3 pt-2.5 border-t border-white/10 pl-3 border-l-2 rounded-r-xl transition-colors ${
+                className={`mt-4 p-4 border-t border-white/10 border-l-2 rounded-r-xl transition-colors ${
                   activeTab === 'line_leader'
                     ? 'border-l-[#00E5FF] bg-[#1A1A1A]/90'
                     : 'border-l-[#00E5FF]/60 bg-[#1A1A1A]/50'
-                } p-2.5`}
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between leading-relaxed">
+                  <div className="flex items-center gap-2">
                     <Layers className="w-3.5 h-3.5 text-[#00E5FF]" />
                     <span className="font-inter text-[11px] font-semibold uppercase tracking-wider text-[#00E5FF]">
                       AUTO-BOUND: SHOCK LEADER
@@ -376,13 +376,15 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
                   </span>
                 </div>
                 {build.shockLeader && (
-                  <div className="mt-1">
-                    <div className="font-jp text-xs font-medium text-white truncate">
+                  <div className="mt-2 space-y-2">
+                    <div className="font-jp text-xs font-medium text-white truncate leading-relaxed">
                       {build.shockLeader.brand} {build.shockLeader.modelName}
                     </div>
                     {compatibleLeaders.length > 1 && (
-                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                        <span className="font-jp text-[11px] text-slate-300">適合号数切替:</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-jp text-[11px] text-slate-300 leading-relaxed">
+                          適合号数切替:
+                        </span>
                         {compatibleLeaders.map((ldr) => (
                           <button
                             key={ldr.id}
@@ -391,7 +393,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
                               e.stopPropagation();
                               onQuickSwitchLeader(ldr);
                             }}
-                            className={`cyber-float-hover font-oswald text-xs px-2.5 py-0.5 rounded-md border tracking-wide ${
+                            className={`cyber-float-hover font-oswald text-xs px-2 py-0 leading-6 rounded-md border tracking-wide ${
                               build.shockLeader?.id === ldr.id
                                 ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF] font-bold'
                                 : 'bg-[#1A1A1A] text-slate-200 border-white/20 hover:border-[#00E5FF]'
@@ -407,7 +409,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
               </div>
             </div>
           ) : (
-            <div className="py-2.5 flex items-center justify-between text-xs font-jp text-slate-200">
+            <div className="py-2 flex items-center justify-between text-xs font-jp text-slate-200 leading-relaxed">
               <span>PEラインを選択（適合リーダーが自動セットされます）</span>
               <ChevronRight className="w-4 h-4 text-[#00E5FF]" />
             </div>
@@ -425,21 +427,21 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
               onSelectTab('lure_plug');
             }
           }}
-          className={`cyber-float-hover cursor-pointer rounded-2xl p-4 sm:p-5 ${
+          className={`cyber-float-hover cursor-pointer rounded-2xl p-6 ${
             isSlotActive('lure') ? 'bento-glass-active' : 'bento-glass-card'
           }`}
         >
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="font-inter text-[11px] font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-md bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/40">
+              <span className="font-inter text-[11px] font-bold tracking-widest uppercase px-2 py-0 leading-6 rounded-md bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/40">
                 04 LURE
               </span>
-              <span className="font-jp text-xs font-medium text-slate-200">
+              <span className="font-jp text-xs font-medium text-slate-200 leading-relaxed">
                 プラグ ＋ 適合太軸フック＆リング
               </span>
             </div>
             {(build.plug || build.hookSet) && (
-              <span className="font-oswald text-lg font-semibold text-white tracking-wide tabular-nums">
+              <span className="font-oswald text-lg font-semibold text-white tracking-wide tabular-nums leading-relaxed">
                 ¥
                 {(
                   (build.plug?.priceJpy ?? 0) + (build.hookSet?.priceJpy ?? 0)
@@ -450,23 +452,23 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
 
           {build.plug ? (
             <div>
-              <div className="flex items-center gap-3.5">
+              <div className="flex items-center gap-4">
                 <GearSchematic item={build.plug} compact />
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-inter text-[11px] font-bold text-[#00E5FF] uppercase tracking-widest">
+                    <span className="font-inter text-[11px] font-bold text-[#00E5FF] uppercase tracking-widest leading-relaxed">
                       {build.plug.brand}
                     </span>
                     {evaluation.totalLureWeightG !== null && (
-                      <span className="font-oswald text-xs px-2 py-0.5 rounded-md bg-[#00E5FF]/15 border border-[#00E5FF]/60 text-[#00E5FF] tracking-wide">
+                      <span className="font-oswald text-xs px-2 py-0 leading-6 rounded-md bg-[#00E5FF]/15 border border-[#00E5FF]/60 text-[#00E5FF] tracking-wide">
                         TOTAL {evaluation.totalLureWeightG}g (針込)
                       </span>
                     )}
                   </div>
-                  <div className="font-inter text-base font-bold text-white truncate mt-0.5">
+                  <div className="font-inter text-base font-bold text-white truncate leading-relaxed">
                     {build.plug.modelName}
                   </div>
-                  <div className="font-jp text-xs text-slate-200 mt-1">
+                  <div className="font-jp text-xs text-slate-200 leading-relaxed">
                     全長{' '}
                     <strong className="font-oswald text-white font-semibold">
                       {build.plug.specs.lengthMm}mm
@@ -496,14 +498,14 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
                   e.stopPropagation();
                   onSelectTab('lure_hook');
                 }}
-                className={`mt-3 pt-2.5 border-t border-white/10 pl-3 border-l-2 rounded-r-xl transition-colors ${
+                className={`mt-4 p-4 border-t border-white/10 border-l-2 rounded-r-xl transition-colors ${
                   activeTab === 'lure_hook'
                     ? 'border-l-[#00E5FF] bg-[#1A1A1A]/90'
                     : 'border-l-[#00E5FF]/60 bg-[#1A1A1A]/50'
-                } p-2.5`}
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between leading-relaxed">
+                  <div className="flex items-center gap-2">
                     <Sliders className="w-3.5 h-3.5 text-[#00E5FF]" />
                     <span className="font-inter text-[11px] font-semibold uppercase tracking-wider text-[#00E5FF]">
                       AUTO-BOUND: HOOK & RING (+{build.hookSet?.specs.weightG ?? 0}g)
@@ -514,13 +516,15 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
                   </span>
                 </div>
                 {build.hookSet && (
-                  <div className="mt-1">
-                    <div className="font-jp text-xs font-medium text-white truncate">
+                  <div className="mt-2 space-y-2">
+                    <div className="font-jp text-xs font-medium text-white truncate leading-relaxed">
                       {build.hookSet.brand} {build.hookSet.modelName}
                     </div>
                     {compatibleHooks.length > 1 && (
-                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                        <span className="font-jp text-[11px] text-slate-300">仕様切替:</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-jp text-[11px] text-slate-300 leading-relaxed">
+                          仕様切替:
+                        </span>
                         {compatibleHooks.map((hk) => {
                           const isSingle =
                             hk.modelName.includes('シングル') || hk.modelName.includes('管ムロ');
@@ -532,7 +536,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
                                 e.stopPropagation();
                                 onQuickSwitchHook(hk);
                               }}
-                              className={`cyber-float-hover font-jp text-xs px-2.5 py-0.5 rounded-md border ${
+                              className={`cyber-float-hover font-jp text-xs px-2 py-0 leading-6 rounded-md border ${
                                 build.hookSet?.id === hk.id
                                   ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF] font-bold'
                                   : 'bg-[#1A1A1A] text-slate-200 border-white/20 hover:border-[#00E5FF]'
@@ -550,7 +554,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
               </div>
             </div>
           ) : (
-            <div className="py-2.5 flex items-center justify-between text-xs font-jp text-slate-200">
+            <div className="py-2 flex items-center justify-between text-xs font-jp text-slate-200 leading-relaxed">
               <span>プラグを選択（適合フック＆リングが自動セットされます）</span>
               <ChevronRight className="w-4 h-4 text-[#00E5FF]" />
             </div>
@@ -559,23 +563,23 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
       </div>
 
       {/* ==================== BENTO CARD 3: 6-POINT TELEMETRY & CHECKOUT CTA ==================== */}
-      <div className="bento-glass-card rounded-2xl p-5 space-y-4">
+      <div className="bento-glass-card rounded-2xl p-6 space-y-6">
         {/* Status Banner */}
         <div
-          className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${
+          className={`p-4 rounded-xl border flex items-center justify-between gap-4 ${
             evaluation.criticalIssues.length > 0
               ? 'bg-rose-950/40 border-rose-400/80 text-rose-100'
               : 'bg-[#00E5FF]/10 border-[#00E5FF]/80 text-white animate-electric-glow'
           }`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {evaluation.criticalIssues.length > 0 ? (
               <AlertTriangle className="w-6 h-6 text-rose-400 shrink-0" />
             ) : (
               <ShieldCheck className="w-6 h-6 text-[#00E5FF] shrink-0" />
             )}
-            <div>
-              <div className="font-inter text-xs font-bold tracking-wider uppercase flex items-center gap-2">
+            <div className="space-y-2">
+              <div className="font-inter text-xs font-bold tracking-wider uppercase flex items-center gap-2 leading-relaxed">
                 {evaluation.criticalIssues.length > 0 ? (
                   <span>
                     INCOMPATIBLE ({evaluation.criticalIssues.length}件の物理的不整合)
@@ -589,7 +593,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
                   </>
                 )}
               </div>
-              <div className="font-jp text-xs text-slate-200 mt-0.5">
+              <div className="font-jp text-xs text-slate-200 leading-relaxed">
                 {evaluation.recommendedInitialDragKg ? (
                   <>
                     推奨初期ドラグ:{' '}
@@ -618,22 +622,22 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
         </div>
 
         {/* 6-Point Telemetry Checklist */}
-        <div className="space-y-2 pt-1">
-          <div className="font-inter text-[11px] font-semibold uppercase tracking-widest text-slate-300 flex items-center gap-1.5">
+        <div className="space-y-2">
+          <div className="font-inter text-[11px] font-semibold uppercase tracking-widest text-slate-300 flex items-center gap-2 leading-relaxed">
             <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" />
             <span>6-POINT RIGGING TELEMETRY</span>
           </div>
           {evaluation.checks.map((chk) => (
             <div
               key={chk.id}
-              className="flex items-start gap-2.5 text-xs leading-relaxed py-1 border-b border-white/5 last:border-none"
+              className="flex items-start gap-2 text-xs leading-relaxed py-2 border-b border-white/5 last:border-none"
             >
               {chk.passed === true ? (
-                <CheckCircle2 className="w-4 h-4 text-[#00E5FF] shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-[#00E5FF] shrink-0 mt-0" />
               ) : chk.passed === false ? (
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0" />
               ) : (
-                <span className="w-4 h-4 inline-block border border-white/25 rounded-full shrink-0 mt-0.5" />
+                <span className="w-4 h-4 inline-block border border-white/25 rounded-full shrink-0 mt-0" />
               )}
               <div className="flex-1 min-w-0 font-jp">
                 <span className="text-white font-medium">{chk.label}: </span>
@@ -654,17 +658,17 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
         </div>
 
         {/* Total Price & Action Button */}
-        <div className="pt-3 border-t border-white/10">
-          <div className="flex items-baseline justify-between mb-3.5">
-            <div>
-              <span className="font-inter text-[11px] font-semibold uppercase tracking-widest text-slate-300 block">
+        <div className="pt-4 border-t border-white/10">
+          <div className="flex items-baseline justify-between mb-4">
+            <div className="space-y-2">
+              <span className="font-inter text-[11px] font-semibold uppercase tracking-widest text-slate-300 block leading-relaxed">
                 TOTAL PACKAGE VALUE
               </span>
-              <span className="font-jp text-[11px] text-slate-300">
+              <span className="font-jp text-[11px] text-slate-300 block leading-relaxed">
                 税込・適合リーダー＆フック一式込
               </span>
             </div>
-            <span className="font-oswald text-3xl sm:text-4xl font-bold text-white tracking-tight tabular-nums">
+            <span className="font-oswald text-3xl sm:text-4xl font-bold text-white tracking-tight tabular-nums leading-relaxed">
               ¥{evaluation.totalPriceJpy.toLocaleString()}
             </span>
           </div>
@@ -673,7 +677,7 @@ export const TackleBoxDock: React.FC<TackleBoxDockProps> = ({
             type="button"
             onClick={onOpenSpecModal}
             disabled={evaluation.completedSlotsCount === 0}
-            className={`cyber-float-hover w-full py-3.5 px-5 rounded-xl font-jp text-sm sm:text-base font-bold tracking-wider flex items-center justify-center gap-2.5 ${
+            className={`cyber-float-hover w-full py-4 px-6 rounded-xl font-jp text-sm sm:text-base font-bold tracking-wider flex items-center justify-center gap-2 leading-6 ${
               evaluation.criticalIssues.length > 0
                 ? 'bg-rose-600 hover:bg-rose-500 text-white border border-rose-400'
                 : 'bg-[#00E5FF] text-[#1A1A1A] border border-[#00E5FF] shadow-[0_0_24px_-4px_rgba(0,229,255,0.5)]'

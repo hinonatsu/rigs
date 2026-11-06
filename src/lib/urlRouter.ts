@@ -98,6 +98,11 @@ export function buildUrlString(route: RouteState, rig: RigState): string {
   const url = new URL(window.location.href);
   const params = new URLSearchParams();
 
+  if (route.view === 'home') {
+    url.search = '';
+    return url.toString();
+  }
+
   params.set('view', route.view);
   params.set('target', route.targetId);
 

@@ -141,29 +141,29 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
         .map(([pe, m]) => `PE${pe}:${m}m`)
         .join(' / ');
       return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3.5 mt-3.5 border-t border-white/10">
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">番手 / 自重</div>
-            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 mt-4 border-t border-white/10">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">番手 / 自重</div>
+            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
               #{r.specs.sizeClass} / {r.specs.weightG}g
             </div>
           </div>
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">ギア比 / 巻上長</div>
-            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">ギア比 / 巻上長</div>
+            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
               {r.specs.gearRatio} ({r.specs.retrieveCm}cm)
             </div>
           </div>
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">実用 / 最大ドラグ</div>
-            <div className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide mt-0.5">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">実用 / 最大ドラグ</div>
+            <div className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide leading-relaxed">
               {r.specs.practicalDragKg}kg / {r.specs.maxDragKg}kg
             </div>
           </div>
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">PE糸巻き量</div>
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">PE糸巻き量</div>
             <div
-              className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide truncate mt-0.5"
+              className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide truncate leading-relaxed"
               title={capStr}
             >
               {capStr}
@@ -177,29 +177,29 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
       const rod = item as RodProduct;
       return (
         <div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3.5 mt-3.5 border-t border-white/10">
-            <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-              <div className="font-jp text-[11px] text-slate-300">全長 / 自重</div>
-              <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 mt-4 border-t border-white/10">
+            <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+              <div className="font-jp text-[11px] text-slate-300 leading-relaxed">全長 / 自重</div>
+              <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
                 {rod.specs.lengthFtIn} ({rod.specs.weightG}g)
               </div>
             </div>
-            <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-              <div className="font-jp text-[11px] text-slate-300">適合ルアー (最適域)</div>
-              <div className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide mt-0.5">
+            <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+              <div className="font-jp text-[11px] text-slate-300 leading-relaxed">適合ルアー (最適域)</div>
+              <div className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide leading-relaxed">
                 {rod.specs.lureMinG}–{rod.specs.lureMaxG}g ({rod.specs.lureSweetMinG}–
                 {rod.specs.lureSweetMaxG}g)
               </div>
             </div>
-            <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-              <div className="font-jp text-[11px] text-slate-300">適合PEライン</div>
-              <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+            <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+              <div className="font-jp text-[11px] text-slate-300 leading-relaxed">適合PEライン</div>
+              <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
                 PE {rod.specs.minPe}–{rod.specs.maxPe}号
               </div>
             </div>
-            <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-              <div className="font-jp text-[11px] text-slate-300">最大ドラグ / 推奨番手</div>
-              <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+            <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+              <div className="font-jp text-[11px] text-slate-300 leading-relaxed">最大ドラグ / 推奨番手</div>
+              <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
                 {rod.specs.maxDragKg}kg / #{rod.specs.compatibleReelSizes.join('・')}
               </div>
             </div>
@@ -218,26 +218,26 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
       const ln = item as LineProduct;
       const isPe = ln.specs.subType === 'pe_main';
       return (
-        <div className="grid grid-cols-3 gap-2.5 pt-3.5 mt-3.5 border-t border-white/10">
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">
+        <div className="grid grid-cols-3 gap-4 pt-4 mt-4 border-t border-white/10">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">
               {isPe ? 'PE号数 / 長さ' : 'リーダー長さ'}
             </div>
-            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
               {isPe ? `PE ${ln.specs.peNumber}号 (${ln.specs.lengthM}m)` : `${ln.specs.lengthM}m`}
             </div>
           </div>
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">直線最大強力</div>
-            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">直線最大強力</div>
+            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
               {ln.specs.strengthLb}lb ({Math.round(ln.specs.strengthLb * 0.4536)}kg)
             </div>
           </div>
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">
               {isPe ? '自動ペアリングリーダー' : '適合PE号数レンジ'}
             </div>
-            <div className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide truncate mt-0.5">
+            <div className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide truncate leading-relaxed">
               {isPe
                 ? ln.specs.defaultSubLeaderSku?.replace('LEADER-VARIVAS-OR-', '') ?? '-'
                 : `PE ${ln.specs.compatiblePeMin}–${ln.specs.compatiblePeMax}号`}
@@ -252,28 +252,28 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
     const isPlug = lr.specs.subType === 'plug_main';
     return (
       <div>
-        <div className="grid grid-cols-3 gap-2.5 pt-3.5 mt-3.5 border-t border-white/10">
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">
+        <div className="grid grid-cols-3 gap-4 pt-4 mt-4 border-t border-white/10">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">
               {isPlug ? '全長 / 本体単体' : '前後セット総重量'}
             </div>
-            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
               {isPlug ? `${lr.specs.lengthMm}mm / ${lr.specs.weightG}g` : `${lr.specs.weightG}g`}
             </div>
           </div>
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">
               {isPlug ? '実戦総重量 (適合針込)' : '適合プラグ規格'}
             </div>
-            <div className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide mt-0.5">
+            <div className="font-oswald text-sm sm:text-base text-[#00E5FF] font-semibold tracking-wide leading-relaxed">
               {isPlug
                 ? `${evalResult.subMetrics?.totalLureWeightG ?? lr.specs.weightG}g`
                 : lr.specs.hookCode.replace('CLASS_', '#').replace('_', '/')}
             </div>
           </div>
-          <div className="bg-[#1A1A1A]/85 px-3 py-2 rounded-xl border border-white/10">
-            <div className="font-jp text-[11px] text-slate-300">推奨ライン下限</div>
-            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide mt-0.5">
+          <div className="bg-[#1A1A1A]/85 p-4 rounded-xl border border-white/10 space-y-2">
+            <div className="font-jp text-[11px] text-slate-300 leading-relaxed">推奨ライン下限</div>
+            <div className="font-oswald text-sm sm:text-base text-white font-semibold tracking-wide leading-relaxed">
               PE {lr.specs.minPe}号+
             </div>
           </div>
@@ -291,10 +291,10 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
   return (
     <section
       aria-label="パーツセレクター＆互換性Bentoグリッド"
-      className="flex-1 min-w-0 flex flex-col gap-5"
+      className="flex-1 min-w-0 flex flex-col gap-6"
     >
       {/* ==================== BENTO STEP NAVIGATION BAR ==================== */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {(
           [
             {
@@ -336,23 +336,23 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
               key={step.id}
               type="button"
               onClick={() => onSelectTab(step.id)}
-              className={`cyber-float-hover p-3.5 sm:p-4 rounded-2xl text-left flex items-center justify-between gap-2 ${
+              className={`cyber-float-hover p-4 rounded-2xl text-left flex items-center justify-between gap-2 ${
                 active ? 'bento-glass-active' : 'bento-glass-card'
               }`}
             >
-              <div className="min-w-0">
-                <div className="font-inter text-[11px] font-bold tracking-widest text-[#00E5FF] uppercase">
+              <div className="min-w-0 space-y-2">
+                <div className="font-inter text-[11px] font-bold tracking-widest text-[#00E5FF] uppercase leading-relaxed">
                   {step.code}
                 </div>
-                <div className="font-jp text-sm font-bold text-white mt-0.5 truncate">
+                <div className="font-jp text-sm font-bold text-white truncate leading-relaxed">
                   {step.label}
                 </div>
-                <div className="font-oswald text-xs text-slate-300 tracking-wider mt-0.5">
+                <div className="font-oswald text-xs text-slate-300 tracking-wider leading-relaxed">
                   {step.sub}
                 </div>
               </div>
               {step.selected && (
-                <span className="w-7 h-7 rounded-xl bg-[#00E5FF]/20 border border-[#00E5FF] text-[#00E5FF] flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(0,229,255,0.35)]">
+                <span className="w-8 h-8 rounded-xl bg-[#00E5FF]/20 border border-[#00E5FF] text-[#00E5FF] flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(0,229,255,0.35)]">
                   <Check className="w-4 h-4" />
                 </span>
               )}
@@ -365,10 +365,10 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
       {build.rod && (
         <div
           key={`rod-synergy-${build.rod.id}`}
-          className="bento-glass-card rounded-2xl p-4 sm:p-5 border border-[#00E5FF]/40"
+          className="bento-glass-card rounded-2xl p-6 border border-[#00E5FF]/40"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2 leading-relaxed">
               <Zap className="w-4 h-4 text-[#00E5FF]" />
               <span className="font-inter text-xs font-bold uppercase tracking-widest text-[#00E5FF]">
                 SELECTED ROD SYNERGY TELEMETRY
@@ -377,13 +377,13 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
                 — 選択中ロッド「{build.rod.brand} {build.rod.modelName}」の物理適合パラメータ
               </span>
             </div>
-            <span className="font-oswald text-xs px-2.5 py-0.5 rounded-full bg-[#00E5FF]/15 border border-[#00E5FF]/60 text-[#00E5FF] tracking-wider self-start sm:self-auto">
+            <span className="font-oswald text-xs px-2 py-0 leading-6 rounded-full bg-[#00E5FF]/15 border border-[#00E5FF]/60 text-[#00E5FF] tracking-wider self-start sm:self-auto">
               SPRING-SYNC ACTIVE
             </span>
           </div>
 
           {/* 4 Bento Sub-Modules that Stagger + Spring in when a compatible rod is selected */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
                 icon: Crosshair,
@@ -423,16 +423,16 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
                 <div
                   key={metric.label}
                   style={{ animationDelay: `${mIdx * 75}ms` }}
-                  className="animate-spring-stagger bg-[#1A1A1A]/90 border border-white/10 rounded-xl p-3.5 flex flex-col justify-between"
+                  className="animate-spring-stagger bg-[#1A1A1A]/90 border border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-2"
                 >
-                  <div className="flex items-center justify-between text-slate-300 mb-1">
+                  <div className="flex items-center justify-between text-slate-300 leading-relaxed">
                     <span className="font-jp text-[11px] font-medium">{metric.label}</span>
                     <IconComp className="w-3.5 h-3.5 text-[#00E5FF]" />
                   </div>
-                  <div className="font-oswald text-lg sm:text-xl font-bold text-white tracking-wide">
+                  <div className="font-oswald text-lg sm:text-xl font-bold text-white tracking-wide leading-relaxed">
                     {metric.value}
                   </div>
-                  <div className="font-jp text-[11px] text-[#00E5FF] mt-1 truncate">
+                  <div className="font-jp text-[11px] text-[#00E5FF] truncate leading-relaxed">
                     {metric.sub}
                   </div>
                 </div>
@@ -444,14 +444,14 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
 
       {/* ==================== SUB-SLOT TOGGLE BAR (LINE OR LURE) ==================== */}
       {(activeTab === 'line_pe' || activeTab === 'line_leader') && (
-        <div className="bento-glass-card rounded-2xl p-3 flex flex-wrap items-center gap-2.5">
-          <span className="font-jp text-xs font-medium text-slate-200 px-2">
+        <div className="bento-glass-card rounded-2xl p-4 flex flex-wrap items-center gap-2">
+          <span className="font-jp text-xs font-medium text-slate-200 px-2 leading-relaxed">
             LINE システム構成要素:
           </span>
           <button
             type="button"
             onClick={() => onSelectTab('line_pe')}
-            className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-bold border ${
+            className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-bold border leading-4 ${
               activeTab === 'line_pe'
                 ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF]'
                 : 'bg-[#1A1A1A] text-slate-200 border-white/15'
@@ -462,7 +462,7 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('line_leader')}
-            className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-bold border ${
+            className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-bold border leading-4 ${
               activeTab === 'line_leader'
                 ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF]'
                 : 'bg-[#1A1A1A] text-slate-200 border-white/15'
@@ -474,14 +474,14 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
       )}
 
       {(activeTab === 'lure_plug' || activeTab === 'lure_hook') && (
-        <div className="bento-glass-card rounded-2xl p-3 flex flex-wrap items-center gap-2.5">
-          <span className="font-jp text-xs font-medium text-slate-200 px-2">
+        <div className="bento-glass-card rounded-2xl p-4 flex flex-wrap items-center gap-2">
+          <span className="font-jp text-xs font-medium text-slate-200 px-2 leading-relaxed">
             LURE システム構成要素:
           </span>
           <button
             type="button"
             onClick={() => onSelectTab('lure_plug')}
-            className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-bold border ${
+            className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-bold border leading-4 ${
               activeTab === 'lure_plug'
                 ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF]'
                 : 'bg-[#1A1A1A] text-slate-200 border-white/15'
@@ -492,7 +492,7 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('lure_hook')}
-            className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-bold border ${
+            className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-bold border leading-4 ${
               activeTab === 'lure_hook'
                 ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF]'
                 : 'bg-[#1A1A1A] text-slate-200 border-white/15'
@@ -504,12 +504,12 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
       )}
 
       {/* ==================== BENTO HEADER & FILTER CONTROLS ==================== */}
-      <div className="bento-glass-card rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="font-inter text-xs font-bold text-[#00E5FF] tracking-widest uppercase">
+      <div className="bento-glass-card rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="font-inter text-xs font-bold text-[#00E5FF] tracking-widest uppercase leading-relaxed">
             {meta.step}
           </div>
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 leading-relaxed">
             <h1 className="font-inter text-xl sm:text-2xl font-extrabold tracking-tight text-white">
               {meta.title}
             </h1>
@@ -517,20 +517,20 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
               / {meta.jpTitle}
             </span>
           </div>
-          <p className="font-jp text-xs sm:text-sm font-normal text-slate-200 mt-1.5 leading-relaxed">
+          <p className="font-jp text-xs sm:text-sm font-normal text-slate-200 leading-relaxed">
             {meta.subtitle}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {/* Brand Filter */}
-          <div className="flex items-center gap-2 bg-[#1A1A1A] border border-white/20 rounded-xl px-3 py-2">
+          <div className="flex items-center gap-2 bg-[#1A1A1A] border border-white/20 rounded-xl px-4 py-2">
             <Filter className="w-4 h-4 text-[#00E5FF]" />
             <select
               value={brandFilter}
               onChange={(e) => setBrandFilter(e.target.value)}
               aria-label="ブランドで絞り込み"
-              className="bg-transparent text-xs font-inter font-semibold text-white focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-inter font-semibold text-white focus:outline-none cursor-pointer leading-4"
             >
               <option value="ALL" className="bg-[#2D2D2D] text-white">
                 ALL BRANDS ({candidates.length})
@@ -548,7 +548,7 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
             <button
               type="button"
               onClick={() => setShowIncompatible((prev) => !prev)}
-              className={`cyber-float-hover px-3.5 py-2 rounded-xl text-xs font-jp font-semibold border flex items-center gap-1.5 ${
+              className={`cyber-float-hover px-4 py-2 rounded-xl text-xs font-jp font-semibold border flex items-center gap-2 leading-4 ${
                 showIncompatible
                   ? 'bg-[#2D2D2D] border-white/25 text-white'
                   : 'bg-[#1A1A1A] border-white/15 text-slate-300'
@@ -566,12 +566,12 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
       </div>
 
       {/* ==================== 1. COMPATIBLE ITEMS BENTO GRID ==================== */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between px-2 leading-relaxed">
+        <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF] inline-block" />
           <h3 className="font-jp text-sm font-bold tracking-wide text-white">
             物理適合アイテム{' '}
-            <span className="font-oswald text-[#00E5FF] text-base ml-1">
+            <span className="font-oswald text-[#00E5FF] text-base ml-2">
               ({compatibleList.length} MODELS)
             </span>
           </h3>
@@ -582,13 +582,13 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
       </div>
 
       {compatibleList.length === 0 ? (
-        <div className="bento-glass-card rounded-2xl p-10 text-center font-jp text-sm text-slate-200">
+        <div className="bento-glass-card rounded-2xl p-10 text-center font-jp text-sm text-slate-200 leading-relaxed">
           現在の絞り込み条件に適合するアイテムがありません。ブランドフィルタまたは他スロットの選択を見直してください。
         </div>
       ) : (
         <div
           key={`bento-grid-${activeTab}-${animGeneration}`}
-          className="grid grid-cols-1 xl:grid-cols-2 gap-5"
+          className="grid grid-cols-1 xl:grid-cols-2 gap-6"
         >
           {compatibleList.map(({ item, evalResult }, idx) => {
             const selected = isCurrentlySelected(item);
@@ -606,31 +606,31 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
                     onSelectItem(item);
                   }
                 }}
-                className={`animate-spring-stagger cyber-float-hover cursor-pointer rounded-2xl p-5 sm:p-6 flex flex-col justify-between ${
+                className={`animate-spring-stagger cyber-float-hover cursor-pointer rounded-2xl p-6 flex flex-col justify-between ${
                   selected ? 'bento-glass-active' : 'bento-glass-card'
                 }`}
               >
                 <div>
                   {/* Top Status Bar */}
-                  <div className="flex items-center justify-between gap-2 mb-3.5">
+                  <div className="flex items-center justify-between gap-2 mb-4">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-inter text-xs font-extrabold text-[#00E5FF] uppercase tracking-widest px-2.5 py-0.5 rounded-md bg-[#1A1A1A] border border-[#00E5FF]/40">
+                      <span className="font-inter text-xs font-extrabold text-[#00E5FF] uppercase tracking-widest px-2 py-0 leading-6 rounded-md bg-[#1A1A1A] border border-[#00E5FF]/40">
                         {item.brand}
                       </span>
                       {isTopPick && (
-                        <span className="font-inter text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#00E5FF]/15 border border-[#00E5FF] text-[#00E5FF] flex items-center gap-1">
+                        <span className="font-inter text-[11px] font-bold px-2 py-0 leading-6 rounded-full bg-[#00E5FF]/15 border border-[#00E5FF] text-[#00E5FF] flex items-center gap-2">
                           <Sparkles className="w-3 h-3" />
                           BEST SWEET SPOT
                         </span>
                       )}
                       {selected && (
-                        <span className="font-inter text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#00E5FF] text-[#1A1A1A] shadow-[0_0_12px_rgba(0,229,255,0.5)]">
+                        <span className="font-inter text-[11px] font-extrabold px-2 py-0 leading-6 rounded-full bg-[#00E5FF] text-[#1A1A1A] shadow-[0_0_12px_rgba(0,229,255,0.5)]">
                           EQUIPPED
                         </span>
                       )}
                     </div>
                     <div className="text-right">
-                      <span className="font-oswald text-2xl font-bold text-white tracking-tight tabular-nums">
+                      <span className="font-oswald text-2xl font-bold text-white tracking-tight tabular-nums leading-relaxed">
                         ¥{item.priceJpy.toLocaleString()}
                       </span>
                     </div>
@@ -641,14 +641,14 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
                     <div className="sm:col-span-5">
                       <GearSchematic item={item} />
                     </div>
-                    <div className="sm:col-span-7">
-                      <h4 className="font-inter text-lg sm:text-xl font-bold text-white leading-snug">
+                    <div className="sm:col-span-7 space-y-2">
+                      <h4 className="font-inter text-lg sm:text-xl font-bold text-white leading-relaxed">
                         {item.modelName}
                       </h4>
-                      <div className="mt-2 inline-block font-jp text-xs font-medium px-2.5 py-1 rounded-lg bg-[#1A1A1A] border border-[#00E5FF]/50 text-[#00E5FF]">
+                      <div className="inline-block font-jp text-xs font-medium px-2 py-0 leading-6 rounded-lg bg-[#1A1A1A] border border-[#00E5FF]/50 text-[#00E5FF]">
                         {evalResult.headlineMetric}
                       </div>
-                      <p className="font-jp text-xs sm:text-[13px] font-normal text-slate-200 mt-2.5 leading-relaxed">
+                      <p className="font-jp text-xs sm:text-[13px] font-normal text-slate-200 leading-relaxed">
                         {item.expertNote}
                       </p>
                     </div>
@@ -659,9 +659,9 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
                 </div>
 
                 {/* Match Ground / Action Footer */}
-                <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between gap-3">
-                  <div className="font-jp text-xs text-slate-200 flex items-start gap-2 min-w-0">
-                    <Check className="w-4 h-4 text-[#00E5FF] shrink-0 mt-0.5" />
+                <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-4">
+                  <div className="font-jp text-xs text-slate-200 flex items-start gap-2 min-w-0 leading-relaxed">
+                    <Check className="w-4 h-4 text-[#00E5FF] shrink-0 mt-0" />
                     <span className="truncate font-medium">
                       {evalResult.reasons[0] ?? '現在のセットアップ構成に100%物理適合'}
                     </span>
@@ -669,7 +669,7 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
                   <button
                     type="button"
                     tabIndex={-1}
-                    className={`cyber-float-hover shrink-0 px-4 py-2 rounded-xl font-jp text-xs font-bold flex items-center gap-1.5 border ${
+                    className={`cyber-float-hover shrink-0 px-4 py-2 rounded-xl font-jp text-xs font-bold flex items-center gap-2 border leading-4 ${
                       selected
                         ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.4)]'
                         : 'bg-[#1A1A1A] text-white border-white/25 hover:border-[#00E5FF] hover:text-[#00E5FF]'
@@ -688,14 +688,14 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
       {/* ==================== 2. INCOMPATIBLE ITEMS (WITH PHYSICAL FAILURE REASONS) ==================== */}
       {incompatibleList.length > 0 && showIncompatible && (
         <div className="pt-6 border-t border-white/10 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-2 leading-relaxed">
             <div className="flex items-center gap-2">
               <AlertOctagon className="w-4 h-4 text-rose-400" />
               <h3 className="font-jp text-sm font-bold text-rose-200">
                 現在の構成に対して物理的不適合なアイテム ({incompatibleList.length}機種)
               </h3>
             </div>
-            <span className="font-jp text-xs text-slate-200 flex items-center gap-1.5">
+            <span className="font-jp text-xs text-slate-200 flex items-center gap-2">
               <Info className="w-3.5 h-3.5 text-[#00E5FF]" />
               ロッド破損・スプール糸溢れ・ルアー浮力破綻を防ぐため物理根拠を表示しています
             </span>
@@ -705,36 +705,36 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
             {incompatibleList.map(({ item, evalResult }) => (
               <article
                 key={item.id}
-                className="bento-glass-card rounded-2xl border-rose-500/40 p-5 opacity-85 hover:opacity-100 transition-opacity flex flex-col justify-between"
+                className="bento-glass-card rounded-2xl border-rose-500/40 p-6 opacity-85 hover:opacity-100 transition-opacity flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <div className="flex items-center justify-between gap-2 mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="font-inter text-xs font-bold text-slate-200 uppercase tracking-wider">
+                      <span className="font-inter text-xs font-bold text-slate-200 uppercase tracking-wider leading-relaxed">
                         {item.brand}
                       </span>
-                      <span className="font-inter text-[11px] px-2.5 py-0.5 rounded-full bg-rose-950 border border-rose-400 text-rose-200 font-bold">
+                      <span className="font-inter text-[11px] px-2 py-0 leading-6 rounded-full bg-rose-950 border border-rose-400 text-rose-200 font-bold">
                         INCOMPATIBLE (物理不適合)
                       </span>
                     </div>
-                    <span className="font-oswald text-lg font-semibold text-slate-200 tabular-nums">
+                    <span className="font-oswald text-lg font-semibold text-slate-200 tabular-nums leading-relaxed">
                       ¥{item.priceJpy.toLocaleString()}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h4 className="font-inter text-lg font-bold text-white">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-inter text-lg font-bold text-white leading-relaxed">
                         {item.modelName}
                       </h4>
-                      <div className="font-jp text-xs text-slate-200 mt-0.5">
+                      <div className="font-jp text-xs text-slate-200 leading-relaxed">
                         {evalResult.headlineMetric}
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => onSelectItem(item)}
-                      className="cyber-float-hover font-jp text-xs font-semibold px-3.5 py-2 rounded-xl border border-white/25 bg-[#1A1A1A] text-white hover:border-[#00E5FF] hover:text-[#00E5FF] shrink-0"
+                      className="cyber-float-hover font-jp text-xs font-semibold px-4 py-2 rounded-xl border border-white/25 bg-[#1A1A1A] text-white hover:border-[#00E5FF] hover:text-[#00E5FF] shrink-0 leading-4"
                       title="このアイテムを基準に組み直す"
                     >
                       この機材を基準に変更
@@ -742,13 +742,13 @@ export const ItemSelectorGrid: React.FC<ItemSelectorGridProps> = ({
                   </div>
 
                   {/* Physical Failure Reasons Box */}
-                  <div className="mt-3.5 p-3 rounded-xl bg-rose-950/50 border border-rose-400/50 space-y-1.5">
+                  <div className="mt-4 p-4 rounded-xl bg-rose-950/50 border border-rose-400/50 space-y-2">
                     {evalResult.reasons.map((reason, rIdx) => (
                       <div
                         key={rIdx}
                         className="font-jp text-xs text-rose-100 flex items-start gap-2 leading-relaxed"
                       >
-                        <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0 mt-0" />
                         <span>{reason}</span>
                       </div>
                     ))}

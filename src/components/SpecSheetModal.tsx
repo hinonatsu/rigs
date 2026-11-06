@@ -142,12 +142,12 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
     >
       <div className="bento-glass-card rounded-3xl border border-white/15 w-full max-w-3xl overflow-hidden shadow-2xl">
         {/* Top Bar */}
-        <div className="px-6 py-4 bg-[#1A1A1A]/90 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2.5">
+        <div className="px-6 py-4 bg-[#1A1A1A]/90 border-b border-white/10 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setActiveModalTab('spec_sheet')}
-              className={`cyber-float-hover font-jp text-xs px-4 py-2 rounded-xl border ${
+              className={`cyber-float-hover font-jp text-xs px-4 py-2 rounded-xl border leading-4 ${
                 activeModalTab === 'spec_sheet'
                   ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF] font-bold'
                   : 'bg-[#2D2D2D] text-slate-200 border-white/15'
@@ -158,7 +158,7 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveModalTab('ai_json')}
-              className={`cyber-float-hover font-jp text-xs px-4 py-2 rounded-xl border flex items-center gap-1.5 ${
+              className={`cyber-float-hover font-jp text-xs px-4 py-2 rounded-xl border flex items-center gap-2 leading-4 ${
                 activeModalTab === 'ai_json'
                   ? 'bg-[#00E5FF] text-[#1A1A1A] border-[#00E5FF] font-bold'
                   : 'bg-[#2D2D2D] text-slate-200 border-white/15'
@@ -179,11 +179,11 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
         </div>
 
         {activeModalTab === 'spec_sheet' ? (
-          <div className="p-6 sm:p-7 space-y-6 max-h-[82vh] overflow-y-auto">
+          <div className="p-6 sm:p-8 space-y-6 max-h-[82vh] overflow-y-auto">
             {/* Compatibility Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/10">
-              <div>
-                <div className="flex items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
                   {evaluation.criticalIssues.length === 0 ? (
                     <ShieldCheck className="w-6 h-6 text-[#00E5FF]" />
                   ) : (
@@ -191,21 +191,21 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
                   )}
                   <h2
                     id="modal-spec-title"
-                    className="font-inter text-xl sm:text-2xl font-extrabold text-white tracking-tight"
+                    className="font-inter text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-relaxed"
                   >
                     RIGs TACKLE SPECIFICATION SHEET
                   </h2>
                 </div>
-                <p className="font-jp text-xs text-slate-200 mt-1">
+                <p className="font-jp text-xs text-slate-200 leading-relaxed">
                   スプール糸巻き量・ロッド耐荷重・フック装着時ルアー総重量の物理検証証明書
                 </p>
               </div>
-              <div className="text-left sm:text-right">
-                <div className="font-inter text-[11px] font-bold tracking-widest text-slate-300">
+              <div className="text-left sm:text-right space-y-2">
+                <div className="font-inter text-[11px] font-bold tracking-widest text-slate-300 leading-relaxed">
                   COMPATIBILITY SCORE
                 </div>
                 <div
-                  className={`font-oswald text-3xl font-bold tracking-wide ${
+                  className={`font-oswald text-3xl font-bold tracking-wide leading-relaxed ${
                     evaluation.criticalIssues.length === 0 ? 'text-[#00E5FF]' : 'text-rose-400'
                   }`}
                 >
@@ -215,32 +215,32 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
             </div>
 
             {/* Key Rigging Telemetry Bento Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              <div className="p-4 rounded-2xl bg-[#1A1A1A]/90 border border-white/10">
-                <div className="font-inter text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-[#1A1A1A]/90 border border-white/10 space-y-2">
+                <div className="font-inter text-[11px] font-semibold text-slate-300 uppercase tracking-wider leading-relaxed">
                   SPOOL FILL RATIO (糸巻き充填率)
                 </div>
-                <div className="font-oswald text-2xl font-bold text-white mt-1 tabular-nums">
+                <div className="font-oswald text-2xl font-bold text-white tabular-nums leading-relaxed">
                   {evaluation.spoolFillRatioPercent !== null
                     ? `${evaluation.spoolFillRatioPercent}% (下巻き不要)`
                     : '未算出'}
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-[#1A1A1A]/90 border border-white/10">
-                <div className="font-inter text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
+              <div className="p-4 rounded-2xl bg-[#1A1A1A]/90 border border-white/10 space-y-2">
+                <div className="font-inter text-[11px] font-semibold text-slate-300 uppercase tracking-wider leading-relaxed">
                   TOTAL LURE WT (本体＋針・リング)
                 </div>
-                <div className="font-oswald text-2xl font-bold text-[#00E5FF] mt-1 tabular-nums">
+                <div className="font-oswald text-2xl font-bold text-[#00E5FF] tabular-nums leading-relaxed">
                   {evaluation.totalLureWeightG !== null
                     ? `${evaluation.totalLureWeightG}g`
                     : '未算出'}
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-[#1A1A1A]/90 border border-white/10">
-                <div className="font-inter text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
+              <div className="p-4 rounded-2xl bg-[#1A1A1A]/90 border border-white/10 space-y-2">
+                <div className="font-inter text-[11px] font-semibold text-slate-300 uppercase tracking-wider leading-relaxed">
                   INITIAL DRAG SET (推奨初期ドラグ)
                 </div>
-                <div className="font-oswald text-2xl font-bold text-[#00E5FF] mt-1 tabular-nums">
+                <div className="font-oswald text-2xl font-bold text-[#00E5FF] tabular-nums leading-relaxed">
                   {evaluation.recommendedInitialDragKg
                     ? `${evaluation.recommendedInitialDragKg.min} – ${evaluation.recommendedInitialDragKg.max} kg`
                     : '未算出'}
@@ -255,16 +255,18 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
                   key={slot}
                   className="p-4 bg-[#1A1A1A]/75 flex items-center justify-between gap-4"
                 >
-                  <div className="min-w-0">
-                    <div className="font-inter text-[11px] font-bold text-[#00E5FF] tracking-wider">
+                  <div className="min-w-0 space-y-2">
+                    <div className="font-inter text-[11px] font-bold text-[#00E5FF] tracking-wider leading-relaxed">
                       {slot}
                     </div>
-                    <div className="font-inter text-sm sm:text-base font-bold text-white truncate mt-0.5">
+                    <div className="font-inter text-sm sm:text-base font-bold text-white truncate leading-relaxed">
                       {item!.brand} — {item!.modelName}
                     </div>
-                    <div className="font-mono text-xs text-slate-300">SKU: {item!.sku}</div>
+                    <div className="font-mono text-xs text-slate-300 leading-relaxed">
+                      SKU: {item!.sku}
+                    </div>
                   </div>
-                  <div className="font-oswald text-lg font-bold text-white tabular-nums shrink-0">
+                  <div className="font-oswald text-lg font-bold text-white tabular-nums shrink-0 leading-relaxed">
                     ¥{item!.priceJpy.toLocaleString()}
                   </div>
                 </div>
@@ -273,37 +275,37 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
 
             {/* SNS / UGC Share Copy Block */}
             <div className="p-4 rounded-2xl bg-[#1A1A1A]/90 border border-white/10">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
-                <span className="font-jp text-xs font-medium text-slate-200">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <span className="font-jp text-xs font-medium text-slate-200 leading-relaxed">
                   セッティング記録 / SNS共有用テキスト (ワンクリックコピー)
                 </span>
                 <button
                   type="button"
                   onClick={handleCopyShare}
-                  className="cyber-float-hover px-3.5 py-1.5 rounded-xl bg-[#2D2D2D] border border-[#00E5FF]/50 text-xs font-jp font-bold text-[#00E5FF] flex items-center gap-1.5"
+                  className="cyber-float-hover px-4 py-2 rounded-xl bg-[#2D2D2D] border border-[#00E5FF]/50 text-xs font-jp font-bold text-[#00E5FF] flex items-center gap-2 leading-4"
                 >
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied ? 'コピー完了' : '構成テキストをコピー'}</span>
                 </button>
               </div>
-              <pre className="text-xs font-mono text-slate-200 whitespace-pre-wrap bg-[#2D2D2D]/70 p-3.5 rounded-xl border border-white/10 leading-relaxed">
+              <pre className="text-xs font-mono text-slate-200 whitespace-pre-wrap bg-[#2D2D2D]/70 p-4 rounded-xl border border-white/10 leading-relaxed">
                 {generateShareText()}
               </pre>
             </div>
 
             {/* Total & Checkout CTA */}
             <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <div className="font-inter text-xs font-bold tracking-wider text-slate-300">
+              <div className="space-y-2">
+                <div className="font-inter text-xs font-bold tracking-wider text-slate-300 leading-relaxed">
                   TOTAL PACKAGE PRICE (全{itemsList.length}点・税込)
                 </div>
-                <div className="font-oswald text-4xl font-bold text-white tabular-nums mt-0.5">
+                <div className="font-oswald text-4xl font-bold text-white tabular-nums leading-relaxed">
                   ¥{evaluation.totalPriceJpy.toLocaleString()}
                 </div>
               </div>
 
               {orderSubmitted ? (
-                <div className="px-5 py-3.5 rounded-2xl bg-[#00E5FF]/15 border border-[#00E5FF] text-[#00E5FF] font-jp text-xs sm:text-sm font-bold flex items-center gap-2">
+                <div className="px-6 py-4 rounded-2xl bg-[#00E5FF]/15 border border-[#00E5FF] text-[#00E5FF] font-jp text-xs sm:text-sm font-bold flex items-center gap-2 leading-relaxed">
                   <Check className="w-5 h-5 shrink-0" />
                   <span>
                     一括カート登録完了（PEライン下巻きなし・ノット結束指定書付きで手配可能）
@@ -314,7 +316,7 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
                   type="button"
                   onClick={() => setOrderSubmitted(true)}
                   disabled={evaluation.criticalIssues.length > 0}
-                  className="cyber-float-hover px-7 py-4 rounded-2xl bg-[#00E5FF] text-[#1A1A1A] font-jp text-base font-bold tracking-wider flex items-center justify-center gap-2.5 shadow-[0_0_28px_rgba(0,229,255,0.45)] disabled:opacity-40"
+                  className="cyber-float-hover px-8 py-4 rounded-2xl bg-[#00E5FF] text-[#1A1A1A] font-jp text-base font-bold tracking-wider flex items-center justify-center gap-2 shadow-[0_0_28px_rgba(0,229,255,0.45)] disabled:opacity-40 leading-6"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   <span>この完全適合セットを一括決済へ進める</span>
@@ -324,14 +326,14 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
           </div>
         ) : (
           /* AI JSON Ingestion Console */
-          <div className="p-6 sm:p-7 space-y-4 max-h-[82vh] overflow-y-auto">
-            <div className="flex items-start gap-3">
-              <Database className="w-6 h-6 text-[#00E5FF] shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-jp text-lg sm:text-xl font-bold text-white">
+          <div className="p-6 sm:p-8 space-y-4 max-h-[82vh] overflow-y-auto">
+            <div className="flex items-start gap-4">
+              <Database className="w-6 h-6 text-[#00E5FF] shrink-0 mt-0" />
+              <div className="space-y-2">
+                <h3 className="font-jp text-lg sm:text-xl font-bold text-white leading-relaxed">
                   AI自律運営：メーカー公表スペックJSON 投入コンソール
                 </h3>
-                <p className="font-jp text-xs text-slate-200 mt-1 leading-relaxed">
+                <p className="font-jp text-xs text-slate-200 leading-relaxed">
                   LLMがメーカーのスペック表から抽出した単一JSON（またはSupabaseの{' '}
                   <code className="text-[#00E5FF] font-mono">upsert_gear_from_ai_json(payload)</code>{' '}
                   RPC互換フォーマット）をそのまま流し込み、互換性判定エンジンで即座にテストできます。
@@ -344,12 +346,12 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
               onChange={(e) => setJsonInput(e.target.value)}
               rows={13}
               aria-label="AI抽出スペックJSON入力エリア"
-              className="w-full font-mono text-xs bg-[#1A1A1A] border border-white/20 rounded-2xl p-4 text-white focus:border-[#00E5FF] focus:outline-none"
+              className="w-full font-mono text-xs bg-[#1A1A1A] border border-white/20 rounded-2xl p-4 text-white focus:border-[#00E5FF] focus:outline-none leading-relaxed"
             />
 
             {jsonStatus && (
               <div
-                className={`p-3.5 rounded-xl border text-xs font-jp font-medium ${
+                className={`p-4 rounded-xl border text-xs font-jp font-medium leading-relaxed ${
                   jsonStatus.ok
                     ? 'bg-[#00E5FF]/15 border-[#00E5FF] text-[#00E5FF]'
                     : 'bg-rose-950/60 border-rose-400 text-rose-200'
@@ -359,11 +361,11 @@ export const SpecSheetModal: React.FC<SpecSheetModalProps> = ({
               </div>
             )}
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-4">
               <button
                 type="button"
                 onClick={handleParseAndInjectJson}
-                className="cyber-float-hover px-6 py-3 rounded-xl bg-[#00E5FF] text-[#1A1A1A] font-jp text-xs sm:text-sm font-bold tracking-wider"
+                className="cyber-float-hover px-6 py-4 rounded-xl bg-[#00E5FF] text-[#1A1A1A] font-jp text-xs sm:text-sm font-bold tracking-wider leading-4"
               >
                 JSONをカタログへ即時投入して互換性エンジンに反映
               </button>
