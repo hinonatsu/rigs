@@ -1,11 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Activity,
   Compass,
   Cpu,
   Database,
   Layers,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
 } from 'lucide-react';
 import { TARGET_PRESETS } from './data/masterCatalog';
 import {
@@ -31,7 +33,9 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveSelectorTab>('rod');
   const [activePresetId, setActivePresetId] = useState<string>(TARGET_PRESETS[0].id);
   const [isSpecModalOpen, setIsSpecModalOpen] = useState<boolean>(false);
-  const [mobileView, setMobileView] = useState<'selector' | 'dock'>('selector');
+
+  const dockSectionRef = useRef<HTMLDivElement>(null);
+  const selectorSectionRef = useRef<HTMLDivElement>(null);
 
   const [build, setBuild] = useState<TackleBuildState>({
     reel: null,
@@ -86,20 +90,19 @@ export const App: React.FC = () => {
 
     if (item.category === 'reel') {
       setBuild((prev) => ({ ...prev, reel: item as ReelProduct }));
-      if (!build.rod) setActiveTab('rod');
+      // Switch to 'rod' so compatible rods immediately appear with Stagger + Spring animation
+      setActiveTab('rod');
       return;
     }
 
     if (item.category === 'rod') {
       setBuild((prev) => ({ ...prev, rod: item as RodProduct }));
-      if (!build.peLine) setActiveTab('line_pe');
       return;
     }
 
     if (item.category === 'line') {
       const lineItem = item as LineProduct;
       if (lineItem.specs.subType === 'pe_main') {
-        // Auto-select recommended shock leader sub-slot
         const autoLeader =
           catalog.lines.find(
             (l) =>
@@ -123,7 +126,6 @@ export const App: React.FC = () => {
     if (item.category === 'lure') {
       const lureItem = item as LureProduct;
       if (lureItem.specs.subType === 'plug_main') {
-        // Auto-select recommended hook & split ring sub-slot matching hookCode
         const autoHook =
           catalog.lures.find(
             (h) =>
@@ -237,8 +239,8 @@ export const App: React.FC = () => {
 
   if (!catalog) {
     return (
-      <div className="min-h-screen bg-carbon-950 flex items-center justify-center font-mono text-sm text-electric">
-        LOADING RIGS COMPATIBILITY ENGINE...
+      <div className="min-h-screen bg-[#1A1A1A] flex items-center justify-center font-inter text-sm tracking-widest text-[#00E5FF]">
+        INITIALIZING RIGs CYBERNETIC COMPATIBILITY ENGINE...
       </div>
     );
   }
@@ -247,36 +249,50 @@ export const App: React.FC = () => {
     catalog.reels.length + catalog.rods.length + catalog.lines.length + catalog.lures.length;
 
   return (
-    <div className="min-h-screen bg-carbon-950 text-slate-100 flex flex-col pb-16 lg:pb-0">
-      {/* ==================== TOP HEADER ==================== */}
-      <header className="border-b border-carbon-700 bg-carbon-900/90 sticky top-0 z-30 backdrop-blur-sm">
-        <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-3 h-6 bg-electric" />
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-display text-2xl font-bold tracking-wider text-white">
-                    fun-fishing
-                  </span>
-                  <span className="font-mono text-xs text-electric tracking-widest uppercase">
-                    // RIGS TACKLE BUILDER
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 hidden sm:block">
-                  オフショア・ビッグゲーム（クロマグロ・ヒラマサ）特化型 物理互換性判定エンジン
-                </p>
+    <div className="min-h-screen bg-[#1A1A1A] text-[#F8FAFC] relative flex flex-col pb-24 md:pb-12 selection:bg-[#00E5FF] selection:text-[#1A1A1A]">
+      {/* ==================== CYBERPUNK AMBIENT GLOW & PRECISION MESH ==================== */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 opacity-25"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 18% 12%, rgba(0, 229, 255, 0.16), transparent 38%), radial-gradient(circle at 85% 22%, rgba(0, 229, 255, 0.10), transparent 42%), radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px)',
+          backgroundSize: '100% 100%, 100% 100%, 28px 28px',
+        }}
+      />
+
+      {/* ==================== TOP GLASSMORPHISM HEADER ==================== */}
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#1A1A1A]/80 backdrop-blur-xl">
+        <div className="max-w-[1640px] mx-auto px-4 sm:px-6 lg:px-10 py-3.5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-3 h-8 rounded-full bg-[#00E5FF] shadow-[0_0_16px_#00E5FF]" />
+            <div>
+              <div className="flex items-baseline gap-2.5 flex-wrap">
+                <span className="font-inter text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                  RIGs
+                </span>
+                <span className="font-inter text-xs font-bold text-[#00E5FF] tracking-widest uppercase">
+                  // CYBER TACKLE BUILDER
+                </span>
               </div>
+              <p className="font-jp text-xs font-normal text-slate-200 hidden sm:block">
+                数万円〜数十万円の高額決済を後押しする、100%物理互換性判定プラットフォーム
+              </p>
             </div>
           </div>
 
           {/* Telemetry & DB Status Bar */}
-          <div className="flex items-center gap-2.5">
-            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-carbon-950 border border-carbon-700 font-mono text-xs text-slate-300">
-              <Database className="w-3.5 h-3.5 text-electric" />
-              <span>CURATED DB: {totalCatalogCount} ITEMS</span>
-              <span className="text-carbon-600">|</span>
-              <span className="text-electric">
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#2D2D2D]/80 border border-white/10 font-inter text-xs text-slate-200 backdrop-blur-md">
+              <Database className="w-4 h-4 text-[#00E5FF]" />
+              <span>
+                CURATED DB:{' '}
+                <strong className="font-oswald text-sm text-white tracking-wider">
+                  {totalCatalogCount}
+                </strong>{' '}
+                ITEMS
+              </span>
+              <span className="text-white/20">|</span>
+              <span className="text-[#00E5FF] font-semibold">
                 {catalog.dataSource === 'supabase' ? 'SUPABASE LIVE' : 'HYBRID ENGINE READY'}
               </span>
             </div>
@@ -284,116 +300,191 @@ export const App: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsSpecModalOpen(true)}
-              className="px-3 py-1.5 bg-carbon-800 hover:bg-carbon-700 border border-carbon-600 font-mono text-xs text-slate-100 flex items-center gap-1.5 transition-colors"
+              className="cyber-float-hover px-4 py-2 rounded-xl bg-[#2D2D2D] border border-[#00E5FF]/50 font-jp text-xs font-bold text-white flex items-center gap-2"
             >
-              <Cpu className="w-3.5 h-3.5 text-electric" />
+              <Cpu className="w-4 h-4 text-[#00E5FF]" />
               <span>仕様書出力 / AI JSON投入</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* ==================== TARGET FIELD PRESET BAR ==================== */}
-      <div className="border-b border-carbon-800 bg-carbon-900/40">
-        <div className="max-w-[1600px] mx-auto px-4 py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-300 shrink-0">
-            <Compass className="w-4 h-4 text-electric" />
-            <span>実戦海域・ターゲット基準プリセット:</span>
+      {/* ==================== MAIN BENTO GRID CONTAINER ==================== */}
+      <main className="relative z-10 max-w-[1640px] w-full mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 flex-1 flex flex-col gap-6 sm:gap-8">
+        {/* ==================== TOP BENTO HERO ROW (12-COLUMN BENTO GRID) ==================== */}
+        <section
+          aria-label="総合互換性テレメトリー＆海域プリセットBento"
+          className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6"
+        >
+          {/* Bento Cell A: Cybernetic Compatibility Assurance Core */}
+          <div className="md:col-span-5 lg:col-span-4 bento-glass-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between gap-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#00E5FF]" />
+                <span className="font-inter text-xs font-bold uppercase tracking-widest text-[#00E5FF]">
+                  ASSURANCE TELEMETRY
+                </span>
+              </div>
+              <span className="font-jp text-xs font-medium px-2.5 py-0.5 rounded-full bg-[#1A1A1A] border border-white/15 text-slate-200">
+                物理整合性保証
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 items-end">
+              <div className="bg-[#1A1A1A]/85 border border-white/10 rounded-2xl p-3.5">
+                <div className="font-jp text-[11px] text-slate-300">適合スコア</div>
+                <div className="font-oswald text-2xl sm:text-3xl font-bold text-[#00E5FF] tracking-tight mt-0.5">
+                  {overallEvaluation.overallScore}%
+                </div>
+              </div>
+              <div className="bg-[#1A1A1A]/85 border border-white/10 rounded-2xl p-3.5">
+                <div className="font-jp text-[11px] text-slate-300">推奨初期ドラグ</div>
+                <div className="font-oswald text-xl sm:text-2xl font-bold text-white tracking-tight mt-0.5">
+                  {overallEvaluation.recommendedInitialDragKg
+                    ? `${overallEvaluation.recommendedInitialDragKg.min}–${overallEvaluation.recommendedInitialDragKg.max}kg`
+                    : '--'}
+                </div>
+              </div>
+              <div className="bg-[#1A1A1A]/85 border border-white/10 rounded-2xl p-3.5">
+                <div className="font-jp text-[11px] text-slate-300">針込ルアー重量</div>
+                <div className="font-oswald text-xl sm:text-2xl font-bold text-[#00E5FF] tracking-tight mt-0.5">
+                  {overallEvaluation.totalLureWeightG
+                    ? `${overallEvaluation.totalLureWeightG}g`
+                    : '--'}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-baseline justify-between pt-2 border-t border-white/10">
+              <span className="font-jp text-xs text-slate-200">
+                現在のビルド総額 ({overallEvaluation.completedSlotsCount}/4 スロット)
+              </span>
+              <span className="font-oswald text-2xl sm:text-3xl font-bold text-white tabular-nums">
+                ¥{overallEvaluation.totalPriceJpy.toLocaleString()}
+              </span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1 max-w-5xl">
-            {TARGET_PRESETS.map((preset) => {
-              const isSelected = activePresetId === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => applyPreset(preset)}
-                  className={`px-3 py-2 text-left border transition-colors flex items-center justify-between gap-2 ${
-                    isSelected
-                      ? 'bg-electric/10 border-electric text-white'
-                      : 'bg-carbon-900 border-carbon-700 text-slate-300 hover:border-carbon-600'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-[10px] px-1 py-0.2 bg-carbon-950 border border-carbon-700 text-electric">
+          {/* Bento Cell B: Target Field Preset Bento Grid */}
+          <div className="md:col-span-7 lg:col-span-8 bento-glass-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-[#00E5FF]" />
+                <h2 className="font-inter text-xs sm:text-sm font-bold uppercase tracking-widest text-white">
+                  FIELD & TARGET PRESET BENTO
+                </h2>
+                <span className="font-jp text-xs text-slate-200 hidden sm:inline">
+                  — 実戦海域・ターゲット基準から100%物理適合ビルドを一括展開
+                </span>
+              </div>
+              <span className="font-inter text-[11px] font-semibold text-[#00E5FF] uppercase tracking-wider">
+                ONE-CLICK FULL RIGGING
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+              {TARGET_PRESETS.map((preset) => {
+                const isSelected = activePresetId === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    className={`cyber-float-hover p-4 rounded-2xl text-left flex flex-col justify-between gap-2.5 border ${
+                      isSelected
+                        ? 'bento-glass-active'
+                        : 'bg-[#1A1A1A]/85 border-white/15 hover:border-[#00E5FF]/60'
+                    }`}
+                  >
+                    <div className="w-full flex items-center justify-between gap-2">
+                      <span className="font-inter text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-[#2D2D2D] border border-[#00E5FF]/40 text-[#00E5FF]">
                         {preset.fieldTag}
                       </span>
-                      <span className="font-mono text-[10px] text-slate-400">
+                      <span className="font-oswald text-xs font-semibold text-slate-200 tracking-wider">
                         {preset.targetWeightClass}
                       </span>
                     </div>
-                    <div className="text-xs font-bold truncate mt-0.5">{preset.title}</div>
-                  </div>
-                  <SlidersHorizontal
-                    className={`w-3.5 h-3.5 shrink-0 ${
-                      isSelected ? 'text-electric' : 'text-slate-500'
-                    }`}
-                  />
-                </button>
-              );
-            })}
+                    <div>
+                      <div className="font-jp text-sm font-bold text-white leading-snug">
+                        {preset.title}
+                      </div>
+                      <p className="font-jp text-xs font-normal text-slate-200 mt-1 line-clamp-2 leading-relaxed">
+                        {preset.description}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-white/10 w-full">
+                      <span className="font-inter text-[11px] font-semibold text-[#00E5FF]">
+                        {isSelected ? 'ACTIVE PRESET' : 'LOAD PRESET'}
+                      </span>
+                      <SlidersHorizontal
+                        className={`w-3.5 h-3.5 ${
+                          isSelected ? 'text-[#00E5FF]' : 'text-slate-300'
+                        }`}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* ==================== MAIN ASYMMETRIC 2-PANE WORKSPACE ==================== */}
-      <main className="max-w-[1600px] w-full mx-auto px-4 py-5 flex-1 flex flex-col lg:flex-row items-start gap-6">
-        {/* Left Pane: MY TACKLE BOX (Always visible on desktop, toggleable on mobile) */}
-        <div
-          className={`w-full lg:w-auto ${
-            mobileView === 'dock' ? 'block' : 'hidden lg:block'
-          } lg:sticky lg:top-20`}
-        >
-          <TackleBoxDock
-            build={build}
-            evaluation={overallEvaluation}
-            activeTab={activeTab}
-            onSelectTab={(tab) => {
-              setActiveTab(tab);
-              setMobileView('selector');
-            }}
-            onClearBuild={handleClearBuild}
-            onRemoveSlot={handleRemoveSlot}
-            compatibleLeaders={compatibleLeaders}
-            compatibleHooks={compatibleHooks}
-            onQuickSwitchLeader={(leader) =>
-              setBuild((prev) => ({ ...prev, shockLeader: leader }))
-            }
-            onQuickSwitchHook={(hook) => setBuild((prev) => ({ ...prev, hookSet: hook }))}
-            onOpenSpecModal={() => setIsSpecModalOpen(true)}
-          />
-        </div>
+        {/* ==================== MAIN WORKSPACE BENTO GRID (MOBILE: VERTICAL SCROLL / TABLET 768px+: HORIZONTAL BENTO) ==================== */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* Left Bento Column (md:col-span-5 lg:col-span-4): MY TACKLE BOX DOCK */}
+          <div
+            ref={dockSectionRef}
+            className="md:col-span-5 lg:col-span-4 md:sticky md:top-24"
+          >
+            <TackleBoxDock
+              build={build}
+              evaluation={overallEvaluation}
+              activeTab={activeTab}
+              onSelectTab={(tab) => {
+                setActiveTab(tab);
+                if (window.innerWidth < 768) {
+                  selectorSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              onClearBuild={handleClearBuild}
+              onRemoveSlot={handleRemoveSlot}
+              compatibleLeaders={compatibleLeaders}
+              compatibleHooks={compatibleHooks}
+              onQuickSwitchLeader={(leader) =>
+                setBuild((prev) => ({ ...prev, shockLeader: leader }))
+              }
+              onQuickSwitchHook={(hook) => setBuild((prev) => ({ ...prev, hookSet: hook }))}
+              onOpenSpecModal={() => setIsSpecModalOpen(true)}
+            />
+          </div>
 
-        {/* Right Pane: ITEM SELECTOR & COMPATIBILITY TELEMETRY */}
-        <div
-          className={`w-full flex-1 min-w-0 ${
-            mobileView === 'selector' ? 'block' : 'hidden lg:block'
-          }`}
-        >
-          <ItemSelectorGrid
-            activeTab={activeTab}
-            onSelectTab={setActiveTab}
-            build={build}
-            candidates={evaluatedCandidates}
-            onSelectItem={handleSelectItem}
-          />
+          {/* Right Bento Column (md:col-span-7 lg:col-span-8): ITEM SELECTOR BENTO GRID */}
+          <div ref={selectorSectionRef} className="md:col-span-7 lg:col-span-8 min-w-0">
+            <ItemSelectorGrid
+              activeTab={activeTab}
+              onSelectTab={setActiveTab}
+              build={build}
+              candidates={evaluatedCandidates}
+              onSelectItem={handleSelectItem}
+            />
+          </div>
         </div>
       </main>
 
-      {/* ==================== MOBILE STICKY BOTTOM SWITCHER ==================== */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-carbon-900 border-t border-carbon-700 px-4 py-2.5 flex items-center justify-between gap-3">
+      {/* ==================== MOBILE (< 768px) FLOATING GLASS TELEMETRY BAR ==================== */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1A1A1A]/90 backdrop-blur-xl border-t border-white/15 px-4 py-3 flex items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-1.5 font-mono text-xs">
-            <ShieldCheck className="w-4 h-4 text-electric" />
-            <span className="text-electric font-bold">{overallEvaluation.overallScore}% 適合</span>
-            <span className="text-slate-400">|</span>
-            <span className="text-white font-bold tabular-nums">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#00E5FF]" />
+            <span className="font-oswald text-sm text-[#00E5FF] font-bold tracking-wider">
+              {overallEvaluation.overallScore}% MATCH
+            </span>
+            <span className="text-white/20">|</span>
+            <span className="font-oswald text-base text-white font-bold tabular-nums">
               ¥{overallEvaluation.totalPriceJpy.toLocaleString()}
             </span>
           </div>
-          <div className="text-[10px] text-slate-400">
+          <div className="font-jp text-[11px] text-slate-200">
             選択済 {overallEvaluation.completedSlotsCount}/4 スロット
           </div>
         </div>
@@ -401,15 +492,19 @@ export const App: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() =>
-              setMobileView((prev) => (prev === 'dock' ? 'selector' : 'dock'))
-            }
-            className="px-3 py-2 bg-carbon-800 border border-electric text-electric font-mono text-xs font-bold flex items-center gap-1.5"
+            onClick={() => dockSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            className="cyber-float-hover px-3 py-2 rounded-xl bg-[#2D2D2D] border border-white/20 text-white font-jp text-xs font-bold flex items-center gap-1.5"
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span>
-              {mobileView === 'dock' ? '機材一覧へ戻る' : 'MY TACKLE BOXを開く'}
-            </span>
+            <Layers className="w-3.5 h-3.5 text-[#00E5FF]" />
+            <span>構成BOX</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => selectorSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            className="cyber-float-hover px-3 py-2 rounded-xl bg-[#00E5FF] text-[#1A1A1A] font-jp text-xs font-bold flex items-center gap-1.5"
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>機材選択</span>
           </button>
         </div>
       </div>
