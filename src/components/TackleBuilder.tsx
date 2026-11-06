@@ -4,7 +4,6 @@ import {
   ChevronUp,
   ExternalLink,
   RotateCcw,
-  Settings,
   ShieldCheck,
   ShoppingBag,
   X,
@@ -12,8 +11,6 @@ import {
 import {
   AmazonLinkTarget,
   buildAmazonAffiliateUrl,
-  getAssociateTag,
-  setAssociateTag,
 } from '../config/amazonAssociate';
 
 // ============================================================================
@@ -624,10 +621,6 @@ export const TackleBuilder: React.FC = () => {
 
   const [mobileRigExpanded, setMobileRigExpanded] = useState<boolean>(false);
   const [amazonModalOpen, setAmazonModalOpen] = useState<boolean>(false);
-  const [associateTagInput, setAssociateTagInput] = useState<string>(() => getAssociateTag());
-  const [activeAssociateTag, setActiveAssociateTag] = useState<string>(() => getAssociateTag());
-  const [tagSavedMessage, setTagSavedMessage] = useState<boolean>(false);
-  const [showTagEditor, setShowTagEditor] = useState<boolean>(false);
 
   const reelSectionRef = useRef<HTMLElement>(null);
   const rodSectionRef = useRef<HTMLElement>(null);
@@ -719,16 +712,6 @@ export const TackleBuilder: React.FC = () => {
     }
   };
 
-  const handleSaveAssociateTag = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleaned = associateTagInput.trim() || 'rigsoffshore-22';
-    setAssociateTag(cleaned);
-    setActiveAssociateTag(cleaned);
-    setAssociateTagInput(cleaned);
-    setTagSavedMessage(true);
-    setTimeout(() => setTagSavedMessage(false), 2500);
-  };
-
   const scrollToSection = (cat: PartCategory) => {
     const map = {
       reel: reelSectionRef,
@@ -742,7 +725,7 @@ export const TackleBuilder: React.FC = () => {
   const renderPartCard = (part: AnyRigPart) => {
     const isSelected = rig[part.category]?.id === part.id;
     const { compatible, reason } = checkPartCompatibility(part, rig);
-    const amazonUrl = buildAmazonAffiliateUrl(part.amazon, activeAssociateTag);
+    const amazonUrl = buildAmazonAffiliateUrl(part.amazon);
 
     return (
       <article
@@ -888,9 +871,9 @@ export const TackleBuilder: React.FC = () => {
             </span>
           </div>
 
-          {/* 推奨プリセット切替ボタン & アソシエイトID設定 */}
+          {/* 推奨プリセット切替ボタン */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden xl:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               {(
                 [
                   { id: 'pe6', label: '6号標準 ヒラマサ・近海マグロ' },
@@ -908,20 +891,6 @@ export const TackleBuilder: React.FC = () => {
                 </button>
               ))}
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowTagEditor(true);
-                setAmazonModalOpen(true);
-              }}
-              className="px-3 py-1.5 rounded-full bg-[#222222] border border-white/10 hover:border-[#FF9900]/70 text-[11px] font-light tracking-wider text-[#A0A0A0] hover:text-[#FFFFFF] transition-all flex items-center gap-1.5"
-              title="AmazonアソシエイトID（トラッキングID）の設定・確認"
-            >
-              <Settings className="w-3.5 h-3.5 text-[#FF9900]" />
-              <span className="hidden sm:inline">Amazon ID:</span>
-              <span className="font-mono text-[#FFFFFF]">{activeAssociateTag}</span>
-            </button>
           </div>
         </div>
       </header>
@@ -1080,10 +1049,7 @@ export const TackleBuilder: React.FC = () => {
                                 ¥{slot.item.price.toLocaleString()}
                               </span>
                               <a
-                                href={buildAmazonAffiliateUrl(
-                                  slot.item.amazon,
-                                  activeAssociateTag
-                                )}
+                                href={buildAmazonAffiliateUrl(slot.item.amazon)}
                                 target="_blank"
                                 rel="noopener noreferrer sponsored"
                                 onClick={(e) => e.stopPropagation()}
@@ -1124,10 +1090,7 @@ export const TackleBuilder: React.FC = () => {
                 <button
                   type="button"
                   disabled={selectedCount === 0}
-                  onClick={() => {
-                    setShowTagEditor(false);
-                    setAmazonModalOpen(true);
-                  }}
+                  onClick={() => setAmazonModalOpen(true)}
                   className="w-full py-4 px-6 rounded-2xl bg-[#00E5FF] text-[#151515] text-sm font-semibold tracking-[0.12em] shadow-[0_0_20px_rgba(0,229,255,0.5)] hover:shadow-[0_0_30px_rgba(0,229,255,0.75)] transition-all duration-300 ease-out hover:scale-105 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2.5"
                 >
                   <ShoppingBag className="w-4 h-4" />
@@ -1245,36 +1208,20 @@ export const TackleBuilder: React.FC = () => {
         </div>
 
         {/* ==================== Amazonアソシエイト 規約必須表記フッター ==================== */}
-        <footer className="mt-20 pt-8 pb-6 border-t border-white/10 text-xs font-light text-[#A0A0A0] space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <p className="text-[#FFFFFF] font-normal tracking-wide">
-                Amazon.co.jp アソシエイト・プログラム参加表記
-              </p>
-              <p className="leading-relaxed">
-                Amazonのアソシエイトとして、RIGs（リグス）は適格販売により収入を得ています。
-              </p>
-              <p className="text-[11px] text-[#A0A0A0]/80 leading-relaxed">
-                ※当サイトに掲載されている商品価格はメーカー希望小売価格または調査時点の参考価格です。Amazon.co.jpにおける最新の販売価格・在庫状況・配送条件につきましては、各商品の「Amazonで購入」リンク先の販売ページにて直接ご確認ください。
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowTagEditor(true);
-                setAmazonModalOpen(true);
-              }}
-              className="self-start sm:self-center shrink-0 px-4 py-2 rounded-xl bg-[#222222] border border-white/10 hover:border-[#00E5FF] text-xs text-[#FFFFFF] transition-colors flex items-center gap-2"
-            >
-              <Settings className="w-3.5 h-3.5 text-[#00E5FF]" />
-              <span>アソシエイトID設定 ({activeAssociateTag})</span>
-            </button>
-          </div>
+        <footer className="mt-20 pt-8 pb-6 border-t border-white/10 text-xs font-light text-[#A0A0A0] space-y-2">
+          <p className="text-[#FFFFFF] font-normal tracking-wide">
+            Amazon.co.jp アソシエイト・プログラム参加表記
+          </p>
+          <p className="leading-relaxed">
+            Amazonのアソシエイトとして、RIGs（リグス）は適格販売により収入を得ています。
+          </p>
+          <p className="text-[11px] text-[#A0A0A0]/80 leading-relaxed">
+            ※当サイトに掲載されている商品価格はメーカー希望小売価格または調査時点の参考価格です。Amazon.co.jpにおける最新の販売価格・在庫状況・配送条件につきましては、各商品の「Amazonで購入」リンク先の販売ページにて直接ご確認ください。
+          </p>
         </footer>
       </div>
 
-      {/* ==================== Amazon購入リスト ＆ アソシエイト設定モーダル ==================== */}
+      {/* ==================== Amazon購入リストモーダル ==================== */}
       {amazonModalOpen && (
         <div
           className="fixed inset-0 z-50 bg-[#151515]/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
@@ -1286,7 +1233,7 @@ export const TackleBuilder: React.FC = () => {
             <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
               <div>
                 <span className="text-[11px] font-light tracking-[0.2em] text-[#FF9900]">
-                  AMAZON.CO.JP OFFICIAL AFFILIATE CHECKOUT
+                  AMAZON.CO.JP CHECKOUT
                 </span>
                 <h2
                   id="amazon-checkout-modal-title"
@@ -1309,14 +1256,11 @@ export const TackleBuilder: React.FC = () => {
             </div>
 
             {/* 選択パーツ別 Amazon購入リンク一覧 */}
-            <div className="space-y-3 max-h-[52vh] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[58vh] overflow-y-auto pr-1">
               {selectedParts.map(({ step, item }) => {
-                const mainUrl = buildAmazonAffiliateUrl(item.amazon, activeAssociateTag);
+                const mainUrl = buildAmazonAffiliateUrl(item.amazon);
                 const subUrl = item.amazon.subItemQuery
-                  ? buildAmazonAffiliateUrl(
-                      { searchQuery: item.amazon.subItemQuery },
-                      activeAssociateTag
-                    )
+                  ? buildAmazonAffiliateUrl({ searchQuery: item.amazon.subItemQuery })
                   : null;
 
                 return (
@@ -1375,62 +1319,6 @@ export const TackleBuilder: React.FC = () => {
               })}
             </div>
 
-            {/* アソシエイトID（トラッキングID）設定・確認パネル */}
-            <div className="rounded-2xl bg-[#151515] border border-white/10 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setShowTagEditor((prev) => !prev)}
-                  className="text-xs font-normal text-[#00E5FF] hover:underline flex items-center gap-1.5"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  <span>
-                    AmazonアソシエイトID（トラッキングID）設定: <strong>{activeAssociateTag}</strong>
-                  </span>
-                </button>
-                <a
-                  href="https://affiliate.amazon.co.jp/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-[#A0A0A0] hover:text-[#FFFFFF] inline-flex items-center gap-1"
-                >
-                  <span>Amazonアソシエイト公式登録ページへ</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-
-              {showTagEditor && (
-                <form onSubmit={handleSaveAssociateTag} className="pt-2 space-y-2.5">
-                  <p className="text-[11px] font-light text-[#A0A0A0] leading-relaxed">
-                    Amazonアソシエイト登録後に発行される「トラッキングID（例:{' '}
-                    <code className="text-[#FFFFFF]">yourname-22</code>
-                    ）」を入力して保存すると、サイト内の全Amazon購入リンクに自動付与されます。
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="text"
-                      value={associateTagInput}
-                      onChange={(e) => setAssociateTagInput(e.target.value)}
-                      placeholder="例: yourname-22"
-                      aria-label="Amazonアソシエイト・トラッキングID"
-                      className="flex-1 rounded-xl bg-[#222222] border border-white/20 px-3.5 py-2 text-xs font-mono text-[#FFFFFF] focus:border-[#00E5FF] focus:outline-none"
-                    />
-                    <button
-                      type="submit"
-                      className="px-4 py-2 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-semibold tracking-wider hover:opacity-90"
-                    >
-                      IDを保存して全リンクに反映
-                    </button>
-                  </div>
-                  {tagSavedMessage && (
-                    <p className="text-[11px] text-[#00E5FF]">
-                      ✓ トラッキングID「{activeAssociateTag}」を保存しました。すべてのAmazonリンクに適用されています。
-                    </p>
-                  )}
-                </form>
-              )}
-            </div>
-
             <div className="flex items-center justify-between pt-2">
               <span className="text-[11px] font-light text-[#A0A0A0]">
                 Amazonのアソシエイトとして、RIGsは適格販売により収入を得ています。
@@ -1486,7 +1374,7 @@ export const TackleBuilder: React.FC = () => {
                   </span>
                   {s.item && (
                     <a
-                      href={buildAmazonAffiliateUrl(s.item.amazon, activeAssociateTag)}
+                      href={buildAmazonAffiliateUrl(s.item.amazon)}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
                       className="px-2 py-0.5 rounded bg-[#FF9900]/20 border border-[#FF9900]/50 text-[10px] text-[#FF9900] shrink-0"
@@ -1526,10 +1414,7 @@ export const TackleBuilder: React.FC = () => {
           <button
             type="button"
             disabled={selectedCount === 0}
-            onClick={() => {
-              setShowTagEditor(false);
-              setAmazonModalOpen(true);
-            }}
+            onClick={() => setAmazonModalOpen(true)}
             className="px-5 py-3.5 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-semibold tracking-wider shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all duration-300 ease-out hover:scale-105 disabled:opacity-30 shrink-0 flex items-center gap-1.5"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
