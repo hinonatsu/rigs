@@ -394,9 +394,13 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             const isCustomized = baseItem && baseItem.id !== item.id;
             const { compatible, reason } = checkPartCompatibility(item, rig);
             const mainAmazonUrl = buildAmazonAffiliateUrl(item.amazon);
-            const subAmazonUrl = item.amazon.subItemQuery
-              ? buildAmazonAffiliateUrl({ searchQuery: item.amazon.subItemQuery })
-              : null;
+            const subAmazonUrl =
+              item.amazon.subItemAsin || item.amazon.subItemQuery
+                ? buildAmazonAffiliateUrl({
+                    asin: item.amazon.subItemAsin,
+                    searchQuery: item.amazon.subItemQuery ?? '',
+                  })
+                : null;
             const isExpanded = expandedCardCat === cat;
 
             return (
@@ -599,56 +603,82 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                   const item = rig[cat];
                   if (!item) return null;
                   const url = buildAmazonAffiliateUrl(item.amazon);
+                  const subUrl =
+                    item.amazon.subItemAsin || item.amazon.subItemQuery
+                      ? buildAmazonAffiliateUrl({
+                          asin: item.amazon.subItemAsin,
+                          searchQuery: item.amazon.subItemQuery ?? '',
+                        })
+                      : null;
                   const isVisited = Boolean(checkedOutSlots[cat]);
 
                   return (
                     <div
                       key={cat}
-                      className="rounded-xl bg-[#151515] border border-white/10 p-3.5 flex items-center justify-between gap-4"
+                      className="rounded-xl bg-[#151515] border border-white/10 p-3.5 space-y-2.5"
                     >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <RigPartShowcase part={item} isSelected={isVisited} size="sm" />
-                        <div className="min-w-0">
-                          <div className="text-[11px] font-oswald text-[#00E5FF] font-bold tracking-wider">
-                            {meta.stepNum} {meta.label}
-                          </div>
-                          <div className="text-xs sm:text-sm font-bold text-white truncate">
-                            {item.brand} — {item.name}
-                          </div>
-                          <div className="font-oswald text-sm text-white/80 tabular-nums mt-0.5">
-                            ¥{item.price.toLocaleString()}{' '}
-                            <span className="text-[10px] font-sans text-[#00E5FF]">
-                              (税込・送料無料)
-                            </span>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <RigPartShowcase part={item} isSelected={isVisited} size="sm" />
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-oswald text-[#00E5FF] font-bold tracking-wider">
+                              {meta.stepNum} {meta.label}
+                            </div>
+                            <div className="text-xs sm:text-sm font-bold text-white truncate">
+                              {item.brand} — {item.name}
+                            </div>
+                            <div className="font-oswald text-sm text-white/80 tabular-nums mt-0.5">
+                              ¥{item.price.toLocaleString()}{' '}
+                              <span className="text-[10px] font-sans text-[#00E5FF]">
+                                (税込・送料無料)
+                              </span>
+                            </div>
                           </div>
                         </div>
+
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          onClick={() =>
+                            setCheckedOutSlots((prev) => ({ ...prev, [cat]: true }))
+                          }
+                          className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shrink-0 transition-all ${
+                            isVisited
+                              ? 'bg-emerald-500/20 border border-emerald-400 text-emerald-300'
+                              : 'bg-[#00E5FF] hover:bg-[#33ECFF] text-[#151515] shadow-[0_0_16px_rgba(0,229,255,0.45)]'
+                          }`}
+                        >
+                          {isVisited ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              <span>商品ページ確認済</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Amazonで購入</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </>
+                          )}
+                        </a>
                       </div>
 
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer sponsored"
-                        onClick={() =>
-                          setCheckedOutSlots((prev) => ({ ...prev, [cat]: true }))
-                        }
-                        className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shrink-0 transition-all ${
-                          isVisited
-                            ? 'bg-emerald-500/20 border border-emerald-400 text-emerald-300'
-                            : 'bg-[#00E5FF] hover:bg-[#33ECFF] text-[#151515] shadow-[0_0_16px_rgba(0,229,255,0.45)]'
-                        }`}
-                      >
-                        {isVisited ? (
-                          <>
-                            <Check className="w-4 h-4" />
-                            <span>カート確認済</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Amazonで購入</span>
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </>
-                        )}
-                      </a>
+                      {subUrl && item.amazon.subItemLabel && (
+                        <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-3 text-[11px]">
+                          <span className="text-white/65 truncate">
+                            ＋ {item.amazon.subItemLabel}
+                          </span>
+                          <a
+                            href={subUrl}
+                            target="_blank"
+                            rel="noopener noreferrer sponsored"
+                            className="text-[#00E5FF] hover:underline shrink-0 inline-flex items-center gap-1 font-medium"
+                          >
+                            <span>ペア金具の商品ページへ</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

@@ -1,5 +1,5 @@
 /**
- * Amazonアソシエイト（Amazon.co.jp）リンク生成ユーティリティ
+ * Amazonアソシエイト（Amazon.co.jp）個別商品ページ直リンク生成ユーティリティ
  * トラッキングIDはサイト運営者の固定ID（`rigsoffshore-22`）を使用します。
  */
 
@@ -7,18 +7,20 @@ export const AMAZON_ASSOCIATE_TAG =
   import.meta.env.VITE_AMAZON_ASSOCIATE_TAG || 'rigsoffshore-22';
 
 export interface AmazonLinkTarget {
-  /** Amazon標準商品番号（10桁のASINが確定している場合に指定） */
-  asin?: string;
-  /** Amazon検索キーワード（釣具の番手・号数など確実にヒットさせる検索クエリ） */
+  /** Amazon標準商品番号（10桁のASIN） */
+  asin: string;
+  /** Amazon検索キーワード（フォールバック用） */
   searchQuery: string;
-  /** サブアイテム（ショックリーダーや太軸フックなど）の検索クエリ */
+  /** サブアイテム（ショックリーダーや太軸フックなど）のASIN */
+  subItemAsin?: string;
+  /** サブアイテムの検索クエリ */
   subItemQuery?: string;
   /** サブアイテムの表示名 */
   subItemLabel?: string;
 }
 
 /**
- * アソシエイトタグ（`rigsoffshore-22`）付きのAmazon商品URLを生成します。
+ * アソシエイトタグ（`rigsoffshore-22`）付きのAmazon個別商品ページURL（`/dp/{ASIN}`）を生成します。
  */
 export function buildAmazonAffiliateUrl(params: {
   asin?: string;
