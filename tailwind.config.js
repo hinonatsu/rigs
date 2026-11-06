@@ -5,17 +5,17 @@ export default {
     extend: {
       colors: {
         matte: {
-          DEFAULT: '#1A1A1A',
-          deep: '#141414',
+          DEFAULT: '#151515',
+          deep: '#101010',
           elevated: '#222222',
         },
         charcoal: {
-          DEFAULT: '#2D2D2D',
-          light: '#383838',
-          border: '#424242',
+          DEFAULT: '#222222',
+          light: '#2D2D2D',
+          border: '#383838',
         },
         carbon: {
-          950: '#1A1A1A',
+          950: '#151515',
           900: '#222222',
           850: '#272727',
           800: '#2D2D2D',
@@ -25,7 +25,7 @@ export default {
         electric: {
           DEFAULT: '#00E5FF',
           dim: '#00B8CC',
-          glow: 'rgba(0, 229, 255, 0.35)',
+          glow: 'rgba(0, 229, 255, 0.4)',
           subtle: 'rgba(0, 229, 255, 0.10)',
         },
       },

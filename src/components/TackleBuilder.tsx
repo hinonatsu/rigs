@@ -4,16 +4,19 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ChevronDown,
   Crosshair,
   ExternalLink,
-  Fish,
   Flame,
   Gauge,
+  Info,
   Link2,
+  Lock,
   RotateCcw,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
+  Truck,
   Zap,
 } from 'lucide-react';
 import { buildAmazonAffiliateUrl } from '../config/amazonAssociate';
@@ -43,6 +46,7 @@ import {
   RouteState,
 } from '../lib/urlRouter';
 import { TargetSelectHomeView } from './CatalogAndHubViews';
+import { RigPartShowcase } from './RigPartShowcase';
 import { SpecCheckoutView } from './SpecCheckoutView';
 
 export type {
@@ -61,7 +65,11 @@ export const TackleBuilder: React.FC = () => {
   const [rig, setRig] = useState<RigState>(initialParsed.rig);
   const [headerUrlCopied, setHeaderUrlCopied] = useState(false);
 
-  // ブラウザの「戻る / 進む」ボタン連動
+  // プログレッシブ・ディスクロージャー（段階的開示）用の開閉ステート
+  const [showNarrativeDetail, setShowNarrativeDetail] = useState(false);
+  const [showTargetHabit, setShowTargetHabit] = useState(false);
+  const [showCombatRadar, setShowCombatRadar] = useState(false);
+
   useEffect(() => {
     const handlePopState = () => {
       const parsed = parseUrlState();
@@ -71,6 +79,11 @@ export const TackleBuilder: React.FC = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  // スロットやパーツが切り替わったら詳細長文は再び折りたたむ（情報過多の防止）
+  useEffect(() => {
+    setShowNarrativeDetail(false);
+  }, [route.activeStep, rig]);
 
   const targetProfile = useMemo(
     () => getTargetProfile(route.targetId),
@@ -82,7 +95,6 @@ export const TackleBuilder: React.FC = () => {
     [route.targetId]
   );
 
-  // ページ間の遷移（History pushState）
   const navigateTo = (nextRoutePartial: Partial<RouteState>, nextRig?: RigState) => {
     const updatedRig = nextRig ?? rig;
     const updatedRoute: RouteState = {
@@ -99,7 +111,6 @@ export const TackleBuilder: React.FC = () => {
     }
   };
 
-  // 同一画面内のスロット切替・パーツ変更（History replaceState）
   const syncUrlInPlace = (updatedRoute: RouteState, updatedRig: RigState) => {
     const urlStr = buildUrlString(updatedRoute, updatedRig);
     if (typeof window !== 'undefined' && urlStr) {
@@ -107,7 +118,6 @@ export const TackleBuilder: React.FC = () => {
     }
   };
 
-  // ホームで「何を釣るか」を選択したときの処理
   const handleSelectTarget = (targetId: TargetId, destination: 'garage' | 'checkout') => {
     const presetRig = getPresetRigState(targetId);
     navigateTo(
@@ -120,7 +130,6 @@ export const TackleBuilder: React.FC = () => {
     );
   };
 
-  // スロットタブの切り替え
   const handleSelectStep = (step: PartCategory) => {
     const nextRoute: RouteState = {
       ...route,
@@ -131,7 +140,6 @@ export const TackleBuilder: React.FC = () => {
     syncUrlInPlace(nextRoute, rig);
   };
 
-  // 変更オプションのパーツを選択（即時装備＆ステータス差分更新）
   const handleEquipOption = (part: AnyRigPart) => {
     const nextRig: RigState = {
       ...rig,
@@ -141,14 +149,12 @@ export const TackleBuilder: React.FC = () => {
     syncUrlInPlace(route, nextRig);
   };
 
-  // 現在のターゲットの推奨ベースに戻す
   const handleResetToRecommended = () => {
     const presetRig = getPresetRigState(route.targetId);
     setRig(presetRig);
     syncUrlInPlace(route, presetRig);
   };
 
-  // 合計金額・総重量・物理適合判定
   const totalValue = useMemo(() => {
     return (
       (rig.reel?.price ?? 0) +
@@ -178,7 +184,6 @@ export const TackleBuilder: React.FC = () => {
     [rig, targetProfile]
   );
 
-  // 現在アクティブなスロットの推奨ベースパーツ、現在装備パーツ、および候補リスト
   const activeStep = route.activeStep;
   const basePartForStep = recommendedRig[activeStep]!;
   const equippedPartForStep = rig[activeStep] ?? basePartForStep;
@@ -193,7 +198,6 @@ export const TackleBuilder: React.FC = () => {
         ? LINE_CATALOG
         : LURE_CATALOG;
 
-    // 推奨ベースを先頭に、次に適合品、最後に他番手品を並べる
     return [...raw].sort((a, b) => {
       if (a.id === basePartForStep.id) return -1;
       if (b.id === basePartForStep.id) return 1;
@@ -203,7 +207,6 @@ export const TackleBuilder: React.FC = () => {
     });
   }, [activeStep, basePartForStep.id, rig]);
 
-  // 推奨ベース vs 現在選択中パーツのゲーム式比較レポート
   const comparisonReport = useMemo(
     () =>
       comparePartAgainstRecommended(
@@ -215,7 +218,6 @@ export const TackleBuilder: React.FC = () => {
     [basePartForStep, equippedPartForStep, targetProfile, rig]
   );
 
-  // 次のステップ計算
   const currentStepIndex = CATEGORY_ORDER.indexOf(activeStep);
   const nextStep: PartCategory | null =
     currentStepIndex < CATEGORY_ORDER.length - 1
@@ -235,19 +237,19 @@ export const TackleBuilder: React.FC = () => {
   };
 
   return (
-    <div className="min-h-dvh bg-[#151515] text-[#FFFFFF] font-jp antialiased leading-relaxed selection:bg-[#00E5FF] selection:text-[#151515] flex flex-col justify-between">
-      {/* ==================== 上部常駐：グローバルステップバー ＆ TARGET LOCK-ON HUD ==================== */}
-      <header className="sticky top-0 z-30 shrink-0 bg-[#151515]/95 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-dvh bg-[#151515] text-white font-sans font-light antialiased selection:bg-[#00E5FF] selection:text-[#151515] flex flex-col justify-between">
+      {/* ==================== 上部常駐：ミニマル・グラスモーフィズムナビゲーション ==================== */}
+      <header className="sticky top-0 z-30 shrink-0 bg-[#151515]/85 backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 lg:px-12 py-4">
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
-          {/* 左：ロゴ ＆ 3ステップ進行ナビ */}
-          <div className="flex items-center gap-6">
+          {/* 左：ブランドロゴ ＆ 3フェーズ進行ピル */}
+          <div className="flex items-center gap-8">
             <button
               type="button"
               onClick={() => navigateTo({ view: 'home' })}
-              className="flex items-center gap-2 text-left group"
+              className="flex items-center gap-2.5 text-left group"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF]" />
-              <span className="text-base font-semibold tracking-[0.22em] text-[#FFFFFF] group-hover:text-[#00E5FF] transition-colors leading-6">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.8)]" />
+              <span className="font-oswald text-lg font-bold tracking-[0.28em] text-white group-hover:text-[#00E5FF] transition-colors">
                 RIGs
               </span>
             </button>
@@ -255,35 +257,30 @@ export const TackleBuilder: React.FC = () => {
             <nav aria-label="進行フェーズ" className="flex items-center gap-2">
               {(
                 [
-                  { id: 'home' as PageView, num: '01', label: '釣る魚を選択' },
-                  { id: 'garage' as PageView, num: '02', label: '推奨タックル＆変更比較' },
-                  { id: 'checkout' as PageView, num: '03', label: '最終確認・購入' },
+                  { id: 'home' as PageView, num: '01', label: 'TARGET' },
+                  { id: 'garage' as PageView, num: '02', label: 'CONFIGURATOR' },
+                  { id: 'checkout' as PageView, num: '03', label: 'CHECKOUT' },
                 ] as const
               ).map((phase, idx) => {
                 const isActive = route.view === phase.id;
                 const isDisabled = route.view === 'home' && phase.id !== 'home';
                 return (
                   <React.Fragment key={phase.id}>
-                    {idx > 0 && <span className="text-white/20 text-xs">➔</span>}
+                    {idx > 0 && <span className="text-white/20 text-xs">/</span>}
                     <button
                       type="button"
                       disabled={isDisabled}
                       onClick={() => navigateTo({ view: phase.id })}
-                      title={
-                        isDisabled
-                          ? 'まずはSTEP 01でターゲット魚種を選択してください'
-                          : undefined
-                      }
-                      className={`px-4 py-2 rounded-full text-xs tracking-wider transition-all flex items-center gap-2 leading-4 ${
+                      className={`px-4 py-1.5 rounded-full text-xs transition-all duration-300 flex items-center gap-2 ${
                         isActive
-                          ? 'bg-[#00E5FF] text-[#151515] font-bold shadow-[0_0_14px_rgba(0,229,255,0.45)]'
+                          ? 'bg-[#00E5FF] text-[#151515] font-bold shadow-[0_0_15px_rgba(0,229,255,0.4)]'
                           : isDisabled
-                          ? 'bg-[#222222]/50 text-[#A0A0A0]/40 border border-white/5 cursor-not-allowed'
-                          : 'bg-[#222222] text-[#A0A0A0] hover:text-[#FFFFFF] border border-white/10'
+                          ? 'bg-transparent text-white/25 cursor-not-allowed'
+                          : 'bg-[#222222]/80 text-white/70 hover:text-white border border-white/10'
                       }`}
                     >
-                      <span className="font-mono text-xs">{phase.num}</span>
-                      <span>{phase.label}</span>
+                      <span className="font-oswald tracking-wider">{phase.num}</span>
+                      <span className="font-oswald tracking-widest">{phase.label}</span>
                     </button>
                   </React.Fragment>
                 );
@@ -291,25 +288,20 @@ export const TackleBuilder: React.FC = () => {
             </nav>
           </div>
 
-          {/* 右：STEP 01では「TARGET: 未選択」、STEP 02/03では「TARGET LOCKED」HUDを表示 */}
+          {/* 右：スリム化したターゲットスイッチャー ＆ セカンダリ共有ボタン */}
           {route.view === 'home' ? (
-            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#222222]/80 border border-white/15 text-xs text-[#A0A0A0]">
-              <Crosshair className="w-3.5 h-3.5 text-[#A0A0A0]" />
-              <span className="font-mono tracking-wider text-[#FFFFFF]/80">TARGET:</span>
-              <span>未選択</span>
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#222222]/80 border border-white/10 text-xs text-white/60">
+              <Crosshair className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <span className="font-oswald tracking-wider">SELECT TARGET</span>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#222222] border border-[#00E5FF]/50">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#222222]/90 backdrop-blur-md border border-[#00E5FF]/40">
                 <img
                   src={targetProfile.heroImage}
                   alt={targetProfile.fishName}
-                  className="w-8 h-6 rounded-full object-cover border border-[#00E5FF]/60 shrink-0"
+                  className="w-6 h-6 rounded-full object-cover border border-[#00E5FF]/60 shrink-0"
                 />
-                <Fish className="w-4 h-4 text-[#00E5FF] shrink-0 hidden sm:inline" />
-                <span className="text-xs font-mono text-[#00E5FF] tracking-wider uppercase hidden sm:inline leading-4">
-                  TARGET LOCKED:
-                </span>
                 <select
                   value={route.targetId}
                   onChange={(e) =>
@@ -319,38 +311,31 @@ export const TackleBuilder: React.FC = () => {
                     )
                   }
                   aria-label="ターゲット魚種を切り替え"
-                  className="bg-transparent text-xs font-medium text-[#FFFFFF] focus:outline-none cursor-pointer leading-4"
+                  className="bg-transparent text-xs font-light text-white focus:outline-none cursor-pointer"
                 >
                   {RIG_PRESETS.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-[#222222] text-[#FFFFFF]">
+                    <option key={t.id} value={t.id} className="bg-[#222222] text-white">
                       {t.fishName} ({t.badge})
                     </option>
                   ))}
                 </select>
-                <span className="hidden xl:inline-flex items-center gap-2 text-xs text-[#A0A0A0] border-l border-white/15 pl-4 leading-4">
-                  <span>初動時速 {targetProfile.strikeSpeedKmh}km</span>
-                  <span>•</span>
-                  <span className="text-[#00E5FF]">初動負荷 {targetProfile.initialRunLoadKg}kg</span>
-                  <span>•</span>
-                  <span>1日 {targetProfile.dailyCastCount}投</span>
-                </span>
               </div>
 
               <button
                 type="button"
                 onClick={handleCopyShareUrl}
-                className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#222222] border border-white/15 hover:border-[#00E5FF] text-xs text-[#FFFFFF] transition-colors leading-4"
+                className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-transparent border border-white/15 hover:border-[#00E5FF] text-xs font-light text-white/80 hover:text-white transition-all duration-300"
                 title="現在の装備URLをコピー"
               >
                 {headerUrlCopied ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-[#00E5FF]" />
-                    <span className="text-[#00E5FF]">URLコピー済</span>
+                    <span className="text-[#00E5FF]">COPIED</span>
                   </>
                 ) : (
                   <>
                     <Link2 className="w-3.5 h-3.5 text-[#00E5FF]" />
-                    <span>装備URL共有</span>
+                    <span>SHARE</span>
                   </>
                 )}
               </button>
@@ -359,9 +344,9 @@ export const TackleBuilder: React.FC = () => {
         </div>
       </header>
 
-      {/* ==================== 中央メインステージ ==================== */}
-      <main className="flex-1 min-h-0 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col">
-        {/* -------------------- 【画面1】ホーム：何を釣るかを選択 -------------------- */}
+      {/* ==================== 中央メインステージ（広大な余白 Whitespace） ==================== */}
+      <main className="flex-1 min-h-0 max-w-[1600px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-10 flex flex-col">
+        {/* -------------------- 【画面1】ホーム：ターゲット選択 -------------------- */}
         {route.view === 'home' && (
           <TargetSelectHomeView
             currentTargetId={route.targetId}
@@ -370,62 +355,80 @@ export const TackleBuilder: React.FC = () => {
           />
         )}
 
-        {/* -------------------- 【画面2】装備ガレージ：推奨タックル ＆ 変更オプション比較 -------------------- */}
+        {/* -------------------- 【画面2】Tesla風スプリット・コンフィギュレーター ＆ Bento Grid -------------------- */}
         {route.view === 'garage' && (
-          <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch py-2">
+          <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
             {/* =================================================================
-                左ペイン (4 cols)：4つの装備スロット ＆ 対ターゲット総合戦闘力ゲージ
+                左ペイン (4 cols)：Tesla風 スティッキー・ロードアウトドック
+                （長文を排除し、4スロットの現在状態と段階的開示テレメトリに集約）
                ================================================================= */}
-            <aside className="lg:col-span-4 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-6 space-y-6">
-              {/* 1. ターゲット魚種のリアル水中ビジュアル付き攻略HUD */}
-              <div className="relative rounded-xl overflow-hidden bg-[#151515] border border-[#00E5FF]/50">
-                <div className="relative h-32 w-full overflow-hidden">
+            <aside className="lg:col-span-4 lg:sticky lg:top-24 flex flex-col gap-6 rounded-2xl bg-[#222222]/85 backdrop-blur-xl border border-white/10 p-6 sm:p-7 shadow-2xl">
+              {/* 1. ターゲットロックオン・コンパクトヘッダー（長文はボタンクリック時のみ段階的開示） */}
+              <div className="rounded-xl overflow-hidden bg-[#151515] border border-white/10">
+                <div className="relative h-28 w-full overflow-hidden">
                   <img
                     src={targetProfile.heroImage}
                     alt={targetProfile.fishName}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#151515] via-[#151515]/55 to-black/30" />
-                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                    <span className="px-2 py-0 leading-6 rounded-full bg-[#151515]/90 border border-[#00E5FF]/60 text-[10px] font-mono font-semibold text-[#00E5FF] tracking-wider flex items-center gap-2">
-                      <Crosshair className="w-3 h-3" />
-                      <span>VS TARGET MONSTER</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#151515] via-[#151515]/50 to-transparent" />
+                  <div className="absolute top-3 left-3.5 right-3.5 flex items-center justify-between">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#151515]/85 backdrop-blur-md border border-[#00E5FF]/50 text-[10px] font-oswald font-semibold text-[#00E5FF] tracking-widest">
+                      {targetProfile.badge}
                     </span>
-                    {customizedSlotsCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      {customizedSlotsCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleResetToRecommended}
+                          className="px-2.5 py-0.5 rounded-full bg-[#151515]/90 border border-white/20 text-[10px] text-white/80 hover:text-[#00E5FF] flex items-center gap-1 transition-colors"
+                        >
+                          <RotateCcw className="w-2.5 h-2.5" />
+                          <span>RESET</span>
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={handleResetToRecommended}
-                        className="px-2 py-0 leading-6 rounded-full bg-[#151515]/90 border border-white/20 text-[10px] text-[#FFFFFF] hover:text-[#00E5FF] flex items-center gap-2"
+                        onClick={() => setShowTargetHabit((prev) => !prev)}
+                        className="px-2.5 py-0.5 rounded-full bg-[#151515]/90 border border-white/20 text-[10px] text-[#00E5FF] hover:border-[#00E5FF] flex items-center gap-1 transition-colors"
+                        title="ターゲットの習性・ベイト情報を表示"
                       >
-                        <RotateCcw className="w-2.5 h-2.5" />
-                        <span>推奨に戻す</span>
+                        <Info className="w-3 h-3" />
+                        <span>習性データ</span>
                       </button>
-                    )}
-                  </div>
-                  <div className="absolute bottom-2 left-4 right-4">
-                    <div className="text-xs sm:text-sm font-bold text-[#FFFFFF] drop-shadow-md truncate leading-relaxed">
-                      {targetProfile.fishName}
                     </div>
                   </div>
-                </div>
-                <div className="p-4 space-y-2">
-                  <p className="text-xs font-light text-[#FFFFFF]/90 leading-relaxed">
-                    {targetProfile.fishHabit}
-                  </p>
-                  <div className="text-[11px] text-[#00E5FF] font-medium leading-relaxed">
-                    ★ 捕食ベイト: {targetProfile.baitSizeMm}
+                  <div className="absolute bottom-2.5 left-4 right-4 flex items-baseline justify-between gap-2">
+                    <div className="text-xs sm:text-sm font-medium text-white truncate">
+                      {targetProfile.fishName}
+                    </div>
+                    <span className="font-oswald text-xs text-[#00E5FF] shrink-0">
+                      MAX {targetProfile.initialRunLoadKg}kg LOAD
+                    </span>
                   </div>
                 </div>
+
+                {/* 段階的開示：クリックした時のみ表示される習性・捕食ベイト情報 */}
+                {showTargetHabit && (
+                  <div className="p-4 border-t border-white/10 bg-[#151515] space-y-2 text-xs font-light text-white/80">
+                    <p className="leading-relaxed">{targetProfile.fishHabit}</p>
+                    <div className="text-[11px] text-[#00E5FF] font-normal">
+                      ★ 捕食ベイト: {targetProfile.baitSizeMm}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* 2. 4つの装備スロット（クリックで比較対象カテゴリを即切替） */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-[11px] text-[#A0A0A0] px-2 leading-relaxed">
-                  <span>EQUIPPED SLOTS（クリックして変更オプションを比較）</span>
-                  <span className="text-[#00E5FF]">
+              {/* 2. 4つの装備スロット（透過PNGサムネイルステージ ＆ Oswald価格 ＆ 発光State） */}
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between text-[11px] px-1">
+                  <span className="font-oswald tracking-widest text-white/60 uppercase">
+                    LOADOUT SLOTS (4 ITEMS)
+                  </span>
+                  <span className="font-oswald text-[#00E5FF] tracking-wider">
                     {customizedSlotsCount === 0
-                      ? '推奨ベース構成'
-                      : `${customizedSlotsCount}箇所 カスタム中`}
+                      ? 'RECOMMENDED SPEC'
+                      : `${customizedSlotsCount} CUSTOMIZED`}
                   </span>
                 </div>
 
@@ -442,43 +445,40 @@ export const TackleBuilder: React.FC = () => {
                       key={cat}
                       type="button"
                       onClick={() => handleSelectStep(cat)}
-                      className={`w-full rounded-xl p-4 text-left transition-all flex items-center justify-between gap-4 ${
+                      className={`group w-full rounded-xl p-3.5 text-left transition-all duration-300 ease-out hover:scale-105 flex items-center gap-3.5 ${
                         isActive
-                          ? 'bg-[#151515] border-2 border-[#00E5FF] shadow-[0_0_16px_rgba(0,229,255,0.3)]'
-                          : 'bg-[#151515]/75 border border-white/10 hover:border-white/30'
+                          ? 'bg-[#151515] border border-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.4)]'
+                          : 'bg-[#151515]/75 border border-white/10 hover:border-[#00E5FF]/50'
                       }`}
                     >
-                      <div className="min-w-0 flex-1 space-y-2">
+                      {/* 透過PNG対応ミニビジュアルステージ */}
+                      <RigPartShowcase part={item} isSelected={isActive} size="sm" />
+
+                      <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-mono font-bold text-[#00E5FF] leading-relaxed">
+                          <span className="font-oswald text-xs font-bold tracking-wider text-[#00E5FF]">
                             {meta.stepNum} {meta.label}
                           </span>
                           <span
-                            className={`text-[10px] px-2 py-0 leading-6 rounded font-semibold ${
+                            className={`text-[10px] px-2 py-0.5 rounded font-medium ${
                               isCustom
-                                ? 'bg-[#00E5FF] text-[#151515]'
-                                : 'bg-white/10 text-[#A0A0A0]'
+                                ? 'bg-[#00E5FF] text-[#151515] font-bold'
+                                : 'bg-white/10 text-white/60'
                             }`}
                           >
-                            {isCustom ? '変更済' : '推奨'}
+                            {isCustom ? 'CUSTOM' : 'BASE'}
                           </span>
                           {!compatible && (
-                            <span className="text-[10px] px-2 py-0 leading-6 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                              番手注意
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                              要確認
                             </span>
                           )}
                         </div>
-                        <div className="text-xs sm:text-sm font-normal text-[#FFFFFF] truncate leading-relaxed">
+                        <div className="text-xs sm:text-sm font-normal text-white truncate">
                           {item.shortName}
                         </div>
-                      </div>
-
-                      <div className="text-right shrink-0 space-y-2">
-                        <div className="text-xs font-light text-[#FFFFFF] tabular-nums leading-relaxed">
+                        <div className="font-oswald text-sm font-semibold text-white/90 tabular-nums">
                           ¥{item.price.toLocaleString()}
-                        </div>
-                        <div className="text-[10px] text-[#00E5FF] leading-relaxed">
-                          {isActive ? '比較中 ▶' : 'オプションを見る'}
                         </div>
                       </div>
                     </button>
@@ -486,113 +486,117 @@ export const TackleBuilder: React.FC = () => {
                 })}
               </div>
 
-              {/* 3. ゲーム風「対ターゲット総合戦闘力（5項目ゲージ）」 */}
-              <div className="rounded-xl bg-[#151515] border border-white/10 p-6 space-y-4">
-                <div className="flex items-center justify-between leading-relaxed">
-                  <span className="text-[11px] font-mono font-semibold tracking-wider text-[#00E5FF] flex items-center gap-2">
-                    <Gauge className="w-3.5 h-3.5" />
-                    <span>TOTAL COMBAT STATS (対ターゲット総合能力)</span>
+              {/* 3. 対ターゲット総合戦闘力（段階的開示でスッキリ収納可能） */}
+              <div className="rounded-xl bg-[#151515] border border-white/10 p-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCombatRadar((prev) => !prev)}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <span className="text-xs font-oswald font-semibold tracking-widest text-[#00E5FF] flex items-center gap-2">
+                    <Gauge className="w-4 h-4" />
+                    <span>TOTAL COMBAT TELEMETRY</span>
                   </span>
-                  <span className="text-[10px] text-[#A0A0A0]">白線＝推奨基準</span>
-                </div>
+                  <span className="text-[11px] text-white/60 flex items-center gap-1">
+                    <span>{showCombatRadar ? '閉じる' : '5項目展開'}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#00E5FF] transition-transform duration-300 ${
+                        showCombatRadar ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </span>
+                </button>
 
-                <div className="space-y-4">
-                  {combatStats.map((stat) => {
-                    const diff = stat.score - stat.baseScore;
-                    return (
-                      <div key={stat.id} className="space-y-2">
-                        <div className="flex items-center justify-between text-[11px] leading-relaxed">
-                          <div className="truncate">
-                            <span className="font-mono font-semibold text-[#FFFFFF]">
-                              {stat.label}
-                            </span>
-                            <span className="text-[#A0A0A0] ml-2">{stat.subLabel}</span>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0 tabular-nums">
-                            <span className="text-[#FFFFFF] font-mono">{stat.score}</span>
-                            {diff !== 0 && (
-                              <span
-                                className={`px-2 py-0 leading-6 rounded text-[10px] font-bold ${
-                                  diff > 0
-                                    ? 'bg-[#00E5FF]/20 text-[#00E5FF]'
-                                    : 'bg-amber-500/20 text-amber-300'
-                                }`}
-                              >
-                                {diff > 0 ? `▲+${diff}` : `▼${diff}`}
+                {showCombatRadar && (
+                  <div className="mt-4 pt-4 border-t border-white/10 space-y-3.5">
+                    {combatStats.map((stat) => {
+                      const diff = stat.score - stat.baseScore;
+                      return (
+                        <div key={stat.id} className="space-y-1.5">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <div className="truncate">
+                              <span className="font-oswald tracking-wider text-white">
+                                {stat.label}
                               </span>
-                            )}
+                              <span className="text-white/50 ml-2 text-[10px]">
+                                {stat.subLabel}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 tabular-nums">
+                              <span className="font-oswald text-xs font-bold text-white">
+                                {stat.score}
+                              </span>
+                              {diff !== 0 && (
+                                <span
+                                  className={`px-1.5 py-0.5 rounded font-oswald text-[10px] font-bold ${
+                                    diff > 0
+                                      ? 'bg-[#00E5FF]/20 text-[#00E5FF]'
+                                      : 'bg-amber-500/20 text-amber-300'
+                                  }`}
+                                >
+                                  {diff > 0 ? `+${diff}` : `${diff}`}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-[#222222] relative overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-300 ${
+                                diff > 0
+                                  ? 'bg-[#00E5FF]'
+                                  : diff < 0
+                                  ? 'bg-amber-400'
+                                  : 'bg-[#00E5FF]/80'
+                              }`}
+                              style={{ width: `${stat.score}%` }}
+                            />
+                            <div
+                              className="absolute top-0 bottom-0 w-0.5 bg-white"
+                              style={{ left: `${stat.baseScore}%` }}
+                            />
                           </div>
                         </div>
-                        {/* デュアルゲージバー */}
-                        <div className="h-2 rounded-full bg-[#222222] relative overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 ${
-                              diff > 0
-                                ? 'bg-[#00E5FF]'
-                                : diff < 0
-                                ? 'bg-amber-400'
-                                : 'bg-[#00E5FF]/80'
-                            }`}
-                            style={{ width: `${stat.score}%` }}
-                          />
-                          {/* 推奨ベース位置のマーカー */}
-                          <div
-                            className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_4px_#fff]"
-                            style={{ left: `${stat.baseScore}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </aside>
 
             {/* =================================================================
-                右ペイン (8 cols)：変更オプション選択 ＆ ゲーム式ステータス・実戦変化比較
+                右ペイン (8 cols)：Bento Grid 製品セレクター ＆ スペック比較ステージ
+                （十分な製品画像スペース・Oswald数値・段階的開示）
                ================================================================= */}
-            <section className="lg:col-span-8 flex flex-col justify-between rounded-2xl bg-[#222222] border border-white/15 p-6 sm:p-8 space-y-6">
-              {/* 1. スロットの役割ヘッダー（魚との対峙フェーズ） */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <section className="lg:col-span-8 flex flex-col gap-8">
+              {/* 1. アクティブスロットの洗練されたヘッダー（重複タブを排除し広大な余白を確保） */}
+              <div className="rounded-2xl bg-[#222222]/85 backdrop-blur-xl border border-white/10 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0 leading-6 rounded bg-[#00E5FF] text-[#151515] font-mono text-[10px] font-bold">
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-0.5 rounded-full bg-[#00E5FF] text-[#151515] font-oswald text-xs font-bold tracking-widest">
                       SLOT {STEP_META[activeStep].stepNum} // {STEP_META[activeStep].label}
                     </span>
-                    <span className="text-xs font-medium text-[#00E5FF] leading-relaxed">
+                    <span className="text-xs font-light text-[#00E5FF]">
                       {STEP_META[activeStep].combatRole}
                     </span>
                   </div>
-                  <h2 className="text-base sm:text-lg font-normal text-[#FFFFFF] leading-relaxed">
-                    推奨パーツと変更オプションの比較（クリックで装備切替＆差分確認）
-                  </h2>
+                  <h1 className="text-xl sm:text-2xl font-light text-white tracking-tight">
+                    {STEP_META[activeStep].fullTitle}
+                  </h1>
                 </div>
-
-                {/* 4スロット快速タブ */}
-                <div className="flex items-center gap-2 shrink-0">
-                  {CATEGORY_ORDER.map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => handleSelectStep(cat)}
-                      className={`px-4 py-2 rounded-lg text-[11px] leading-4 transition-colors ${
-                        activeStep === cat
-                          ? 'bg-[#00E5FF] text-[#151515] font-bold'
-                          : 'bg-[#151515] text-[#A0A0A0] hover:text-[#FFFFFF] border border-white/10'
-                      }`}
-                    >
-                      {STEP_META[cat].stepNum} {STEP_META[cat].label}
-                    </button>
-                  ))}
+                <div className="text-left sm:text-right shrink-0">
+                  <div className="text-[11px] font-light text-white/50">現在選択中のモデル</div>
+                  <div className="font-oswald text-lg font-semibold text-[#00E5FF]">
+                    {equippedPartForStep.shortName}
+                  </div>
                 </div>
               </div>
 
-              {/* 2. 推奨パーツ ＆ 変更オプション選択ストリップ（横並びカード） */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              {/* 2. 製品選択 Bento Grid（透過PNG用余白ステージ ＋ 極限まで削ぎ落としたテキスト ＋ ホバー開示） */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {stepCatalog.map((optionPart, idx) => {
                   const isBase = optionPart.id === basePartForStep.id;
                   const isEquipped = optionPart.id === equippedPartForStep.id;
-                  const { compatible } = checkPartCompatibility(optionPart, rig);
+                  const { compatible, reason } = checkPartCompatibility(optionPart, rig);
                   const priceDiff = optionPart.price - basePartForStep.price;
 
                   return (
@@ -600,132 +604,170 @@ export const TackleBuilder: React.FC = () => {
                       key={optionPart.id}
                       type="button"
                       onClick={() => handleEquipOption(optionPart)}
-                      className={`rounded-xl p-4 text-left transition-all flex flex-col justify-between gap-4 ${
+                      className={`group relative rounded-2xl p-6 text-left transition-all duration-300 ease-out hover:scale-105 flex flex-col justify-between gap-5 backdrop-blur-xl ${
                         isEquipped
-                          ? 'bg-[#151515] border-2 border-[#00E5FF] shadow-[0_0_18px_rgba(0,229,255,0.35)] scale-[1.01]'
+                          ? 'bg-[#222222] border border-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.4)]'
                           : compatible
-                          ? 'bg-[#151515]/80 border border-white/15 hover:border-[#00E5FF]/60'
-                          : 'bg-[#151515]/40 border border-white/5 opacity-60 hover:opacity-90'
+                          ? 'bg-[#222222]/80 border border-white/10 hover:border-[#00E5FF]/60 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)]'
+                          : 'bg-[#222222]/45 border border-white/5 opacity-65 hover:opacity-95'
                       }`}
                     >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0 leading-6 rounded-full ${
-                              isBase
-                                ? 'bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/50'
-                                : compatible
-                                ? 'bg-white/10 text-[#FFFFFF]'
-                                : 'bg-white/5 text-[#A0A0A0]'
-                            }`}
-                          >
-                            {isBase
-                              ? '★ 推奨ベース'
+                      {/* 上部：ステータスバッジ ＆ 装着状態 */}
+                      <div className="flex items-center justify-between gap-2 w-full">
+                        <span
+                          className={`font-oswald text-[11px] tracking-wider font-semibold px-3 py-0.5 rounded-full ${
+                            isBase
+                              ? 'bg-[#00E5FF]/15 text-[#00E5FF] border border-[#00E5FF]/50'
                               : compatible
-                              ? `変更オプション 0${idx}`
-                              : '他番手オプション'}
-                          </span>
-                          {isEquipped && (
-                            <span className="text-[10px] font-bold text-[#00E5FF] flex items-center gap-2 leading-6">
-                              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                              装備中
-                            </span>
-                          )}
-                        </div>
+                              ? 'bg-white/10 text-white/90'
+                              : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                          }`}
+                        >
+                          {isBase
+                            ? '★ RECOMMENDED BASE'
+                            : compatible
+                            ? `OPTION 0${idx}`
+                            : 'OTHER CLASS'}
+                        </span>
 
-                        <div className="text-[11px] text-[#A0A0A0] leading-relaxed">
-                          {optionPart.brand}
-                        </div>
-                        <div className="text-xs font-medium text-[#FFFFFF] leading-relaxed line-clamp-2">
-                          {optionPart.shortName}
+                        {isEquipped ? (
+                          <span className="px-3 py-0.5 rounded-full bg-[#00E5FF] text-[#151515] font-oswald text-[11px] font-bold tracking-wider flex items-center gap-1 shadow-[0_0_15px_rgba(0,229,255,0.4)]">
+                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                            EQUIPPED
+                          </span>
+                        ) : (
+                          <span className="font-oswald text-[11px] text-white/40 group-hover:text-[#00E5FF] transition-colors">
+                            CLICK TO EQUIP ➔
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 中央：美しい製品画像（透過PNG）が入る広大なショーケース余白 */}
+                      <div className="relative w-full">
+                        <RigPartShowcase
+                          part={optionPart}
+                          isSelected={isEquipped}
+                          size="md"
+                        />
+
+                        {/* 【プログレッシブ・ディスクロージャー】ホバー時のみ浮かび上がる詳細スペックオーバーレイ */}
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-0 z-20 rounded-xl bg-[#151515]/95 backdrop-blur-md border border-[#00E5FF]/50 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between pointer-events-none"
+                        >
+                          <div className="flex items-center justify-between text-[10px] font-oswald tracking-widest text-[#00E5FF] border-b border-white/10 pb-1.5">
+                            <span>SPEC TELEMETRY</span>
+                            <span>{compatible ? '100% MATCH' : 'CHECK SPEC'}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 my-auto pt-1">
+                            {optionPart.specs.slice(0, 4).map((sp) => (
+                              <div
+                                key={sp.label}
+                                className="bg-[#222222] rounded-lg px-2.5 py-1.5 border border-white/5"
+                              >
+                                <div className="text-[10px] text-white/50 truncate">
+                                  {sp.label}
+                                </div>
+                                <div className="font-oswald text-xs font-semibold text-white truncate">
+                                  {sp.value}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="text-[10px] text-[#00E5FF] truncate pt-1">
+                            ✦ {reason}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="pt-4 border-t border-white/10 flex items-baseline justify-between gap-2 leading-relaxed">
-                        <span className="text-xs font-light text-[#FFFFFF] tabular-nums">
-                          ¥{optionPart.price.toLocaleString()}
-                        </span>
-                        <span
-                          className={`text-[10px] font-mono ${
-                            priceDiff === 0
-                              ? 'text-[#A0A0A0]'
-                              : priceDiff < 0
-                              ? 'text-[#00E5FF]'
-                              : 'text-amber-300'
-                          }`}
-                        >
-                          {priceDiff === 0
-                            ? '基準価格'
-                            : priceDiff > 0
-                            ? `+¥${priceDiff.toLocaleString()}`
-                            : `-¥${Math.abs(priceDiff).toLocaleString()}`}
-                        </span>
+                      {/* 下部：最小限に削ぎ落としたブランド・製品名・Oswald 価格 */}
+                      <div className="w-full pt-2 border-t border-white/10 flex items-end justify-between gap-4">
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="text-[11px] font-light text-white/50 uppercase tracking-wider">
+                            {optionPart.brand}
+                          </div>
+                          <div className="text-sm sm:text-base font-normal text-white truncate">
+                            {optionPart.shortName}
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <div className="font-oswald text-xl font-bold text-white tabular-nums leading-none">
+                            ¥{optionPart.price.toLocaleString()}
+                          </div>
+                          <div
+                            className={`font-oswald text-xs mt-1 ${
+                              priceDiff === 0
+                                ? 'text-white/40'
+                                : priceDiff < 0
+                                ? 'text-[#00E5FF]'
+                                : 'text-amber-300'
+                            }`}
+                          >
+                            {priceDiff === 0
+                              ? 'BASE PRICE'
+                              : priceDiff > 0
+                              ? `+¥${priceDiff.toLocaleString()}`
+                              : `-¥${Math.abs(priceDiff).toLocaleString()}`}
+                          </div>
+                        </div>
                       </div>
                     </button>
                   );
                 })}
               </div>
 
-              {/* 3. ゲーム式ステータス比較 ＆ 釣る魚に対する実戦変化インスペクター（左右2分割） */}
-              <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-                {/* 左半分 (6 cols): 定量スペック増減ゲージ（数字で何が違うか）＋ 装備プロパティ */}
-                <div className="xl:col-span-6 rounded-xl bg-[#151515] border border-white/10 p-6 flex flex-col justify-between space-y-6">
-                  <div className="space-y-6">
+              {/* 3. Bento スペック比較 ＆ 段階的開示インスペクター */}
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+                {/* 左Bento (6 cols): Oswald 定量スペック差分ゲージ */}
+                <div className="xl:col-span-6 rounded-2xl bg-[#222222]/85 backdrop-blur-xl border border-white/10 p-6 sm:p-7 flex flex-col justify-between gap-6">
+                  <div className="space-y-5">
                     <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-                      <div className="space-y-2">
-                        <span className="text-[10px] font-mono font-semibold text-[#00E5FF] tracking-wider block leading-relaxed">
-                          QUANTITATIVE STAT COMPARISON
+                      <div>
+                        <span className="font-oswald text-xs font-semibold text-[#00E5FF] tracking-widest block">
+                          QUANTITATIVE SPECS
                         </span>
-                        <h3 className="text-xs sm:text-sm font-medium text-[#FFFFFF] leading-relaxed">
+                        <h2 className="text-sm font-normal text-white mt-0.5">
                           {comparisonReport.isSameAsBase
-                            ? `推奨ベース「${basePartForStep.shortName}」のステータス`
-                            : `推奨「${basePartForStep.shortName}」➔「${equippedPartForStep.shortName}」の数値差`}
-                        </h3>
+                            ? `推奨ベース「${basePartForStep.shortName}」基準値`
+                            : `推奨ベースとの定量スペック比較`}
+                        </h2>
                       </div>
-                      <span
-                        className={`text-[11px] font-mono px-2 py-0 leading-6 rounded border shrink-0 ${
-                          comparisonReport.priceDeltaTone === 'up'
-                            ? 'bg-[#00E5FF]/15 border-[#00E5FF] text-[#00E5FF]'
-                            : comparisonReport.priceDeltaTone === 'down'
-                            ? 'bg-amber-500/15 border-amber-400 text-amber-200'
-                            : 'bg-[#222222] border-white/15 text-[#A0A0A0]'
-                        }`}
-                      >
-                        価格差: {comparisonReport.priceDeltaText}
+                      <span className="font-oswald text-xs px-3 py-1 rounded-full bg-[#151515] border border-white/15 text-white/80">
+                        {comparisonReport.priceDeltaText}
                       </span>
                     </div>
 
-                    {/* 各スペックのデュアル比較ゲージ */}
                     <div className="space-y-4">
                       {comparisonReport.statRows.map((row) => (
-                        <div key={row.label} className="space-y-2">
-                          <div className="flex items-center justify-between text-[11px] gap-2 leading-relaxed">
-                            <span className="font-mono text-[#A0A0A0] text-[11px] truncate">
+                        <div key={row.label} className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs gap-2">
+                            <span className="font-oswald tracking-wider text-white/60 truncate">
                               {row.label}
                             </span>
                             <div className="flex items-center gap-2 shrink-0 tabular-nums">
                               {comparisonReport.isSameAsBase ? (
-                                <span className="text-xs font-semibold text-[#FFFFFF]">
+                                <span className="font-oswald text-sm font-bold text-white">
                                   {row.candValText}
                                 </span>
                               ) : (
                                 <>
-                                  <span className="text-[11px] text-[#A0A0A0]">
+                                  <span className="font-oswald text-xs text-white/40">
                                     {row.baseValText}
                                   </span>
                                   <span className="text-[#00E5FF]">➔</span>
-                                  <span className="text-xs font-semibold text-[#FFFFFF]">
+                                  <span className="font-oswald text-sm font-bold text-white">
                                     {row.candValText}
                                   </span>
                                 </>
                               )}
                               <span
-                                className={`text-[10px] font-bold px-2 py-0 leading-6 rounded ${
+                                className={`font-oswald text-[11px] font-semibold px-2 py-0.5 rounded ${
                                   row.tone === 'up'
-                                    ? 'bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/40'
+                                    ? 'bg-[#00E5FF]/20 text-[#00E5FF]'
                                     : row.tone === 'down'
-                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
-                                    : 'bg-white/10 text-[#A0A0A0]'
+                                    ? 'bg-amber-500/20 text-amber-300'
+                                    : 'bg-white/10 text-white/60'
                                 }`}
                               >
                                 {row.deltaBadge}
@@ -733,8 +775,7 @@ export const TackleBuilder: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* ゲージバー（白線＝推奨ベース、バー＝選択中パーツ） */}
-                          <div className="h-2 rounded-full bg-[#222222] relative overflow-hidden border border-white/5">
+                          <div className="h-2 rounded-full bg-[#151515] relative overflow-hidden">
                             <div
                               className={`h-full transition-all duration-300 ${
                                 row.tone === 'up'
@@ -749,7 +790,6 @@ export const TackleBuilder: React.FC = () => {
                               <div
                                 className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_4px_#fff]"
                                 style={{ left: `${row.basePct}%` }}
-                                title={`推奨ベース: ${row.baseValText}`}
                               />
                             )}
                           </div>
@@ -758,76 +798,95 @@ export const TackleBuilder: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 装備固有プロパティ（パッシブ特性タグ） */}
-                  <div className="pt-4 border-t border-white/10 space-y-2">
-                    <div className="text-[11px] font-mono text-[#00E5FF] flex items-center gap-2 leading-relaxed">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>PASSIVE PROPERTIES // この装備の固有特性</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {equippedPartForStep.propertyTags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-xs px-4 py-2 rounded-lg bg-[#222222] border border-[#00E5FF]/40 text-[#FFFFFF] leading-4"
-                        >
-                          ✦ {tag}
-                        </span>
-                      ))}
-                    </div>
+                  {/* パッシブ特性ピル */}
+                  <div className="pt-4 border-t border-white/10 flex flex-wrap gap-2">
+                    {equippedPartForStep.propertyTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-[11px] font-light px-3 py-1 rounded-full bg-[#151515] border border-[#00E5FF]/30 text-white/90"
+                      >
+                        ✦ {tag}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
-                {/* 右半分 (6 cols): それによって「釣る魚」との実戦で何が変わるか（文章解説） */}
-                <div className="xl:col-span-6 rounded-xl bg-[#151515] border border-[#00E5FF]/40 p-6 flex flex-col justify-between space-y-6">
+                {/* 右Bento (6 cols): 実戦インパクト要約 ＆ 段階的開示（長文はクリック時のみ展開） */}
+                <div className="xl:col-span-6 rounded-2xl bg-[#222222]/85 backdrop-blur-xl border border-white/10 p-6 sm:p-7 flex flex-col justify-between gap-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between border-b border-white/10 pb-4">
                       <div className="flex items-center gap-2">
                         <Flame className="w-4 h-4 text-[#00E5FF]" />
-                        <span className="text-[11px] font-mono font-semibold text-[#00E5FF] tracking-wider leading-relaxed">
-                          TACTICAL IMPACT ON TARGET FISH // 実戦で何が変わるか
+                        <span className="font-oswald text-xs font-semibold text-[#00E5FF] tracking-widest">
+                          TACTICAL IMPACT // 実戦変化サマリー
                         </span>
                       </div>
-                      <span className="text-[11px] text-[#A0A0A0] leading-relaxed">
-                        対 {targetProfile.weightRange}
+                      <span className="font-oswald text-xs text-white/50">
+                        VS {targetProfile.weightRange}
                       </span>
                     </div>
 
-                    {/* 数字と直結した変化のヘッドライン */}
-                    <div className="rounded-xl bg-[#222222] border-l-4 border-l-[#00E5FF] p-4">
-                      <div className="text-xs sm:text-sm font-medium text-[#00E5FF] leading-relaxed">
+                    {/* 1行で直感的にわかるヘッドラインのみ常時表示 */}
+                    <div className="rounded-xl bg-[#151515] border-l-4 border-l-[#00E5FF] p-4">
+                      <div className="text-sm font-normal text-white leading-relaxed">
                         {comparisonReport.fishFightHeadline}
                       </div>
                     </div>
 
-                    {/* 実戦での変化の文章解説 */}
-                    <p className="text-xs sm:text-sm font-light text-[#FFFFFF]/90 leading-loose">
-                      {comparisonReport.fishFightNarrative}
-                    </p>
-
-                    {/* 他スロットとの物理互換性に関する注意（もし他番手オプションを選んだ場合） */}
+                    {/* 互換性アラート（必要な場合のみ） */}
                     {comparisonReport.cascadeNotice && (
-                      <div className="rounded-xl bg-amber-950/50 border border-amber-400/50 p-4 text-xs text-amber-200 flex items-start gap-2 leading-relaxed">
-                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0" />
+                      <div className="rounded-xl bg-amber-950/40 border border-amber-400/40 p-3.5 text-xs text-amber-200 flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                         <span>{comparisonReport.cascadeNotice}</span>
                       </div>
                     )}
+
+                    {/* 【プログレッシブ・ディスクロージャー】長文の解説はデフォルト非表示・クリックで段階的開示 */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setShowNarrativeDetail((prev) => !prev)}
+                        aria-expanded={showNarrativeDetail}
+                        className="w-full py-2.5 px-4 rounded-xl bg-[#151515] border border-white/10 hover:border-[#00E5FF]/50 text-xs font-light text-[#00E5FF] flex items-center justify-between transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>
+                            {showNarrativeDetail
+                              ? '実戦ファイト詳細解説を閉じる'
+                              : '＋ 実戦ファイトでの詳細な変化・物理根拠を読む'}
+                          </span>
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform duration-300 ${
+                            showNarrativeDetail ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+
+                      {showNarrativeDetail && (
+                        <div className="mt-3 p-4 rounded-xl bg-[#151515]/90 border border-white/10 text-xs font-light text-white/80 leading-loose">
+                          {comparisonReport.fishFightNarrative}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* 単体Amazon確認リンク ＆ 推奨へ戻すボタン */}
-                  <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
+                  {/* セカンダリアクション（アウトライン） */}
+                  <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
                     {!comparisonReport.isSameAsBase ? (
                       <button
                         type="button"
                         onClick={() => handleEquipOption(basePartForStep)}
-                        className="px-4 py-2 rounded-lg bg-[#222222] border border-white/15 hover:border-[#00E5FF] text-xs text-[#A0A0A0] hover:text-[#FFFFFF] transition-colors flex items-center gap-2 leading-4"
+                        className="px-3.5 py-2 rounded-xl bg-transparent border border-white/15 hover:border-[#00E5FF] text-xs font-light text-white/70 hover:text-white transition-colors flex items-center gap-2"
                       >
                         <RotateCcw className="w-3.5 h-3.5 text-[#00E5FF]" />
-                        <span>このスロットを推奨（{basePartForStep.shortName}）に戻す</span>
+                        <span>推奨ベースに戻す</span>
                       </button>
                     ) : (
-                      <span className="text-xs text-[#00E5FF] flex items-center gap-2 leading-relaxed">
+                      <span className="text-xs font-light text-[#00E5FF] flex items-center gap-1.5">
                         <ShieldCheck className="w-4 h-4" />
-                        現在「推奨ベース」を装備しています
+                        <span>推奨ベース装備中</span>
                       </span>
                     )}
 
@@ -835,10 +894,10 @@ export const TackleBuilder: React.FC = () => {
                       href={buildAmazonAffiliateUrl(equippedPartForStep.amazon)}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
-                      className="px-4 py-2 rounded-lg bg-[#222222] hover:bg-[#FF9900]/15 border border-white/10 hover:border-[#FF9900]/60 text-xs text-[#A0A0A0] hover:text-[#FFFFFF] transition-colors inline-flex items-center gap-2 leading-4"
+                      className="px-3.5 py-2 rounded-xl bg-transparent border border-white/15 hover:border-white/40 text-xs font-light text-white/70 hover:text-white transition-colors inline-flex items-center gap-2"
                     >
-                      <span>Amazonで単体価格・在庫を見る</span>
-                      <ExternalLink className="w-3.5 h-3.5 text-[#FF9900]" />
+                      <span>単体スペックをAmazonで確認</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-[#00E5FF]" />
                     </a>
                   </div>
                 </div>
@@ -867,92 +926,98 @@ export const TackleBuilder: React.FC = () => {
         )}
       </main>
 
-      {/* ==================== 下部常駐：コマンド＆進捗バー（STEP 02/03のみ表示） ==================== */}
+      {/* ==================== 下部常駐：トラストバッジ ＆ 階層化CTAドック ==================== */}
       {route.view !== 'home' && (
-        <footer className="shrink-0 bg-[#151515]/95 border-t border-white/10 px-4 sm:px-6 lg:px-8 py-4">
-          <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
-            {/* 左：現在の装備ステータス・総重量・合計金額 */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-2.5 h-2.5 rounded-full ${
-                    isAllSelectedCompatible
-                      ? 'bg-[#00E5FF] shadow-[0_0_10px_#00E5FF]'
-                      : 'bg-amber-400'
-                  }`}
-                />
-                <span className="text-xs font-medium text-[#FFFFFF] leading-relaxed">
-                  {isAllSelectedCompatible ? '物理互換性 100% 適合' : '番手・重量バランス要確認'}
-                </span>
+        <footer className="sticky bottom-0 z-30 shrink-0 bg-[#151515]/90 backdrop-blur-xl border-t border-white/10 px-4 sm:px-8 lg:px-12 py-4">
+          <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-6">
+            {/* 左：Oswald 合計金額・総重量 ＆ 25万円決済の安心感を高めるトラストアイコン群 */}
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-baseline gap-4">
+                <div>
+                  <div className="text-[10px] font-light text-white/50 uppercase tracking-wider">
+                    TOTAL BUILD PRICE
+                  </div>
+                  <div className="font-oswald text-2xl sm:text-3xl font-bold text-[#00E5FF] tabular-nums leading-none mt-0.5">
+                    ¥{totalValue.toLocaleString()}
+                  </div>
+                </div>
+                <div className="border-l border-white/15 pl-4">
+                  <div className="text-[10px] font-light text-white/50 uppercase tracking-wider">
+                    TOTAL WEIGHT
+                  </div>
+                  <div className="font-oswald text-lg font-semibold text-white tabular-nums leading-none mt-0.5">
+                    {totalWeightG}g
+                  </div>
+                </div>
               </div>
 
-              <div className="hidden sm:flex items-center gap-4 text-xs text-[#A0A0A0] border-l border-white/15 pl-4 leading-relaxed">
-                <span>
-                  装備総重量:{' '}
-                  <strong className="text-[#FFFFFF] font-normal tabular-nums">
-                    {totalWeightG}g
-                  </strong>
+              {/* トラストシグナル（Secure Checkout / 送料無料 / 物理適合保証） */}
+              <div className="hidden xl:flex items-center gap-4 text-xs font-light text-white/75 border-l border-white/15 pl-6">
+                <span className="inline-flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <span>Secure Checkout</span>
                 </span>
-                <span>•</span>
-                <span>
-                  合計参考金額:{' '}
-                  <strong className="text-[#00E5FF] font-semibold text-sm tabular-nums">
-                    ¥{totalValue.toLocaleString()}
-                  </strong>
+                <span className="inline-flex items-center gap-1.5">
+                  <Truck className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <span>全国送料無料</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <span>
+                    {isAllSelectedCompatible ? '100% 物理適合保証' : '番手バランス要確認'}
+                  </span>
                 </span>
               </div>
             </div>
 
-            {/* 右：ステップ進行 ＆ 購入へのメインCTA */}
-            <div className="flex items-center gap-4">
+            {/* 右：Secondary（アウトライン）と Primary（塗りつぶし＋Glow＋Scale 1.05）を完全分離 */}
+            <div className="flex items-center gap-3">
               {route.view === 'garage' && (
                 <>
+                  {/* Secondary Action: 前のスロット / 魚種変更（アウトライン・軽量） */}
                   {prevStep ? (
                     <button
                       type="button"
                       onClick={() => handleSelectStep(prevStep)}
-                      className="px-4 py-2 rounded-xl bg-[#222222] border border-white/15 hover:border-[#00E5FF] text-xs text-[#FFFFFF] transition-colors flex items-center gap-2 leading-4"
+                      className="px-4 py-2.5 rounded-xl bg-transparent border border-white/15 hover:border-white/40 text-xs font-light text-white/80 hover:text-white transition-all duration-300 flex items-center gap-2"
                     >
                       <ArrowLeft className="w-3.5 h-3.5 text-[#00E5FF]" />
-                      <span>
-                        {STEP_META[prevStep].stepNum} {STEP_META[prevStep].label}へ戻る
-                      </span>
+                      <span>{STEP_META[prevStep].label}へ戻る</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={() => navigateTo({ view: 'home' })}
-                      className="px-4 py-2 rounded-xl bg-[#222222] border border-white/15 hover:border-[#00E5FF] text-xs text-[#A0A0A0] hover:text-[#FFFFFF] transition-colors flex items-center gap-2 leading-4"
+                      className="px-4 py-2.5 rounded-xl bg-transparent border border-white/15 hover:border-white/40 text-xs font-light text-white/80 hover:text-white transition-all duration-300 flex items-center gap-2"
                     >
                       <ArrowLeft className="w-3.5 h-3.5 text-[#00E5FF]" />
                       <span>魚を選び直す</span>
                     </button>
                   )}
 
-                  {nextStep ? (
+                  {/* Secondary Action: 次のスロット確認（アウトライン・軽量） */}
+                  {nextStep && (
                     <button
                       type="button"
                       onClick={() => handleSelectStep(nextStep)}
-                      className="px-6 py-2 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-bold tracking-wider shadow-[0_0_16px_rgba(0,229,255,0.45)] hover:opacity-95 transition-all flex items-center gap-2 leading-6"
+                      className="px-4 py-2.5 rounded-xl bg-[#222222] border border-[#00E5FF]/50 hover:border-[#00E5FF] text-xs font-medium text-[#00E5FF] transition-all duration-300 flex items-center gap-2"
                     >
                       <span>
-                        次へ：{STEP_META[nextStep].stepNum} {STEP_META[nextStep].label}を確認・比較
+                        次へ：{STEP_META[nextStep].stepNum} {STEP_META[nextStep].label}
                       </span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
-                  ) : null}
+                  )}
 
+                  {/* Primary Action: 唯一の塗りつぶしメインCTA（視覚的重さを圧倒的に集中） */}
                   <button
                     type="button"
                     onClick={() => navigateTo({ view: 'checkout' })}
-                    className={`px-6 py-2 rounded-xl text-xs font-bold tracking-wider transition-all flex items-center gap-2 leading-6 ${
-                      !nextStep
-                        ? 'bg-[#00E5FF] text-[#151515] shadow-[0_0_20px_rgba(0,229,255,0.55)]'
-                        : 'bg-[#222222] text-[#00E5FF] border border-[#00E5FF]/60 hover:bg-[#00E5FF] hover:text-[#151515]'
-                    }`}
+                    className="px-6 py-3 rounded-xl bg-[#00E5FF] text-[#151515] text-xs sm:text-sm font-bold tracking-wide shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all duration-300 ease-out hover:scale-105 flex items-center gap-2.5"
                   >
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>この装備で決定・Amazon購入へ進む ➔</span>
+                    <ShoppingBag className="w-4 h-4 stroke-[2.5]" />
+                    <span>この構成で購入確認へ進む</span>
+                    <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                   </button>
                 </>
               )}
@@ -961,10 +1026,10 @@ export const TackleBuilder: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigateTo({ view: 'garage' })}
-                  className="px-4 py-2 rounded-xl bg-[#222222] border border-[#00E5FF]/60 text-xs text-[#00E5FF] hover:bg-[#00E5FF] hover:text-[#151515] font-semibold transition-colors flex items-center gap-2 leading-6"
+                  className="px-5 py-2.5 rounded-xl bg-transparent border border-white/20 hover:border-[#00E5FF] text-xs font-light text-white hover:text-[#00E5FF] transition-all duration-300 flex items-center gap-2"
                 >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>ガレージに戻ってステータスを再調整する</span>
+                  <Zap className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <span>コンフィギュレーターへ戻る</span>
                 </button>
               )}
             </div>

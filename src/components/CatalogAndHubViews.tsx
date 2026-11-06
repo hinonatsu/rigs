@@ -6,8 +6,10 @@ import {
   Crosshair,
   Fish,
   Flame,
+  Lock,
   MapPin,
   ShieldCheck,
+  Truck,
   Waves,
   Zap,
 } from 'lucide-react';
@@ -24,7 +26,6 @@ interface TargetSelectHomeViewProps {
   onSelectTargetAndGoCheckout?: (targetId: TargetId) => void;
 }
 
-// 魚種名を「主役タイトル」と「補足クラス表記」に分離してジャンプ率を高めるヘルパー
 const DISPLAY_TITLE_MAP: Record<
   TargetId,
   {
@@ -34,7 +35,7 @@ const DISPLAY_TITLE_MAP: Record<
 > = {
   pe6: {
     mainSpecies: '近海ヒラマサ ＆ キハダ',
-    subSpecies: 'ヒラマサ 10〜20kg / キハダマグロ 20〜40kg',
+    subSpecies: 'ヒラマサ 10〜20kg / キハダ 20〜40kg',
   },
   pe8: {
     mainSpecies: '大型クロマグロ ＆ オオマサ',
@@ -47,16 +48,15 @@ const DISPLAY_TITLE_MAP: Record<
 };
 
 export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
+  currentTargetId,
   onSelectTargetAndGoGarage,
+  onSelectTargetAndGoCheckout,
 }) => {
-  // ホバー中のターゲットID（背景アンビエント連動＆PC段階的開示用）
   const [hoveredTargetId, setHoveredTargetId] = useState<TargetId | null>(null);
-
-  // モバイル用：詳細スペックのアコーディオン開閉状態
   const [expandedMobileTargetId, setExpandedMobileTargetId] = useState<TargetId | null>(null);
 
   const activeAmbientTarget =
-    RIG_PRESETS.find((t) => t.id === hoveredTargetId) ?? RIG_PRESETS[0];
+    RIG_PRESETS.find((t) => t.id === (hoveredTargetId ?? currentTargetId)) ?? RIG_PRESETS[0];
 
   const toggleMobileDetails = (e: React.MouseEvent, targetId: TargetId) => {
     e.stopPropagation();
@@ -64,7 +64,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
   };
 
   return (
-    <div className="relative flex-1 min-h-0 flex flex-col justify-between gap-6 sm:gap-8 py-2 sm:py-4">
+    <div className="relative flex-1 min-h-0 flex flex-col justify-between gap-8 sm:gap-10 py-4 sm:py-6">
       {/* ==================== 背景アンビエント水中フォトレイヤー ==================== */}
       <div
         aria-hidden="true"
@@ -75,31 +75,48 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
         <img
           src={activeAmbientTarget.heroImage}
           alt=""
-          className="w-full h-full object-cover scale-110 blur-2xl transition-all duration-700"
+          className="w-full h-full object-cover scale-110 blur-3xl transition-all duration-700"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#151515] via-[#151515]/85 to-[#151515]" />
       </div>
 
-      {/* ==================== 上部：STEP 01 タイトルヘッダー（ノイズを削ぎ落とし選択に集中） ==================== */}
-      <div className="relative z-10 border-b border-white/10 pb-5 sm:pb-6 shrink-0">
-        <div className="space-y-2 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/40 text-xs font-mono font-bold tracking-[0.18em] text-[#00E5FF]">
+      {/* ==================== 上部：STEP 01 タイトル ＆ トラストシグナル（Apple的余白） ==================== */}
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/10 pb-6 shrink-0">
+        <div className="space-y-3 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/40 text-[11px] font-oswald font-semibold tracking-[0.2em] text-[#00E5FF]">
             <Crosshair className="w-3.5 h-3.5 animate-pulse" />
             <span>STEP 01 // SELECT TARGET MONSTER</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#FFFFFF] leading-tight">
+          <h1 className="text-2xl sm:text-4xl font-light tracking-tight text-white leading-tight">
             どのモンスターを釣りに行きますか？
           </h1>
-          <p className="text-xs sm:text-sm text-[#A0A0A0] leading-relaxed">
-            狙うターゲットを選択してください。100%物理適合する推奨タックル4点セットが自動構成されます。
+          <p className="text-xs sm:text-sm font-light text-white/60 leading-relaxed">
+            ターゲットを選択するだけで、物理計算済みの推奨4点フルセットが即時ロードされます。
           </p>
+        </div>
+
+        {/* 高額決済の安心感を醸成するトラストバー */}
+        <div className="flex flex-wrap items-center gap-4 text-[11px] font-light text-white/70">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#222222]/80 backdrop-blur-md border border-white/10">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#00E5FF]" />
+            <span>100% 物理互換性検証済</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#222222]/80 backdrop-blur-md border border-white/10">
+            <Lock className="w-3.5 h-3.5 text-[#00E5FF]" />
+            <span>Secure Checkout (Amazon公式)</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#222222]/80 backdrop-blur-md border border-white/10">
+            <Truck className="w-3.5 h-3.5 text-[#00E5FF]" />
+            <span>全国送料無料対象</span>
+          </span>
         </div>
       </div>
 
-      {/* ==================== メイン：3つのターゲット選択カード（段階的開示 ＆ 強アフォーダンスCTA） ==================== */}
+      {/* ==================== メイン：3つのターゲット選択 Bento Grid ==================== */}
       <div className="relative z-10 flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
         {RIG_PRESETS.map((target: TargetFishProfile, idx: number) => {
           const displayTitle = DISPLAY_TITLE_MAP[target.id];
+          const isSelected = currentTargetId === target.id;
           const isMobileExpanded = expandedMobileTargetId === target.id;
 
           const pReel = ALL_PARTS.find((p) => p.id === target.rigIds.reel);
@@ -120,145 +137,132 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
               onMouseLeave={() => setHoveredTargetId(null)}
               role="button"
               tabIndex={0}
-              aria-label={`${displayTitle.mainSpecies}（${target.badge}）を選択してタックルを組む`}
+              aria-label={`${displayTitle.mainSpecies}（${target.badge}）を選択`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   onSelectTargetAndGoGarage(target.id);
                 }
               }}
-              className="group relative rounded-2xl bg-[#222222]/95 backdrop-blur-md overflow-hidden cursor-pointer border border-white/15 hover:border-[#00E5FF] shadow-[0_12px_32px_-10px_rgba(0,0,0,0.6)] hover:shadow-[0_0_36px_rgba(0,229,255,0.38)] transition-all duration-300 ease-out hover:-translate-y-1.5 flex flex-col justify-between"
+              className={`group relative rounded-2xl bg-[#222222]/85 backdrop-blur-xl overflow-hidden cursor-pointer border transition-all duration-300 ease-out hover:scale-[1.02] flex flex-col justify-between ${
+                isSelected
+                  ? 'border-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.4)]'
+                  : 'border-white/10 hover:border-[#00E5FF]/80 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)]'
+              }`}
             >
-              {/* =========================================================
-                  1. ヒーロービジュアル ＆ 常時表示コア情報（第1階層：LV・魚種名・海域のみ）
-                 ========================================================= */}
-              <div className="relative h-72 sm:h-80 lg:h-96 w-full overflow-hidden bg-[#151515]">
-                {/* メイン魚種ビジュアル（ホバーでダイナミックズーム） */}
+              {/* 1. ビジュアルステージ（最小限のコア情報のみ常時表示） */}
+              <div className="relative h-72 sm:h-80 w-full overflow-hidden bg-[#151515]">
                 <img
                   src={target.heroImage}
                   alt={target.fishName}
                   className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#222222] via-[#151515]/50 to-black/30" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,229,255,0.25),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                {/* コントラスト確保のためのグラデーションオーバーレイ */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-[#151515]/55 to-black/40" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,229,255,0.28),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                {/* 【常時表示①】上部：対象クラス（LV） ＆ 推奨基準バッジ */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-20">
-                  <span className="px-3.5 py-1.5 rounded-full bg-[#151515]/90 backdrop-blur-md border border-white/25 text-xs sm:text-sm font-mono font-bold text-[#FFFFFF] tracking-wider shadow-md">
+                {/* 上部バッジ（Oswald フォントで力強く） */}
+                <div className="absolute top-5 left-5 right-5 flex items-center justify-between gap-2 z-20">
+                  <span className="px-3.5 py-1 rounded-full bg-[#151515]/85 backdrop-blur-md border border-white/20 text-xs font-oswald font-semibold text-white tracking-wider">
                     LV.0{idx + 1} // {target.weightRange}
                   </span>
 
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#151515]/90 backdrop-blur-md border border-[#00E5FF] text-[#00E5FF] text-xs font-bold tracking-wider shadow-[0_0_15px_rgba(0,229,255,0.35)]">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#151515]/90 backdrop-blur-md border border-[#00E5FF] text-[#00E5FF] text-xs font-oswald font-semibold tracking-wider shadow-[0_0_15px_rgba(0,229,255,0.4)]">
                     <Waves className="w-3.5 h-3.5 shrink-0" />
                     <span>{target.badge}</span>
                   </span>
                 </div>
 
-                {/* =========================================================
-                    【段階的開示（Progressive Disclosure）】
-                    PCホバー時のみフワッと浮かび上がるマニアック戦闘データ（第2階層）
-                   ========================================================= */}
+                {/* 【プログレッシブ・ディスクロージャー】PCホバー時のみ表示される実戦負荷テレメトリ */}
                 <div
                   aria-hidden="true"
-                  className="hidden lg:flex absolute inset-x-4 top-16 z-20 rounded-xl bg-[#151515]/92 backdrop-blur-md border border-[#00E5FF]/60 p-4 shadow-[0_12px_28px_rgba(0,0,0,0.85)] opacity-0 translate-y-3 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out flex-col gap-3"
+                  className="hidden lg:flex absolute inset-x-5 top-16 z-20 rounded-xl bg-[#151515]/95 backdrop-blur-xl border border-[#00E5FF]/50 p-4 shadow-2xl opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out flex-col gap-3"
                 >
-                  <div className="flex items-center justify-between text-xs border-b border-white/10 pb-2">
-                    <span className="font-mono font-bold text-[#00E5FF] tracking-wider">
-                      COMBAT TELEMETRY // 実戦負荷データ
+                  <div className="flex items-center justify-between text-[11px] border-b border-white/10 pb-2">
+                    <span className="font-oswald font-semibold text-[#00E5FF] tracking-widest">
+                      COMBAT TELEMETRY
                     </span>
-                    <span className="text-[#A0A0A0] font-mono">
+                    <span className="text-white/60 font-light">
                       {target.waterDepthText.split('//')[0]}
                     </span>
                   </div>
 
-                  {/* 3大マニアック数値（時速・ドラグ負荷・キャスト数） */}
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="rounded-lg bg-[#222222] p-2.5 border border-white/10">
-                      <div className="text-xs text-[#A0A0A0] flex items-center justify-center gap-1">
-                        <Zap className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <div className="text-[10px] text-white/60 flex items-center justify-center gap-1">
+                        <Zap className="w-3 h-3 text-[#00E5FF]" />
                         <span>初動時速</span>
                       </div>
-                      <div className="text-sm font-mono font-bold text-[#FFFFFF] mt-1 tabular-nums">
+                      <div className="text-base font-oswald font-bold text-white mt-0.5 tabular-nums">
                         {target.strikeSpeedKmh}km/h
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-[#222222] p-2.5 border border-[#00E5FF]/30">
-                      <div className="text-xs text-[#A0A0A0] flex items-center justify-center gap-1">
-                        <Flame className="w-3.5 h-3.5 text-[#FF9900]" />
+                    <div className="rounded-lg bg-[#222222] p-2.5 border border-[#00E5FF]/40">
+                      <div className="text-[10px] text-white/60 flex items-center justify-center gap-1">
+                        <Flame className="w-3 h-3 text-[#00E5FF]" />
                         <span>初動負荷</span>
                       </div>
-                      <div className="text-sm font-mono font-bold text-[#00E5FF] mt-1 tabular-nums">
-                        約{target.initialRunLoadKg}kg
+                      <div className="text-base font-oswald font-bold text-[#00E5FF] mt-0.5 tabular-nums">
+                        {target.initialRunLoadKg}kg
                       </div>
                     </div>
 
                     <div className="rounded-lg bg-[#222222] p-2.5 border border-white/10">
-                      <div className="text-xs text-[#A0A0A0] flex items-center justify-center gap-1">
-                        <Activity className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <div className="text-[10px] text-white/60 flex items-center justify-center gap-1">
+                        <Activity className="w-3 h-3 text-[#00E5FF]" />
                         <span>1日投数</span>
                       </div>
-                      <div className="text-sm font-mono font-bold text-[#FFFFFF] mt-1 tabular-nums">
-                        約{target.dailyCastCount}投
+                      <div className="text-base font-oswald font-bold text-white mt-0.5 tabular-nums">
+                        {target.dailyCastCount}投
                       </div>
                     </div>
                   </div>
 
-                  {/* アイコン化した捕食ベイトサイズ */}
-                  <div className="flex items-center gap-2 text-xs text-[#FFFFFF] bg-[#222222]/90 rounded-lg px-3 py-2 border border-white/10">
-                    <Fish className="w-4 h-4 text-[#00E5FF] shrink-0" />
-                    <span className="text-[#A0A0A0] shrink-0">捕食ベイト:</span>
-                    <span className="font-medium text-[#00E5FF] truncate">
-                      {target.baitSizeMm}
-                    </span>
+                  <div className="flex items-center gap-2 text-xs text-white/90 bg-[#222222] rounded-lg px-3 py-2 border border-white/10">
+                    <Fish className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+                    <span className="text-white/60 shrink-0">ベイト:</span>
+                    <span className="font-light text-[#00E5FF] truncate">{target.baitSizeMm}</span>
                   </div>
                 </div>
 
-                {/* 【常時表示②・③】下部：高ジャンプ率の魚種名 ＆ 対象海域 */}
-                <div className="absolute bottom-4 left-5 right-5 z-10 space-y-2">
-                  <div className="text-xs font-medium text-[#00E5FF] tracking-wide drop-shadow">
+                {/* 下部タイトルエリア（長文を排除し、魚種とフィールドのみを洗練表示） */}
+                <div className="absolute bottom-5 left-6 right-6 z-10 space-y-1.5">
+                  <div className="text-xs font-light text-[#00E5FF] tracking-wide">
                     {displayTitle.subSpecies}
                   </div>
-
-                  <h2 className="text-2xl sm:text-3xl font-bold text-[#FFFFFF] group-hover:text-[#00E5FF] transition-colors tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white group-hover:text-[#00E5FF] transition-colors tracking-tight leading-tight">
                     {displayTitle.mainSpecies}
                   </h2>
-
-                  <div className="pt-1 flex items-center gap-2 text-xs sm:text-sm font-medium text-[#FFFFFF]/90 drop-shadow">
-                    <MapPin className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                  <div className="pt-1 flex items-center gap-1.5 text-xs font-light text-white/75">
+                    <MapPin className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
                     <span className="truncate">{target.field}</span>
                   </div>
                 </div>
               </div>
 
-              {/* =========================================================
-                  2. カード下部：価格アンカー ＆ モバイル用折りたたみ ＆ 明確な単一CTAボタン
-                 ========================================================= */}
-              <div className="p-5 sm:p-6 bg-[#222222] space-y-4">
-                {/* 推奨4点セット参考価格バー（1行でスッキリ表示） */}
-                <div className="flex items-center justify-between text-xs sm:text-sm pb-3 border-b border-white/10">
-                  <span className="text-[#A0A0A0] flex items-center gap-1.5">
+              {/* 2. カード下部：Oswald 価格表示 ＆ 明確に分離された Primary / Secondary CTA */}
+              <div className="p-6 bg-[#222222] space-y-5">
+                <div className="flex items-baseline justify-between pb-4 border-b border-white/10">
+                  <span className="text-xs font-light text-white/60 flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-[#00E5FF] shrink-0" />
-                    <span>推奨4点フルセット基準価格</span>
+                    <span>推奨4点フルセット参考価格</span>
                   </span>
-                  <span className="font-mono font-bold text-base text-[#FFFFFF] tabular-nums">
+                  <span className="font-oswald font-bold text-2xl text-white tracking-tight tabular-nums">
                     ¥{totalPrice.toLocaleString()}
                   </span>
                 </div>
 
-                {/* モバイル・タブレット（lg未満）専用：文字潰れを防ぐアコーディオン展開 */}
+                {/* モバイル用：段階的開示アコーディオン */}
                 <div className="lg:hidden">
                   <button
                     type="button"
                     onClick={(e) => toggleMobileDetails(e, target.id)}
                     aria-expanded={isMobileExpanded}
-                    className="w-full py-2.5 px-3.5 rounded-xl bg-[#151515] border border-white/10 text-xs font-medium text-[#A0A0A0] hover:text-[#FFFFFF] flex items-center justify-between transition-colors"
+                    className="w-full py-2 px-3.5 rounded-xl bg-[#151515] border border-white/10 text-xs font-light text-white/70 hover:text-white flex items-center justify-between transition-colors"
                   >
                     <span className="flex items-center gap-2">
                       <Zap className="w-3.5 h-3.5 text-[#00E5FF]" />
-                      <span>実戦データ（時速・負荷・捕食ベイト）を見る</span>
+                      <span>実戦テレメトリ（時速・負荷）を表示</span>
                     </span>
                     <ChevronDown
                       className={`w-4 h-4 text-[#00E5FF] transition-transform duration-200 ${
@@ -270,60 +274,64 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                   {isMobileExpanded && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-2.5 p-3.5 rounded-xl bg-[#151515] border border-[#00E5FF]/40 space-y-3"
+                      className="mt-2.5 p-3.5 rounded-xl bg-[#151515] border border-[#00E5FF]/40 grid grid-cols-3 gap-2 text-center"
                     >
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="rounded-lg bg-[#222222] p-2">
-                          <div className="text-xs text-[#A0A0A0]">初動時速</div>
-                          <div className="text-sm font-mono font-bold text-[#FFFFFF] mt-0.5">
-                            {target.strikeSpeedKmh}km
-                          </div>
-                        </div>
-                        <div className="rounded-lg bg-[#222222] p-2">
-                          <div className="text-xs text-[#A0A0A0]">初動負荷</div>
-                          <div className="text-sm font-mono font-bold text-[#00E5FF] mt-0.5">
-                            約{target.initialRunLoadKg}kg
-                          </div>
-                        </div>
-                        <div className="rounded-lg bg-[#222222] p-2">
-                          <div className="text-xs text-[#A0A0A0]">1日投数</div>
-                          <div className="text-sm font-mono font-bold text-[#FFFFFF] mt-0.5">
-                            約{target.dailyCastCount}投
-                          </div>
+                      <div className="rounded-lg bg-[#222222] p-2">
+                        <div className="text-[10px] text-white/60">初動時速</div>
+                        <div className="text-sm font-oswald font-bold text-white mt-0.5">
+                          {target.strikeSpeedKmh}km/h
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2 text-xs text-[#FFFFFF] bg-[#222222] rounded-lg px-3 py-2">
-                        <Fish className="w-4 h-4 text-[#00E5FF] shrink-0" />
-                        <span className="text-[#00E5FF] font-medium">
-                          ベイト: {target.baitSizeMm}
-                        </span>
+                      <div className="rounded-lg bg-[#222222] p-2">
+                        <div className="text-[10px] text-white/60">初動負荷</div>
+                        <div className="text-sm font-oswald font-bold text-[#00E5FF] mt-0.5">
+                          {target.initialRunLoadKg}kg
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-[#222222] p-2">
+                        <div className="text-[10px] text-white/60">1日投数</div>
+                        <div className="text-sm font-oswald font-bold text-white mt-0.5">
+                          {target.dailyCastCount}投
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* 【改善点3】明確な単一プライマリCTAボタン（エレクトリックブルー発光＋矢印アニメーション） */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectTargetAndGoGarage(target.id);
-                  }}
-                  className="w-full py-4 px-5 rounded-xl bg-[#00E5FF]/15 border-2 border-[#00E5FF] text-[#00E5FF] group-hover:bg-[#00E5FF] group-hover:text-[#151515] shadow-[0_0_20px_rgba(0,229,255,0.25)] group-hover:shadow-[0_0_30px_rgba(0,229,255,0.8)] transition-all duration-300 flex items-center justify-between gap-3"
-                >
-                  <div className="flex flex-col items-start text-left">
-                    <span className="font-mono text-xs font-extrabold tracking-[0.16em] uppercase leading-none">
-                      SELECT TARGET
-                    </span>
-                    <span className="text-sm font-bold tracking-wide mt-1 leading-none">
-                      このターゲットで組む
-                    </span>
-                  </div>
-                  <span className="w-9 h-9 rounded-lg bg-[#00E5FF]/20 group-hover:bg-[#151515]/15 flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:translate-x-1.5">
-                    <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-                  </span>
-                </button>
+                {/* Primary CTA（塗りつぶし・発光・物理スケール）と Secondary CTA（アウトライン）の階層分離 */}
+                <div className="space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectTargetAndGoGarage(target.id);
+                    }}
+                    className="w-full py-3.5 px-5 rounded-xl bg-[#00E5FF] text-[#151515] font-bold shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all duration-300 ease-out hover:scale-105 flex items-center justify-between gap-3"
+                  >
+                    <div className="flex flex-col items-start text-left">
+                      <span className="font-oswald text-[11px] font-bold tracking-[0.18em] uppercase leading-none opacity-80">
+                        CONFIGURE LOADOUT
+                      </span>
+                      <span className="text-sm font-bold tracking-wide mt-1 leading-none">
+                        このターゲットで装備を組む
+                      </span>
+                    </div>
+                    <ArrowRight className="w-5 h-5 stroke-[2.5] shrink-0" />
+                  </button>
+
+                  {onSelectTargetAndGoCheckout && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectTargetAndGoCheckout(target.id);
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-transparent border border-white/15 hover:border-white/40 text-xs font-light text-white/70 hover:text-white transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <span>推奨セットのまま購入確認へスキップ</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </article>
           );

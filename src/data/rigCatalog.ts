@@ -197,8 +197,7 @@ export const REEL_CATALOG: ReelPart[] = [
     shortName: '19 ステラ SW 14000XG',
     subCode: '14000番 // 高剛性HAGANE・高速巻上 134cm',
     price: 119300,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=19+%E3%82%B9%E3%83%86%E3%83%A9+14000%E7%95%AA',
+    image: 'https://m.media-amazon.com/images/I/6137ljKmWdL._AC_SL1000_.jpg',
     sizeClass: 14000,
     dragMaxKg: 25,
     practicalDragKg: 18,
@@ -233,8 +232,7 @@ export const REEL_CATALOG: ReelPart[] = [
     shortName: '20 ソルティガ 14000-XH',
     subCode: '14000番 // 軽量モノコック・滑らかATDドラグ',
     price: 119900,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+14000%E7%95%AA',
+    image: 'https://m.media-amazon.com/images/I/61zdeV7N7FL._AC_SL1000_.jpg',
     sizeClass: 14000,
     dragMaxKg: 25,
     practicalDragKg: 18,
@@ -269,8 +267,7 @@ export const REEL_CATALOG: ReelPart[] = [
     shortName: '20 ステラ SW 18000HG',
     subCode: '18000番 // 大型マグロ＆オオマサ制圧トルク',
     price: 130900,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%B9%E3%83%86%E3%83%A9+18000%E7%95%AA',
+    image: 'https://m.media-amazon.com/images/I/81OGHM7fueL._AC_SL1000_.jpg',
     sizeClass: 18000,
     dragMaxKg: 28,
     practicalDragKg: 20,
@@ -305,8 +302,7 @@ export const REEL_CATALOG: ReelPart[] = [
     shortName: '20 ソルティガ 20000-H',
     subCode: '20000番 // 100kg超クロマグロ遠征・最大ドラグ30kg',
     price: 141900,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+20000%E7%95%AA',
+    image: 'https://m.media-amazon.com/images/I/615wzgX56iL._AC_SL1000_.jpg',
     sizeClass: 20000,
     dragMaxKg: 30,
     practicalDragKg: 22,
@@ -344,8 +340,7 @@ export const ROD_CATALOG: RodPart[] = [
     shortName: 'アクイラ MLT 82-3/6',
     subCode: '8\'2" (346g) // 3番ティップ追従 × 6番バットパワー',
     price: 78100,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A2%E3%82%AF%E3%82%A4%E3%83%A9+82-3%2F6',
+    image: 'https://m.media-amazon.com/images/I/31hHyNP99RL._AC_SL1000_.jpg',
     compatibleReelSizes: [14000],
     minPe: 3,
     maxPe: 6,
@@ -380,8 +375,7 @@ export const ROD_CATALOG: RodPart[] = [
     shortName: 'エクスプロージョン 865HF',
     subCode: '8\'6" (375g) // ロングキャスト遠投 × 許容130g',
     price: 69300,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%97%E3%83%AD%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3+865',
+    image: 'https://m.media-amazon.com/images/I/91VjMH1vnXL._AC_SL1000_.jpg',
     compatibleReelSizes: [14000, 18000],
     minPe: 5,
     maxPe: 8,
@@ -416,8 +410,7 @@ export const ROD_CATALOG: RodPart[] = [
     shortName: 'ウルティモ 83M Nano',
     subCode: '8\'3" (388g) // ナノアロイ高反発リフト・許容150g',
     price: 83600,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A6%E3%83%AB%E3%83%86%E3%82%A3%E3%83%A2+83+%E3%83%8A%E3%83%8E',
+    image: 'https://m.media-amazon.com/images/I/51RRYYrky9L._AC_SL1000_.jpg',
     compatibleReelSizes: [14000, 18000],
     minPe: 6,
     maxPe: 8,
@@ -452,8 +445,7 @@ export const ROD_CATALOG: RodPart[] = [
     shortName: 'ビッグツナ 83 JAPAN SP',
     subCode: '8\'3" (440g) // 対100kg超クロマグロ垂直リフト設計',
     price: 86900,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%93%E3%83%83%E3%82%B0%E3%83%84%E3%83%8A+83',
+    image: 'https://m.media-amazon.com/images/I/71hSqVJhgTL._AC_SL1000_.jpg',
     compatibleReelSizes: [18000, 20000],
     minPe: 8,
     maxPe: 12,
@@ -491,8 +483,7 @@ export const LINE_CATALOG: LinePart[] = [
     shortName: 'バリバス SMP PE6号 (90lb)',
     subCode: 'PE6号-300m // 自動セット: 130lbショックリーダー',
     price: 16830,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+6%E5%8F%B7+300m',
+    image: 'https://m.media-amazon.com/images/I/71-1KOMli2L._AC_SL1000_.jpg',
     peNumber: 6,
     lengthM: 300,
     strengthLb: 90,
@@ -526,8 +517,7 @@ export const LINE_CATALOG: LinePart[] = [
     shortName: 'オッズポート PE8号 (120lb)',
     subCode: 'PE8号-300m // 自動セット: 170lbショックリーダー',
     price: 18920,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AA%E3%83%83%E3%82%BA%E3%83%9D%E3%83%BC%E3%83%88+8%E5%8F%B7+300m',
+    image: 'https://m.media-amazon.com/images/I/61XXzr+YzUL._AC_SL1000_.jpg',
     peNumber: 8,
     lengthM: 300,
     strengthLb: 120,
@@ -561,8 +551,7 @@ export const LINE_CATALOG: LinePart[] = [
     shortName: 'バリバス Si-X PE10号 (140lb)',
     subCode: 'PE10号-300m // 自動セット: 220lbショックリーダー',
     price: 20460,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+10%E5%8F%B7+300m',
+    image: 'https://m.media-amazon.com/images/I/71rWPcYeFjL._AC_SL1000_.jpg',
     peNumber: 10,
     lengthM: 300,
     strengthLb: 140,
@@ -599,8 +588,7 @@ export const LURE_CATALOG: LurePart[] = [
     shortName: 'CB ONE ライアン 200 (針込96.5g)',
     subCode: '全長200mm // 本体85g ＋ 太軸#3/0金具 11.5g ＝ 96.5g',
     price: 13860,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%A9%E3%82%A4%E3%82%A2%E3%83%B3+200',
+    image: 'https://m.media-amazon.com/images/I/61iVcr6BFGL._AC_SL1000_.jpg',
     bodyWeightG: 85,
     hookRingWeightG: 11.5,
     totalWeightG: 96.5,
@@ -635,8 +623,7 @@ export const LURE_CATALOG: LurePart[] = [
     shortName: 'カーペンター ガンマ 90 (針込86.5g)',
     subCode: '全長200mm // 本体75g ＋ 太軸#3/0金具 11.5g ＝ 86.5g',
     price: 15400,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AC%E3%83%B3%E3%83%9E+90',
+    image: 'https://m.media-amazon.com/images/I/71DPwUmtvsL._AC_SL1000_.jpg',
     bodyWeightG: 75,
     hookRingWeightG: 11.5,
     totalWeightG: 86.5,
@@ -671,8 +658,7 @@ export const LURE_CATALOG: LurePart[] = [
     shortName: 'CB ONE バズー 200 (針込112.0g)',
     subCode: '全長200mm // 本体96g ＋ 太軸#4/0金具 16.0g ＝ 112.0g',
     price: 14960,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%82%BA%E3%83%BC+200',
+    image: 'https://m.media-amazon.com/images/I/61jTMcNB4fL._AC_SL1000_.jpg',
     bodyWeightG: 96,
     hookRingWeightG: 16.0,
     totalWeightG: 112.0,
@@ -707,8 +693,7 @@ export const LURE_CATALOG: LurePart[] = [
     shortName: 'CB ONE ゾロ 240 (針込141.0g)',
     subCode: '全長240mm // 本体120g ＋ 太軸#5/0金具 21.0g ＝ 141.0g',
     price: 16720,
-    image:
-      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%BE%E3%83%AD+240',
+    image: 'https://m.media-amazon.com/images/I/417b406izAL._AC_SL1000_.jpg',
     bodyWeightG: 120,
     hookRingWeightG: 21.0,
     totalWeightG: 141.0,
