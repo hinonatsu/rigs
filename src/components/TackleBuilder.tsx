@@ -2,11 +2,19 @@ import React, { useMemo, useRef, useState } from 'react';
 import {
   Check,
   ChevronUp,
+  ExternalLink,
   RotateCcw,
+  Settings,
   ShieldCheck,
   ShoppingBag,
   X,
 } from 'lucide-react';
+import {
+  AmazonLinkTarget,
+  buildAmazonAffiliateUrl,
+  getAssociateTag,
+  setAssociateTag,
+} from '../config/amazonAssociate';
 
 // ============================================================================
 // 型定義・データモデル
@@ -29,6 +37,7 @@ export interface ReelPart {
   weightG: number;
   gearRatio: string;
   specs: { label: string; value: string }[];
+  amazon: AmazonLinkTarget;
 }
 
 export interface RodPart {
@@ -48,6 +57,7 @@ export interface RodPart {
   lengthFt: string;
   weightG: number;
   specs: { label: string; value: string }[];
+  amazon: AmazonLinkTarget;
 }
 
 export interface LinePart {
@@ -63,6 +73,7 @@ export interface LinePart {
   strengthLb: number;
   pairedLeaderSpec: string;
   specs: { label: string; value: string }[];
+  amazon: AmazonLinkTarget;
 }
 
 export interface LurePart {
@@ -80,6 +91,7 @@ export interface LurePart {
   lengthMm: number;
   hookSpec: string;
   specs: { label: string; value: string }[];
+  amazon: AmazonLinkTarget;
 }
 
 export type AnyRigPart = ReelPart | RodPart | LinePart | LurePart;
@@ -92,7 +104,7 @@ export interface RigState {
 }
 
 // ============================================================================
-// 厳選マスターカタログデータ（すべて日本語表記）
+// 厳選マスターカタログデータ（すべて日本語表記 + Amazonアソシエイト検索クエリ連動）
 // ============================================================================
 
 const REEL_CATALOG: ReelPart[] = [
@@ -103,7 +115,8 @@ const REEL_CATALOG: ReelPart[] = [
     name: '19 ステラ 14000番 エクストラハイギア',
     subCode: '14000番スプール // ハイスピードモデル',
     price: 119300,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=19+%E3%82%B9%E3%83%86%E3%83%A9+14000%E7%95%AA',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=19+%E3%82%B9%E3%83%86%E3%83%A9+14000%E7%95%AA',
     sizeClass: 14000,
     dragMaxKg: 25,
     peCapacityNum: 6,
@@ -116,6 +129,9 @@ const REEL_CATALOG: ReelPart[] = [
       { label: '最大巻上長', value: '134cm / 1回転' },
       { label: '自重', value: '675g' },
     ],
+    amazon: {
+      searchQuery: 'シマノ 19 ステラ SW 14000XG',
+    },
   },
   {
     id: 'reel-saltiga-14000xh',
@@ -124,7 +140,8 @@ const REEL_CATALOG: ReelPart[] = [
     name: '20 ソルティガ 14000番 エクストラハイギア',
     subCode: 'モノコックボディ // 14000番ハイスピード',
     price: 119900,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+14000%E7%95%AA',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+14000%E7%95%AA',
     sizeClass: 14000,
     dragMaxKg: 25,
     peCapacityNum: 6,
@@ -137,6 +154,9 @@ const REEL_CATALOG: ReelPart[] = [
       { label: '最大巻上長', value: '134cm / 1回転' },
       { label: '自重', value: '665g' },
     ],
+    amazon: {
+      searchQuery: 'ダイワ 20 ソルティガ 14000-XH',
+    },
   },
   {
     id: 'reel-stella-18000hg',
@@ -145,7 +165,8 @@ const REEL_CATALOG: ReelPart[] = [
     name: '20 ステラ 18000番 パワーハイギア',
     subCode: '大型マグロ・オオマサ対応 // 18000番ハイギア',
     price: 130900,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%B9%E3%83%86%E3%83%A9+18000%E7%95%AA',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%B9%E3%83%86%E3%83%A9+18000%E7%95%AA',
     sizeClass: 18000,
     dragMaxKg: 28,
     peCapacityNum: 8,
@@ -158,6 +179,9 @@ const REEL_CATALOG: ReelPart[] = [
       { label: '最大巻上長', value: '129cm / 1回転' },
       { label: '自重', value: '875g' },
     ],
+    amazon: {
+      searchQuery: 'シマノ 20 ステラ SW 18000HG',
+    },
   },
   {
     id: 'reel-saltiga-20000h',
@@ -166,7 +190,8 @@ const REEL_CATALOG: ReelPart[] = [
     name: '20 ソルティガ 20000番 ハイギア',
     subCode: '100kg超クロマグロ遠征仕様 // 20000番',
     price: 141900,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+20000%E7%95%AA',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=20+%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%82%AC+20000%E7%95%AA',
     sizeClass: 20000,
     dragMaxKg: 30,
     peCapacityNum: 10,
@@ -179,6 +204,9 @@ const REEL_CATALOG: ReelPart[] = [
       { label: '最大巻上長', value: '143cm / 1回転' },
       { label: '自重', value: '890g' },
     ],
+    amazon: {
+      searchQuery: 'ダイワ 20 ソルティガ 20000-H',
+    },
   },
 ];
 
@@ -190,7 +218,8 @@ const ROD_CATALOG: RodPart[] = [
     name: 'アクイラ 82-3/6（テクニカルモデル）',
     subCode: 'テクニカルキャスト仕様 // 適合ライン 3〜6号',
     price: 78100,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A2%E3%82%AF%E3%82%A4%E3%83%A9+82-3%2F6',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A2%E3%82%AF%E3%82%A4%E3%83%A9+82-3%2F6',
     compatibleReelSizes: [14000],
     minPe: 3,
     maxPe: 6,
@@ -205,6 +234,9 @@ const ROD_CATALOG: RodPart[] = [
       { label: '最大ドラグ負荷', value: '11kg (45°)' },
       { label: '推奨リール番手', value: '14000番' },
     ],
+    amazon: {
+      searchQuery: 'リップルフィッシャー アクイラ MLT 82-3/6',
+    },
   },
   {
     id: 'rod-explosion-865hf',
@@ -213,7 +245,8 @@ const ROD_CATALOG: RodPart[] = [
     name: 'エクスプロージョン 865（フルコンタクト）',
     subCode: 'フルコンタクト仕様 // 適合ライン 5〜8号',
     price: 69300,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%97%E3%83%AD%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3+865',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%97%E3%83%AD%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3+865',
     compatibleReelSizes: [14000, 18000],
     minPe: 5,
     maxPe: 8,
@@ -228,6 +261,9 @@ const ROD_CATALOG: RodPart[] = [
       { label: '最大ドラグ負荷', value: '15kg (45°)' },
       { label: '推奨リール番手', value: '14000番 / 18000番' },
     ],
+    amazon: {
+      searchQuery: 'MCワークス エクスプロージョン 865HF',
+    },
   },
   {
     id: 'rod-ultimo-83m',
@@ -236,7 +272,8 @@ const ROD_CATALOG: RodPart[] = [
     name: 'ウルティモ 83 ナノ（大型ヒラマサモデル）',
     subCode: '大型ヒラマサ特化 // 適合ライン 6〜8号',
     price: 83600,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A6%E3%83%AB%E3%83%86%E3%82%A3%E3%83%A2+83+%E3%83%8A%E3%83%8E',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%A6%E3%83%AB%E3%83%86%E3%82%A3%E3%83%A2+83+%E3%83%8A%E3%83%8E',
     compatibleReelSizes: [14000, 18000],
     minPe: 6,
     maxPe: 8,
@@ -251,6 +288,9 @@ const ROD_CATALOG: RodPart[] = [
       { label: '最大ドラグ負荷', value: '16kg (45°)' },
       { label: '推奨リール番手', value: '14000番 / 18000番' },
     ],
+    amazon: {
+      searchQuery: 'リップルフィッシャー ウルティモ 83M Nano',
+    },
   },
   {
     id: 'rod-bigtuna-83',
@@ -259,7 +299,8 @@ const ROD_CATALOG: RodPart[] = [
     name: 'ビッグツナ 83 ジャパンスペシャル',
     subCode: 'クロマグロ・スタンドアップ // 適合ライン 8〜12号',
     price: 86900,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%93%E3%83%83%E3%82%B0%E3%83%84%E3%83%8A+83',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%93%E3%83%83%E3%82%B0%E3%83%84%E3%83%8A+83',
     compatibleReelSizes: [18000, 20000],
     minPe: 8,
     maxPe: 12,
@@ -274,6 +315,9 @@ const ROD_CATALOG: RodPart[] = [
       { label: '最大ドラグ負荷', value: '18kg (45°)' },
       { label: '推奨リール番手', value: '18000番 / 20000番' },
     ],
+    amazon: {
+      searchQuery: 'リップルフィッシャー ビッグツナ 83 ジャパンスペシャル',
+    },
   },
 ];
 
@@ -283,57 +327,75 @@ const LINE_CATALOG: LinePart[] = [
     category: 'line',
     brand: 'バリバス',
     name: 'アバニ キャスティングライン 6号 (300m)',
-    subCode: '自動セット: オーシャンレコード 130ポンド リーダー付属',
+    subCode: '自動セット: オーシャンレコード 130ポンド リーダー推奨',
     price: 16830,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+6%E5%8F%B7+300m',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+6%E5%8F%B7+300m',
     peNumber: 6,
     lengthM: 300,
     strengthLb: 90,
-    pairedLeaderSpec: 'オーシャンレコード 130ポンド（同梱）',
+    pairedLeaderSpec: 'オーシャンレコード 130ポンド（推奨ペア）',
     specs: [
       { label: '号数・長さ', value: '6号-300m' },
       { label: '最大直線強力', value: '90ポンド (40.8kg)' },
-      { label: '付属リーダー', value: '130ポンド 自動セット' },
+      { label: '適合リーダー', value: '130ポンド 自動ペア' },
       { label: 'スプール適合', value: '14000番 (充填100%)' },
     ],
+    amazon: {
+      searchQuery: 'バリバス アバニ キャスティングPE SMP 6号 300m',
+      subItemLabel: '適合ショックリーダー：バリバス オーシャンレコード 130lb',
+      subItemQuery: 'バリバス オーシャンレコード ショックリーダー 130lb',
+    },
   },
   {
     id: 'line-ygk-oddport-pe8',
     category: 'line',
     brand: 'エックスブレイド',
     name: 'オッズポート 8本組ライン 8号 (300m)',
-    subCode: '自動セット: オーシャンレコード 170ポンド リーダー付属',
+    subCode: '自動セット: オーシャンレコード 170ポンド リーダー推奨',
     price: 18920,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AA%E3%83%83%E3%82%BA%E3%83%9D%E3%83%BC%E3%83%88+8%E5%8F%B7+300m',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AA%E3%83%83%E3%82%BA%E3%83%9D%E3%83%BC%E3%83%88+8%E5%8F%B7+300m',
     peNumber: 8,
     lengthM: 300,
     strengthLb: 120,
-    pairedLeaderSpec: 'オーシャンレコード 170ポンド（同梱）',
+    pairedLeaderSpec: 'オーシャンレコード 170ポンド（推奨ペア）',
     specs: [
       { label: '号数・長さ', value: '8号-300m' },
       { label: '最大直線強力', value: '120ポンド (54.4kg)' },
-      { label: '付属リーダー', value: '170ポンド 自動セット' },
+      { label: '適合リーダー', value: '170ポンド 自動ペア' },
       { label: 'スプール適合', value: '18000番 (充填100%)' },
     ],
+    amazon: {
+      searchQuery: 'エックスブレイド オッズポート WXP1 8 8号 300m',
+      subItemLabel: '適合ショックリーダー：バリバス オーシャンレコード 170lb',
+      subItemQuery: 'バリバス オーシャンレコード ショックリーダー 170lb',
+    },
   },
   {
     id: 'line-varivas-six-pe10',
     category: 'line',
     brand: 'バリバス',
     name: 'アバニ マグロ耐熱ライン 10号 (300m)',
-    subCode: '自動セット: オーシャンレコード 220ポンド リーダー付属',
+    subCode: '自動セット: オーシャンレコード 220ポンド リーダー推奨',
     price: 20460,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+10%E5%8F%B7+300m',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%83%AA%E3%83%90%E3%82%B9+10%E5%8F%B7+300m',
     peNumber: 10,
     lengthM: 300,
     strengthLb: 140,
-    pairedLeaderSpec: 'オーシャンレコード 220ポンド（同梱）',
+    pairedLeaderSpec: 'オーシャンレコード 220ポンド（推奨ペア）',
     specs: [
       { label: '号数・長さ', value: '10号-300m' },
       { label: '最大直線強力', value: '140ポンド (63.5kg)' },
-      { label: '付属リーダー', value: '220ポンド 自動セット' },
+      { label: '適合リーダー', value: '220ポンド 自動ペア' },
       { label: 'スプール適合', value: '20000番 (充填100%)' },
     ],
+    amazon: {
+      searchQuery: 'バリバス アバニ キャスティングPE Si-X 10号 300m',
+      subItemLabel: '適合ショックリーダー：バリバス オーシャンレコード 220lb',
+      subItemQuery: 'バリバス オーシャンレコード ショックリーダー 220lb',
+    },
   },
 ];
 
@@ -342,10 +404,11 @@ const LURE_CATALOG: LurePart[] = [
     id: 'lure-cbone-ryan-200',
     category: 'lure',
     brand: 'シービーワン',
-    name: 'ライアン 200（太軸 3/0号 フック＆リング付属）',
+    name: 'ライアン 200（太軸 3/0号 フック＆リング推奨）',
     subCode: '本体単体 85g ＋ 太軸フック・強化リング 11.5g',
     price: 13860,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%A9%E3%82%A4%E3%82%A2%E3%83%B3+200',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%A9%E3%82%A4%E3%82%A2%E3%83%B3+200',
     bodyWeightG: 85,
     hookRingWeightG: 11.5,
     totalWeightG: 96.5,
@@ -355,18 +418,24 @@ const LURE_CATALOG: LurePart[] = [
     specs: [
       { label: '実戦総重量', value: '96.5g (針・リング込)' },
       { label: '本体単体重量', value: '85.0g (全長200mm)' },
-      { label: '付属フック', value: '3/0号規格 (+11.5g)' },
+      { label: '適合フック', value: '3/0号規格 (+11.5g)' },
       { label: '推奨ライン', value: '5号以上' },
     ],
+    amazon: {
+      searchQuery: 'CB ONE ライアン 200',
+      subItemLabel: '適合太軸フック：オーナー カルティバ ST-66 #3/0',
+      subItemQuery: 'オーナー カルティバ スティンガートリプル ST-66 3/0',
+    },
   },
   {
     id: 'lure-carpenter-gamma-90',
     category: 'lure',
     brand: 'カーペンター',
-    name: 'ガンマ 90-特選モデル（太軸 3/0号 フック付属）',
+    name: 'ガンマ 90-特選モデル（太軸 3/0号 フック推奨）',
     subCode: '本体単体 75g ＋ 太軸フック・強化リング 11.5g',
     price: 15400,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AC%E3%83%B3%E3%83%9E+90',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%AC%E3%83%B3%E3%83%9E+90',
     bodyWeightG: 75,
     hookRingWeightG: 11.5,
     totalWeightG: 86.5,
@@ -376,18 +445,24 @@ const LURE_CATALOG: LurePart[] = [
     specs: [
       { label: '実戦総重量', value: '86.5g (針・リング込)' },
       { label: '本体単体重量', value: '75.0g (全長200mm)' },
-      { label: '付属フック', value: '3/0号規格 (+11.5g)' },
+      { label: '適合フック', value: '3/0号規格 (+11.5g)' },
       { label: '推奨ライン', value: '5号以上' },
     ],
+    amazon: {
+      searchQuery: 'カーペンター ガンマ 90',
+      subItemLabel: '適合太軸フック：オーナー カルティバ ST-66 #3/0',
+      subItemQuery: 'オーナー カルティバ スティンガートリプル ST-66 3/0',
+    },
   },
   {
     id: 'lure-cbone-bazoo-200',
     category: 'lure',
     brand: 'シービーワン',
-    name: 'バズー 200（太軸 4/0号 フック＆リング付属）',
+    name: 'バズー 200（太軸 4/0号 フック＆リング推奨）',
     subCode: '本体単体 96g ＋ 太軸フック・強化リング 16.0g',
     price: 14960,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%82%BA%E3%83%BC+200',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%83%90%E3%82%BA%E3%83%BC+200',
     bodyWeightG: 96,
     hookRingWeightG: 16.0,
     totalWeightG: 112.0,
@@ -397,18 +472,24 @@ const LURE_CATALOG: LurePart[] = [
     specs: [
       { label: '実戦総重量', value: '112.0g (針・リング込)' },
       { label: '本体単体重量', value: '96.0g (全長200mm)' },
-      { label: '付属フック', value: '4/0号規格 (+16.0g)' },
+      { label: '適合フック', value: '4/0号規格 (+16.0g)' },
       { label: '推奨ライン', value: '6号以上' },
     ],
+    amazon: {
+      searchQuery: 'CB ONE バズー 200',
+      subItemLabel: '適合太軸フック：オーナー カルティバ ST-66 #4/0',
+      subItemQuery: 'オーナー カルティバ スティンガートリプル ST-66 4/0',
+    },
   },
   {
     id: 'lure-cbone-zorro-240',
     category: 'lure',
     brand: 'シービーワン',
-    name: 'ゾロ 240 モンスター仕様（太軸 5/0号 フック付属）',
+    name: 'ゾロ 240 モンスター仕様（太軸 5/0号 フック推奨）',
     subCode: '本体単体 120g ＋ 太軸フック・強化リング 21.0g',
     price: 16720,
-    image: 'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%BE%E3%83%AD+240',
+    image:
+      'https://placehold.co/400x400/222222/00E5FF?text=%E3%82%BE%E3%83%AD+240',
     bodyWeightG: 120,
     hookRingWeightG: 21.0,
     totalWeightG: 141.0,
@@ -418,9 +499,14 @@ const LURE_CATALOG: LurePart[] = [
     specs: [
       { label: '実戦総重量', value: '141.0g (針・リング込)' },
       { label: '本体単体重量', value: '120.0g (全長240mm)' },
-      { label: '付属フック', value: '5/0号規格 (+21.0g)' },
+      { label: '適合フック', value: '5/0号規格 (+21.0g)' },
       { label: '推奨ライン', value: '8号以上' },
     ],
+    amazon: {
+      searchQuery: 'CB ONE ゾロ 240',
+      subItemLabel: '適合太軸フック：オーナー カルティバ ST-66 #5/0',
+      subItemQuery: 'オーナー カルティバ スティンガートリプル ST-66 5/0',
+    },
   },
 ];
 
@@ -524,7 +610,7 @@ function checkPartCompatibility(
 }
 
 // ============================================================================
-// メインコンポーネント: TackleBuilder（すべて日本語表記）
+// メインコンポーネント: TackleBuilder（Amazonアソシエイト購入導線対応版）
 // ============================================================================
 
 export const TackleBuilder: React.FC = () => {
@@ -536,15 +622,19 @@ export const TackleBuilder: React.FC = () => {
     lure: LURE_CATALOG[0],
   });
 
-  const [cartAdded, setCartAdded] = useState<boolean>(false);
   const [mobileRigExpanded, setMobileRigExpanded] = useState<boolean>(false);
+  const [amazonModalOpen, setAmazonModalOpen] = useState<boolean>(false);
+  const [associateTagInput, setAssociateTagInput] = useState<string>(() => getAssociateTag());
+  const [activeAssociateTag, setActiveAssociateTag] = useState<string>(() => getAssociateTag());
+  const [tagSavedMessage, setTagSavedMessage] = useState<boolean>(false);
+  const [showTagEditor, setShowTagEditor] = useState<boolean>(false);
 
   const reelSectionRef = useRef<HTMLElement>(null);
   const rodSectionRef = useRef<HTMLElement>(null);
   const lineSectionRef = useRef<HTMLElement>(null);
   const lureSectionRef = useRef<HTMLElement>(null);
 
-  // 合計金額のリアルタイム計算
+  // 合計参考金額のリアルタイム計算
   const totalValue = useMemo(() => {
     return (
       (rig.reel?.price ?? 0) +
@@ -571,10 +661,21 @@ export const TackleBuilder: React.FC = () => {
     return items.every((item) => checkPartCompatibility(item, rig).compatible);
   }, [rig]);
 
-  const selectedCount = [rig.reel, rig.rod, rig.line, rig.lure].filter(Boolean).length;
+  const selectedParts = useMemo(() => {
+    const entries: Array<{ step: string; item: AnyRigPart | null }> = [
+      { step: '01 リール', item: rig.reel },
+      { step: '02 ロッド', item: rig.rod },
+      { step: '03 ライン', item: rig.line },
+      { step: '04 ルアー', item: rig.lure },
+    ];
+    return entries.filter(
+      (entry): entry is { step: string; item: AnyRigPart } => entry.item !== null
+    );
+  }, [rig]);
+
+  const selectedCount = selectedParts.length;
 
   const handleSelectPart = (part: AnyRigPart) => {
-    setCartAdded(false);
     setRig((prev) => {
       const isSame = prev[part.category]?.id === part.id;
       return {
@@ -585,7 +686,6 @@ export const TackleBuilder: React.FC = () => {
   };
 
   const handleResetRig = () => {
-    setCartAdded(false);
     setRig({
       reel: null,
       rod: null,
@@ -595,7 +695,6 @@ export const TackleBuilder: React.FC = () => {
   };
 
   const handleApplyPreset = (presetType: 'pe6' | 'pe8' | 'pe10') => {
-    setCartAdded(false);
     if (presetType === 'pe6') {
       setRig({
         reel: REEL_CATALOG[0],
@@ -620,6 +719,16 @@ export const TackleBuilder: React.FC = () => {
     }
   };
 
+  const handleSaveAssociateTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = associateTagInput.trim() || 'rigs-offshore-22';
+    setAssociateTag(cleaned);
+    setActiveAssociateTag(cleaned);
+    setAssociateTagInput(cleaned);
+    setTagSavedMessage(true);
+    setTimeout(() => setTagSavedMessage(false), 2500);
+  };
+
   const scrollToSection = (cat: PartCategory) => {
     const map = {
       reel: reelSectionRef,
@@ -633,6 +742,7 @@ export const TackleBuilder: React.FC = () => {
   const renderPartCard = (part: AnyRigPart) => {
     const isSelected = rig[part.category]?.id === part.id;
     const { compatible, reason } = checkPartCompatibility(part, rig);
+    const amazonUrl = buildAmazonAffiliateUrl(part.amazon, activeAssociateTag);
 
     return (
       <article
@@ -693,14 +803,19 @@ export const TackleBuilder: React.FC = () => {
             </div>
           </div>
 
-          {/* モデル名・価格 */}
+          {/* モデル名・参考価格 */}
           <div className="flex items-baseline justify-between gap-3 mb-5">
             <h3 className="text-lg font-normal tracking-tight text-[#FFFFFF] leading-snug">
               {part.name}
             </h3>
-            <span className="text-lg font-light tracking-wider text-[#FFFFFF] tabular-nums shrink-0">
-              ¥{part.price.toLocaleString()}
-            </span>
+            <div className="text-right shrink-0">
+              <span className="block text-[10px] font-light tracking-wider text-[#A0A0A0]">
+                参考価格
+              </span>
+              <span className="text-lg font-light tracking-wider text-[#FFFFFF] tabular-nums">
+                ¥{part.price.toLocaleString()}
+              </span>
+            </div>
           </div>
 
           {/* 無機質かつ美しい細字スペック一覧 */}
@@ -718,26 +833,41 @@ export const TackleBuilder: React.FC = () => {
           </div>
         </div>
 
-        {/* 適合判定理由フッター */}
-        <div className="mt-5 pt-3.5 border-t border-white/5 flex items-center justify-between gap-2">
-          <span
-            className={`text-[11px] font-light tracking-wide truncate ${
-              compatible ? 'text-[#00E5FF]' : 'text-[#A0A0A0]'
-            }`}
-          >
-            {reason}
-          </span>
-          <span
-            className={`text-[11px] font-normal tracking-wider shrink-0 ${
-              isSelected
-                ? 'text-[#00E5FF]'
-                : compatible
-                ? 'text-[#FFFFFF] group-hover:text-[#00E5FF]'
-                : 'text-[#A0A0A0]'
-            }`}
-          >
-            {isSelected ? '解除する' : '選択する →'}
-          </span>
+        {/* 適合判定理由 ＆ Amazon直接確認リンクフッター */}
+        <div className="mt-5 pt-3.5 border-t border-white/5 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className={`text-[11px] font-light tracking-wide truncate ${
+                compatible ? 'text-[#00E5FF]' : 'text-[#A0A0A0]'
+              }`}
+            >
+              {reason}
+            </span>
+            <span
+              className={`text-[11px] font-normal tracking-wider shrink-0 ${
+                isSelected
+                  ? 'text-[#00E5FF]'
+                  : compatible
+                  ? 'text-[#FFFFFF] group-hover:text-[#00E5FF]'
+                  : 'text-[#A0A0A0]'
+              }`}
+            >
+              {isSelected ? '解除する' : '選択する →'}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <a
+              href={amazonUrl}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              onClick={(e) => e.stopPropagation()}
+              className="w-full py-2 px-3 rounded-xl bg-[#151515] hover:bg-[#FF9900]/15 border border-white/10 hover:border-[#FF9900]/60 text-[11px] font-normal tracking-wider text-[#A0A0A0] hover:text-[#FFFFFF] transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span>Amazonで在庫・最新価格を見る</span>
+              <ExternalLink className="w-3 h-3 text-[#FF9900]" />
+            </a>
+          </div>
         </div>
       </article>
     );
@@ -747,7 +877,7 @@ export const TackleBuilder: React.FC = () => {
     <div className="min-h-screen bg-[#151515] text-[#FFFFFF] font-jp antialiased selection:bg-[#00E5FF] selection:text-[#151515] pb-28 lg:pb-16">
       {/* ==================== ミニマルトップナビゲーションバー ==================== */}
       <header className="sticky top-0 z-40 bg-[#151515]/85 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <span className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_12px_#00E5FF]" />
             <span className="text-lg font-medium tracking-[0.22em] text-[#FFFFFF]">
@@ -758,9 +888,9 @@ export const TackleBuilder: React.FC = () => {
             </span>
           </div>
 
-          {/* 推奨プリセット切替ボタン */}
+          {/* 推奨プリセット切替ボタン & アソシエイトID設定 */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden xl:flex items-center gap-2">
               {(
                 [
                   { id: 'pe6', label: '6号標準 ヒラマサ・近海マグロ' },
@@ -778,6 +908,20 @@ export const TackleBuilder: React.FC = () => {
                 </button>
               ))}
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowTagEditor(true);
+                setAmazonModalOpen(true);
+              }}
+              className="px-3 py-1.5 rounded-full bg-[#222222] border border-white/10 hover:border-[#FF9900]/70 text-[11px] font-light tracking-wider text-[#A0A0A0] hover:text-[#FFFFFF] transition-all flex items-center gap-1.5"
+              title="AmazonアソシエイトID（トラッキングID）の設定・確認"
+            >
+              <Settings className="w-3.5 h-3.5 text-[#FF9900]" />
+              <span className="hidden sm:inline">Amazon ID:</span>
+              <span className="font-mono text-[#FFFFFF]">{activeAssociateTag}</span>
+            </button>
           </div>
         </div>
       </header>
@@ -786,7 +930,7 @@ export const TackleBuilder: React.FC = () => {
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12 pt-8 lg:pt-12">
         <div className="flex flex-col lg:flex-row items-start gap-10 xl:gap-16">
           {/* =================================================================
-              左カラム（PC時 Sticky 固定）：「現在のセッティング」＆「合計金額」
+              左カラム（PC時 Sticky 固定）：「現在のセッティング」＆「Amazon購入導線」
              ================================================================= */}
           <aside
             aria-label="現在のセッティング"
@@ -845,7 +989,7 @@ export const TackleBuilder: React.FC = () => {
                   </span>
                 </div>
 
-                {/* 4スロット一覧 */}
+                {/* 4スロット一覧（各スロットから直接Amazonへ遷移可能） */}
                 <div className="mt-6 space-y-3">
                   {(
                     [
@@ -890,7 +1034,7 @@ export const TackleBuilder: React.FC = () => {
                     <div
                       key={slot.key}
                       onClick={() => scrollToSection(slot.key)}
-                      className={`group rounded-2xl p-4 bg-[#151515] border cursor-pointer transition-all duration-300 ease-out hover:scale-105 ${
+                      className={`group rounded-2xl p-4 bg-[#151515] border cursor-pointer transition-all duration-300 ease-out hover:scale-[1.02] ${
                         slot.item
                           ? 'border-[#00E5FF]/50 shadow-[0_0_15px_rgba(0,229,255,0.22)]'
                           : 'border-white/10 hover:border-white/30'
@@ -929,11 +1073,26 @@ export const TackleBuilder: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="text-right shrink-0">
+                        <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
                           {slot.item ? (
-                            <span className="text-sm font-light tracking-wider text-[#FFFFFF] tabular-nums">
-                              ¥{slot.item.price.toLocaleString()}
-                            </span>
+                            <>
+                              <span className="text-sm font-light tracking-wider text-[#FFFFFF] tabular-nums">
+                                ¥{slot.item.price.toLocaleString()}
+                              </span>
+                              <a
+                                href={buildAmazonAffiliateUrl(
+                                  slot.item.amazon,
+                                  activeAssociateTag
+                                )}
+                                target="_blank"
+                                rel="noopener noreferrer sponsored"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FF9900]/15 hover:bg-[#FF9900]/30 border border-[#FF9900]/50 text-[10px] font-medium text-[#FF9900] transition-colors"
+                              >
+                                <span>Amazon</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            </>
                           ) : (
                             <span className="text-xs font-light tracking-wider text-[#A0A0A0]">
                               選択する
@@ -946,15 +1105,15 @@ export const TackleBuilder: React.FC = () => {
                 </div>
               </div>
 
-              {/* 合計金額 ＆ カート追加ボタン */}
+              {/* 合計参考金額 ＆ Amazon一括購入リスト表示ボタン */}
               <div className="mt-8 pt-6 border-t border-white/10">
                 <div className="flex items-baseline justify-between mb-6">
                   <div>
                     <span className="text-xs font-light tracking-[0.18em] text-[#A0A0A0] block">
-                      合計金額
+                      合計参考金額
                     </span>
                     <span className="text-[11px] font-light text-[#A0A0A0]">
-                      税込・適合ショックリーダー＆太軸フック一式込
+                      ※最新価格・在庫はAmazonページにてご確認ください
                     </span>
                   </div>
                   <div className="text-3xl sm:text-4xl font-light tracking-tight text-[#FFFFFF] tabular-nums">
@@ -965,20 +1124,14 @@ export const TackleBuilder: React.FC = () => {
                 <button
                   type="button"
                   disabled={selectedCount === 0}
-                  onClick={() => setCartAdded(true)}
-                  className="w-full py-4 px-6 rounded-2xl bg-[#00E5FF] text-[#151515] text-sm font-semibold tracking-[0.16em] shadow-[0_0_20px_rgba(0,229,255,0.5)] hover:shadow-[0_0_30px_rgba(0,229,255,0.75)] transition-all duration-300 ease-out hover:scale-105 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2.5"
+                  onClick={() => {
+                    setShowTagEditor(false);
+                    setAmazonModalOpen(true);
+                  }}
+                  className="w-full py-4 px-6 rounded-2xl bg-[#00E5FF] text-[#151515] text-sm font-semibold tracking-[0.12em] shadow-[0_0_20px_rgba(0,229,255,0.5)] hover:shadow-[0_0_30px_rgba(0,229,255,0.75)] transition-all duration-300 ease-out hover:scale-105 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2.5"
                 >
-                  {cartAdded ? (
-                    <>
-                      <Check className="w-4 h-4 stroke-[2.5]" />
-                      <span>カートに追加済み — ご注文手続き可能</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingBag className="w-4 h-4" />
-                      <span>カートに追加する</span>
-                    </>
-                  )}
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Amazonで選択パーツを購入する ({selectedCount}点)</span>
                 </button>
               </div>
             </div>
@@ -992,7 +1145,7 @@ export const TackleBuilder: React.FC = () => {
             <div className="border-b border-white/10 pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
                 <p className="text-xs font-light tracking-[0.22em] text-[#00E5FF]">
-                  高精度・物理互換性判定システム
+                  高精度・物理互換性判定システム × Amazon.co.jp 購入連携
                 </p>
                 <h2 className="text-3xl sm:text-4xl font-extralight tracking-tight text-[#FFFFFF] mt-2">
                   理想のオフショアタックルを構築する
@@ -1001,7 +1154,7 @@ export const TackleBuilder: React.FC = () => {
               <p className="text-xs font-light text-[#A0A0A0] max-w-md leading-relaxed">
                 各パーツを選択すると、現在のセッティングに適合するパーツだけが{' '}
                 <span className="text-[#00E5FF]">エレクトリックブルーの発光エフェクト</span>{' '}
-                でハイライトされ、糸巻量超過や負荷オーバーとなる不適合パーツは自動的に暗転します。
+                でハイライトされ、すべての適合パーツをそのままAmazon.co.jpから購入できます。
               </p>
             </div>
 
@@ -1090,10 +1243,212 @@ export const TackleBuilder: React.FC = () => {
             </section>
           </main>
         </div>
+
+        {/* ==================== Amazonアソシエイト 規約必須表記フッター ==================== */}
+        <footer className="mt-20 pt-8 pb-6 border-t border-white/10 text-xs font-light text-[#A0A0A0] space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <p className="text-[#FFFFFF] font-normal tracking-wide">
+                Amazon.co.jp アソシエイト・プログラム参加表記
+              </p>
+              <p className="leading-relaxed">
+                Amazonのアソシエイトとして、RIGs（リグス）は適格販売により収入を得ています。
+              </p>
+              <p className="text-[11px] text-[#A0A0A0]/80 leading-relaxed">
+                ※当サイトに掲載されている商品価格はメーカー希望小売価格または調査時点の参考価格です。Amazon.co.jpにおける最新の販売価格・在庫状況・配送条件につきましては、各商品の「Amazonで購入」リンク先の販売ページにて直接ご確認ください。
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowTagEditor(true);
+                setAmazonModalOpen(true);
+              }}
+              className="self-start sm:self-center shrink-0 px-4 py-2 rounded-xl bg-[#222222] border border-white/10 hover:border-[#00E5FF] text-xs text-[#FFFFFF] transition-colors flex items-center gap-2"
+            >
+              <Settings className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <span>アソシエイトID設定 ({activeAssociateTag})</span>
+            </button>
+          </div>
+        </footer>
       </div>
 
+      {/* ==================== Amazon購入リスト ＆ アソシエイト設定モーダル ==================== */}
+      {amazonModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-[#151515]/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="amazon-checkout-modal-title"
+        >
+          <div className="w-full max-w-2xl rounded-3xl bg-[#222222] border border-white/15 p-6 sm:p-8 shadow-2xl space-y-6 my-8">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
+              <div>
+                <span className="text-[11px] font-light tracking-[0.2em] text-[#FF9900]">
+                  AMAZON.CO.JP OFFICIAL AFFILIATE CHECKOUT
+                </span>
+                <h2
+                  id="amazon-checkout-modal-title"
+                  className="text-xl sm:text-2xl font-normal tracking-wide text-[#FFFFFF] mt-1"
+                >
+                  選択中のタックルをAmazonで購入する
+                </h2>
+                <p className="text-xs font-light text-[#A0A0A0] mt-1">
+                  各パーツの「Amazon商品ページを開く」ボタンを押すと、Amazon.co.jpの販売ページが新しいタブで開きます。そのままAmazonのカートへ追加してご購入ください。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAmazonModalOpen(false)}
+                className="p-2 rounded-xl bg-[#151515] border border-white/10 text-[#A0A0A0] hover:text-[#FFFFFF]"
+                aria-label="モーダルを閉じる"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 選択パーツ別 Amazon購入リンク一覧 */}
+            <div className="space-y-3 max-h-[52vh] overflow-y-auto pr-1">
+              {selectedParts.map(({ step, item }) => {
+                const mainUrl = buildAmazonAffiliateUrl(item.amazon, activeAssociateTag);
+                const subUrl = item.amazon.subItemQuery
+                  ? buildAmazonAffiliateUrl(
+                      { searchQuery: item.amazon.subItemQuery },
+                      activeAssociateTag
+                    )
+                  : null;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-2xl bg-[#151515] border border-white/10 p-4 space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-medium tracking-wider text-[#00E5FF]">
+                            {step}
+                          </span>
+                          <span className="text-[11px] font-light text-[#A0A0A0]">
+                            // {item.brand}
+                          </span>
+                        </div>
+                        <div className="text-sm sm:text-base font-normal text-[#FFFFFF] mt-0.5">
+                          {item.name}
+                        </div>
+                        <div className="text-xs font-light text-[#A0A0A0] mt-0.5 tabular-nums">
+                          参考価格: ¥{item.price.toLocaleString()}
+                        </div>
+                      </div>
+
+                      <a
+                        href={mainUrl}
+                        target="_blank"
+                        rel="noopener noreferrer sponsored"
+                        className="shrink-0 px-4 py-2.5 rounded-xl bg-[#FF9900] hover:bg-[#FF9900]/90 text-[#151515] text-xs font-bold tracking-wider transition-transform hover:scale-105 flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(255,153,0,0.35)]"
+                      >
+                        <span>Amazon商品ページを開く</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+
+                    {/* 適合リーダーや太軸フックなどのサブアイテム購入ボタン */}
+                    {subUrl && item.amazon.subItemLabel && (
+                      <div className="pt-2.5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <span className="text-xs font-light text-[#00E5FF]">
+                          ＋ {item.amazon.subItemLabel}
+                        </span>
+                        <a
+                          href={subUrl}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="shrink-0 px-3 py-1.5 rounded-lg bg-[#222222] hover:bg-[#FF9900]/20 border border-[#FF9900]/50 text-[11px] font-medium text-[#FF9900] transition-colors inline-flex items-center justify-center gap-1.5"
+                        >
+                          <span>適合サブパーツもAmazonで見る</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* アソシエイトID（トラッキングID）設定・確認パネル */}
+            <div className="rounded-2xl bg-[#151515] border border-white/10 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowTagEditor((prev) => !prev)}
+                  className="text-xs font-normal text-[#00E5FF] hover:underline flex items-center gap-1.5"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>
+                    AmazonアソシエイトID（トラッキングID）設定: <strong>{activeAssociateTag}</strong>
+                  </span>
+                </button>
+                <a
+                  href="https://affiliate.amazon.co.jp/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-[#A0A0A0] hover:text-[#FFFFFF] inline-flex items-center gap-1"
+                >
+                  <span>Amazonアソシエイト公式登録ページへ</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+
+              {showTagEditor && (
+                <form onSubmit={handleSaveAssociateTag} className="pt-2 space-y-2.5">
+                  <p className="text-[11px] font-light text-[#A0A0A0] leading-relaxed">
+                    Amazonアソシエイト登録後に発行される「トラッキングID（例:{' '}
+                    <code className="text-[#FFFFFF]">yourname-22</code>
+                    ）」を入力して保存すると、サイト内の全Amazon購入リンクに自動付与されます。
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      value={associateTagInput}
+                      onChange={(e) => setAssociateTagInput(e.target.value)}
+                      placeholder="例: yourname-22"
+                      aria-label="Amazonアソシエイト・トラッキングID"
+                      className="flex-1 rounded-xl bg-[#222222] border border-white/20 px-3.5 py-2 text-xs font-mono text-[#FFFFFF] focus:border-[#00E5FF] focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-semibold tracking-wider hover:opacity-90"
+                    >
+                      IDを保存して全リンクに反映
+                    </button>
+                  </div>
+                  {tagSavedMessage && (
+                    <p className="text-[11px] text-[#00E5FF]">
+                      ✓ トラッキングID「{activeAssociateTag}」を保存しました。すべてのAmazonリンクに適用されています。
+                    </p>
+                  )}
+                </form>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-[11px] font-light text-[#A0A0A0]">
+                Amazonのアソシエイトとして、RIGsは適格販売により収入を得ています。
+              </span>
+              <button
+                type="button"
+                onClick={() => setAmazonModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl bg-[#151515] border border-white/15 text-xs text-[#FFFFFF] hover:border-white/40"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ==================== モバイル（375px〜）画面下部固定バー ==================== */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#151515]/95 backdrop-blur-xl border-t border-white/15">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#151515]/95 backdrop-blur-xl border-t border-white/15">
         {/* 展開可能なセッティング内訳ドロワー */}
         {mobileRigExpanded && (
           <div className="px-5 pt-4 pb-3 border-b border-white/10 bg-[#222222] space-y-2.5 max-h-[55vh] overflow-y-auto">
@@ -1120,12 +1475,26 @@ export const TackleBuilder: React.FC = () => {
             ).map((s) => (
               <div
                 key={s.label}
-                className="flex items-center justify-between text-xs py-1.5 border-b border-white/5 last:border-none"
+                className="flex items-center justify-between text-xs py-1.5 border-b border-white/5 last:border-none gap-2"
               >
-                <span className="text-[#A0A0A0] font-light tracking-wider">{s.label}</span>
-                <span className="text-[#FFFFFF] font-light truncate max-w-[200px]">
-                  {s.item ? s.item.name : '未選択'}
+                <span className="text-[#A0A0A0] font-light tracking-wider shrink-0">
+                  {s.label}
                 </span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[#FFFFFF] font-light truncate max-w-[160px]">
+                    {s.item ? s.item.name : '未選択'}
+                  </span>
+                  {s.item && (
+                    <a
+                      href={buildAmazonAffiliateUrl(s.item.amazon, activeAssociateTag)}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      className="px-2 py-0.5 rounded bg-[#FF9900]/20 border border-[#FF9900]/50 text-[10px] text-[#FF9900] shrink-0"
+                    >
+                      Amazon ↗
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -1157,10 +1526,14 @@ export const TackleBuilder: React.FC = () => {
           <button
             type="button"
             disabled={selectedCount === 0}
-            onClick={() => setCartAdded(true)}
-            className="px-6 py-3.5 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-semibold tracking-wider shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all duration-300 ease-out hover:scale-105 disabled:opacity-30 shrink-0"
+            onClick={() => {
+              setShowTagEditor(false);
+              setAmazonModalOpen(true);
+            }}
+            className="px-5 py-3.5 rounded-xl bg-[#00E5FF] text-[#151515] text-xs font-semibold tracking-wider shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all duration-300 ease-out hover:scale-105 disabled:opacity-30 shrink-0 flex items-center gap-1.5"
           >
-            {cartAdded ? '追加済み ✓' : 'カートに追加'}
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Amazonで購入 ({selectedCount})</span>
           </button>
         </div>
       </div>
