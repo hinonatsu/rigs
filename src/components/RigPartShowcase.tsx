@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, ShieldCheck, AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  MessageSquare,
+  Plus,
+  ShieldCheck,
+} from 'lucide-react';
 import { AnyRigPart, RigState, TargetFishProfile } from '../data/rigCatalog';
 
 interface RigPartShowcaseProps {
@@ -573,10 +580,11 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
         <button
           type="button"
           onClick={() => onOpenFeatureModal(0)}
-          title="機能・物理適合テレメトリーを表示"
-          className="hidden sm:flex w-10 h-9 rounded-md items-center justify-center transition-colors bg-[#8E8E93]/80 hover:bg-[#171A20] text-white"
+          title="タックル機能ハイライト・適合アシストを表示"
+          aria-label="タックル機能ハイライト・適合アシストを表示"
+          className="flex w-10 h-9 rounded-md items-center justify-center transition-colors bg-[#B5B6B8]/75 hover:bg-[#9E9FA2] text-[#171A20]"
         >
-          <ShieldCheck className="w-4 h-4" />
+          <MessageSquare className="w-4 h-4 stroke-[2]" />
         </button>
 
         <div className="mx-auto flex items-center gap-3">

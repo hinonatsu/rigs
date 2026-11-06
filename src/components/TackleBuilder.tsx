@@ -1,19 +1,26 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
+  Award,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Copy,
   ExternalLink,
   Globe,
+  Link2,
+  Lock,
   RotateCcw,
+  ShieldCheck,
   Sparkles,
+  Truck,
   X,
 } from 'lucide-react';
 import { buildAmazonAffiliateUrl } from '../config/amazonAssociate';
 import {
+  ALL_PARTS,
   AnyRigPart,
   calculateOverallCombatStats,
   CATEGORY_ORDER,
@@ -28,6 +35,7 @@ import {
   RIG_PRESETS,
   RigState,
   ROD_CATALOG,
+  STEP_META,
   TargetId,
 } from '../data/rigCatalog';
 import {
@@ -55,14 +63,47 @@ export type {
   RigState,
 } from '../data/rigCatalog';
 
+const MODEL_TITLE_MAP: Record<
+  TargetId,
+  {
+    modelName: string;
+    trimBadge: string;
+    subTitle: string;
+  }
+> = {
+  pe6: {
+    modelName: 'Model PE6',
+    trimBadge: 'Standard',
+    subTitle: '14000番・近海ヒラマサ ＆ キハダ',
+  },
+  pe8: {
+    modelName: 'Model PE8',
+    trimBadge: 'Long Range',
+    subTitle: '18000番・大型クロマグロ ＆ オオマサ',
+  },
+  pe10: {
+    modelName: 'Model PE10',
+    trimBadge: 'パフォーマンス',
+    subTitle: '20000番・100kg超マグロ ＆ 遠征GT',
+  },
+};
+
 export const TackleBuilder: React.FC = () => {
   const initialParsed = useMemo(() => parseUrlState(), []);
   const [route, setRoute] = useState<RouteState>(initialParsed.route);
   const [rig, setRig] = useState<RigState>(initialParsed.rig);
   const [headerUrlCopied, setHeaderUrlCopied] = useState(false);
+  const [inlineSavedCopied, setInlineSavedCopied] = useState(false);
+
+  // Tesla ホーム画面右上の「メニュー」ドロワー開閉
+  const [isMenuDrawerOpen, setIsMenuDrawerOpen] = useState<boolean>(false);
 
   // メインフォトステージのカルーセルスライド番号 (0: ロッド×リール統合, 1: リール単体, 2: ロッド単体, 3: ライン&ルアー, 4: ターゲット魚)
   const [activeSlide, setActiveSlide] = useState<number>(0);
+
+  // 右カラム上部の支払いモード切替タブ (添付3枚目の「現金 | ローン」相当)
+  // 'cash' = 4点フルセット一括 / 'main2' = ロッド＆リール2点先行（分割ステップ購入）
+  const [pricingMode, setPricingMode] = useState<'cash' | 'main2'>('cash');
 
   // Tesla風「機能を表示する (コールアウト [＋])」モーダル
   const [featureModalIndex, setFeatureModalIndex] = useState<number | null>(null);
@@ -70,8 +111,17 @@ export const TackleBuilder: React.FC = () => {
   // Tesla風「タックル仕様を比較する ＞」モーダル
   const [isCompareModalOpen, setIsCompareModalOpen] = useState<boolean>(false);
 
-  // フッター価格内訳ドロワー
+  // フッターおよびインライン決済の「価格詳細を表示 ∨」展開ステート
   const [isPriceBreakdownOpen, setIsPriceBreakdownOpen] = useState<boolean>(false);
+  const [isInlinePriceDetailOpen, setIsInlinePriceDetailOpen] = useState<boolean>(false);
+
+  // インライン決済の「Amazonで注文する」から直接開くディスパッチモーダル
+  const [isOrderDispatchModalOpen, setIsOrderDispatchModalOpen] = useState<boolean>(false);
+  const [checkedOutSlots, setCheckedOutSlots] = useState<Record<string, boolean>>({});
+
+  // 右カラム最下部「お客様のModel PE6」インライン決済セクションのRef & 可視状態
+  const inlineCheckoutRef = useRef<HTMLDivElement | null>(null);
+  const [isInlineCheckoutVisible, setIsInlineCheckoutVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -82,6 +132,28 @@ export const TackleBuilder: React.FC = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  // 添付2枚目・3枚目の連動：右カラム最下部の「お客様のModel PE6」が画面内に入ったら下部スティッキーバーを自動で隠す
+  useEffect(() => {
+    if (route.view !== 'garage') {
+      setIsInlineCheckoutVisible(false);
+      return;
+    }
+    const el = inlineCheckoutRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsInlineCheckoutVisible(Boolean(entry && entry.isIntersecting));
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [route.view]);
 
   const targetProfile = useMemo(
     () => getTargetProfile(route.targetId),
@@ -106,6 +178,7 @@ export const TackleBuilder: React.FC = () => {
     const urlStr = buildUrlString(updatedRoute, updatedRig);
     if (typeof window !== 'undefined' && urlStr) {
       window.history.pushState({}, '', urlStr);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -116,9 +189,35 @@ export const TackleBuilder: React.FC = () => {
     }
   };
 
-  const handleSelectTarget = (targetId: TargetId, destination: 'garage' | 'checkout') => {
+  const handleSelectTarget = (
+    targetId: TargetId,
+    destination: 'garage' | 'checkout' | 'inline-checkout'
+  ) => {
     const presetRig = getPresetRigState(targetId);
     setActiveSlide(0);
+
+    if (destination === 'inline-checkout') {
+      const updatedRoute: RouteState = {
+        ...route,
+        view: 'garage',
+        targetId,
+        activeStep: 'reel',
+      };
+      setRoute(updatedRoute);
+      setRig(presetRig);
+      const urlStr = buildUrlString(updatedRoute, presetRig);
+      if (typeof window !== 'undefined' && urlStr) {
+        window.history.pushState({}, '', urlStr);
+      }
+      setTimeout(() => {
+        inlineCheckoutRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 120);
+      return;
+    }
+
     navigateTo(
       {
         view: destination,
@@ -197,6 +296,10 @@ export const TackleBuilder: React.FC = () => {
     );
   }, [rig]);
 
+  const mainTwoPrice = useMemo(() => {
+    return (rig.reel?.price ?? 0) + (rig.rod?.price ?? 0);
+  }, [rig]);
+
   const totalWeightG = useMemo(() => {
     return (
       (rig.reel?.weightG ?? 0) +
@@ -236,10 +339,32 @@ export const TackleBuilder: React.FC = () => {
     return CATEGORY_ORDER.filter((cat) => rig[cat]?.id !== recommendedRig[cat]?.id).length;
   }, [rig, recommendedRig]);
 
+  const shareUrl = useMemo(
+    () => buildShareableSpecUrl(rig, route.targetId),
+    [rig, route.targetId]
+  );
+
   const handleCopyShareUrl = () => {
-    navigator.clipboard.writeText(buildShareableSpecUrl(rig, route.targetId));
+    navigator.clipboard.writeText(shareUrl);
     setHeaderUrlCopied(true);
     setTimeout(() => setHeaderUrlCopied(false), 2500);
+  };
+
+  const handleSaveDesignInline = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setInlineSavedCopied(true);
+    setTimeout(() => setInlineSavedCopied(false), 2500);
+  };
+
+  const handleStickyOrderClick = () => {
+    if (inlineCheckoutRef.current) {
+      inlineCheckoutRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    } else {
+      setIsOrderDispatchModalOpen(true);
+    }
   };
 
   // フィーチャーモーダル用の4大ハイライト定義
@@ -286,95 +411,58 @@ export const TackleBuilder: React.FC = () => {
     ];
   }, [rig]);
 
+  const currentModelInfo = MODEL_TITLE_MAP[route.targetId];
+
   return (
     <div className="min-h-dvh bg-white text-[#171A20] font-sans antialiased selection:bg-[#3E6AE1] selection:text-white flex flex-col justify-between">
-      {/* ==================== 上部ヘッダー：Tesla Minimal Navigation (白スタジオ統一) ==================== */}
+      {/* =====================================================================
+          上部ヘッダー：Tesla Minimal Navigation
+          ・左：R I G s ワイドレタースペーシングロゴ（クリックでホームへ）
+          ・右：ホーム時は「メニュー」ピルボタン（添付1枚目）、スタジオ時は「🌐 JP」＋「メニュー」（添付2・3枚目）
+         ===================================================================== */}
       <header className="sticky top-0 z-30 shrink-0 bg-white/95 backdrop-blur-md border-b border-black/5 px-4 sm:px-8 lg:px-12 py-3.5">
         <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-4">
           {/* 左：Tesla ワイドレタースペーシング風ブランドロゴ */}
-          <div className="flex items-center gap-8">
-            <button
-              type="button"
-              onClick={() => navigateTo({ view: 'garage' })}
-              className="flex items-center gap-2 text-left group"
-            >
-              <span className="font-oswald text-lg sm:text-xl font-bold tracking-[0.42em] text-[#171A20] group-hover:text-[#3E6AE1] transition-colors">
-                R I G s
-              </span>
-            </button>
+          <button
+            type="button"
+            onClick={() => navigateTo({ view: 'home' })}
+            className="flex items-center gap-2 text-left group"
+            title="RIGs ホームへ戻る"
+          >
+            <span className="font-oswald text-lg sm:text-xl font-bold tracking-[0.42em] text-[#171A20] group-hover:text-[#3E6AE1] transition-colors">
+              R I G s
+            </span>
+          </button>
 
-            <nav aria-label="画面切り替え" className="hidden md:flex items-center gap-1">
-              {(
-                [
-                  { id: 'garage' as PageView, label: 'コンフィギュレーター' },
-                  { id: 'home' as PageView, label: 'ターゲット魚種から選ぶ' },
-                  { id: 'checkout' as PageView, label: '完成仕様書・注文' },
-                ] as const
-              ).map((phase) => {
-                const isActive = route.view === phase.id;
-                return (
-                  <button
-                    key={phase.id}
-                    type="button"
-                    onClick={() => navigateTo({ view: phase.id })}
-                    className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      isActive
-                        ? 'bg-[#F4F4F4] text-[#171A20] font-semibold'
-                        : 'text-[#5C5E62] hover:text-[#171A20] hover:bg-[#F4F4F4]/60'
-                    }`}
-                  >
-                    {phase.label}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* 右：モバイル用ナビ ＆ 🌐 JP (URL共有) */}
-          <div className="flex items-center gap-2">
-            <div className="flex md:hidden items-center gap-1">
-              {(
-                [
-                  { id: 'garage' as PageView, label: 'ビルド' },
-                  { id: 'home' as PageView, label: '魚種' },
-                  { id: 'checkout' as PageView, label: '注文' },
-                ] as const
-              ).map((phase) => {
-                const isActive = route.view === phase.id;
-                return (
-                  <button
-                    key={phase.id}
-                    type="button"
-                    onClick={() => navigateTo({ view: phase.id })}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${
-                      isActive
-                        ? 'bg-[#171A20] text-white'
-                        : 'bg-[#F4F4F4] text-[#5C5E62]'
-                    }`}
-                  >
-                    {phase.label}
-                  </button>
-                );
-              })}
-            </div>
+          {/* 右：コンフィギュレーター時は 🌐 JP (添付2・3枚目)、ホーム時は「メニュー」ピルボタン (添付1枚目) */}
+          <div className="flex items-center gap-2.5">
+            {route.view !== 'home' && (
+              <button
+                type="button"
+                onClick={handleCopyShareUrl}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#171A20] hover:bg-[#F4F4F4] transition-colors"
+                title="現在のカスタム構成URLをコピー"
+              >
+                {headerUrlCopied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="text-emerald-600 font-semibold">COPIED</span>
+                  </>
+                ) : (
+                  <>
+                    <Globe className="w-4 h-4" />
+                    <span>JP</span>
+                  </>
+                )}
+              </button>
+            )}
 
             <button
               type="button"
-              onClick={handleCopyShareUrl}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#171A20] hover:bg-[#F4F4F4] transition-colors"
-              title="現在のカスタム構成URLをコピー"
+              onClick={() => setIsMenuDrawerOpen(true)}
+              className="px-4 py-1.5 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-semibold text-[#171A20] transition-colors"
             >
-              {headerUrlCopied ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-600 font-semibold">COPIED</span>
-                </>
-              ) : (
-                <>
-                  <Globe className="w-4 h-4" />
-                  <span>JP</span>
-                </>
-              )}
+              メニュー
             </button>
           </div>
         </div>
@@ -382,21 +470,28 @@ export const TackleBuilder: React.FC = () => {
 
       {/* ==================== メインステージ ==================== */}
       <main className="flex-1 min-h-0 w-full flex flex-col bg-white">
-        {/* -------------------- 【画面1】ターゲット魚種ガイド画面 -------------------- */}
+        {/* -------------------- 【画面1】Tesla型 ホーム画面（添付1枚目） -------------------- */}
         {route.view === 'home' && (
-          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 flex-1 flex flex-col">
+          <div className="w-full flex-1 flex flex-col">
             <TargetSelectHomeView
               currentTargetId={route.targetId}
-              onSelectTargetAndGoGarage={(targetId) => handleSelectTarget(targetId, 'garage')}
-              onSelectTargetAndGoCheckout={(targetId) => handleSelectTarget(targetId, 'checkout')}
+              onSelectTargetAndGoGarage={(targetId) =>
+                handleSelectTarget(targetId, 'garage')
+              }
+              onSelectTargetAndGoCheckout={(targetId) =>
+                handleSelectTarget(targetId, 'inline-checkout')
+              }
             />
           </div>
         )}
 
         {/* =================================================================
-            【画面2】Tesla Model 3 型 スプリット・コンフィギュレーター（白スタジオ統一）
+            【画面2】Tesla Model 3 型 スプリット・コンフィギュレーター ＆ インライン決済（添付2・3枚目）
             ・左 8 cols (Sticky固定): ロッド＆リール スタジオ写真 ＋ 引き出し線コールアウト [＋] ＋ < ● ○ ○ ○ ○ >
-            ・右 4 cols (縦スクロール): ロッド・リール中心の大型セレクター ＋ ライン・ルアー丸型スウォッチ
+            ・右 4 cols (縦スクロール):
+                上部: モデル名・現金/分割タブ・3大数値・縦積みグレード選択・「タックル仕様を比較する ＞」
+                中盤: リール・ロッド・ライン・ルアー選択
+                最下部: 標準パッケージ枠 ＋ 「お客様のModel PE6」＋ 黒太枠「Amazonで注文する」
            ================================================================= */}
         {route.view === 'garage' && (
           <div className="max-w-[1680px] w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 items-start">
@@ -417,91 +512,176 @@ export const TackleBuilder: React.FC = () => {
             {/* -----------------------------------------------------------------
                 右ペイン (PC: 4 cols 縦スクロール / モバイル: 下部ストリーム)
                ----------------------------------------------------------------- */}
-            <div className="lg:col-span-4 w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 pb-28">
-              {/* 1. モバイル専用：添付画像2枚目の「機能を表示する ＞」枠ボックス */}
-              <div className="sm:hidden rounded-xl border-2 border-[#171A20] bg-white p-2.5">
-                <button
-                  type="button"
-                  onClick={() => setFeatureModalIndex(0)}
-                  className="w-full rounded-lg px-4 py-3 flex items-center justify-between text-sm font-medium bg-[#F4F4F4] text-[#171A20] hover:bg-[#E8E8EA] transition-colors"
-                >
-                  <span>機能を表示する</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* 2. ターゲットクラス切替 ＆「タックル仕様を比較する ＞」カード */}
-              <div className="rounded-2xl p-5 sm:p-6 space-y-4 bg-[#F4F4F4] text-[#171A20]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-[11px] font-oswald tracking-widest uppercase block text-[#5C5E62]">
-                      TARGET CLASS // 推奨基準クラス
-                    </span>
-                    <h2 className="text-base font-bold mt-0.5">
-                      ターゲット魚種・海域クラス
-                    </h2>
+            <div className="lg:col-span-4 w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 pb-24">
+              {/* =================================================================
+                  1. 【添付3枚目 上部完全再現】モデル大見出し ＆ 支払いモード2タブ切替
+                 ================================================================= */}
+              <div className="space-y-4 pt-1">
+                <div className="text-center space-y-1">
+                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#171A20]">
+                    {currentModelInfo.modelName}
+                  </h1>
+                  <div className="text-xs text-[#5C5E62]">
+                    {currentModelInfo.subTitle}
                   </div>
-                  {customizedSlotsCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleResetToRecommended}
-                      className="text-xs font-medium px-2.5 py-1 rounded-md flex items-center gap-1 bg-white text-[#5C5E62] hover:text-[#171A20] shadow-sm transition-colors"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      <span>推奨に戻す</span>
-                    </button>
-                  )}
                 </div>
 
-                {/* Teslaのグレード選択枠スタイル */}
-                <div className="grid grid-cols-3 gap-2">
+                {/* 添付3枚目の「現金 | ローン」アンダーライン2タブ */}
+                <div className="grid grid-cols-2 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setPricingMode('cash')}
+                    className={`pb-2.5 text-xs sm:text-sm transition-colors ${
+                      pricingMode === 'cash'
+                        ? 'border-b-2 border-[#171A20] font-semibold text-[#171A20]'
+                        : 'border-b border-black/15 font-medium text-[#5C5E62] hover:text-[#171A20]'
+                    }`}
+                  >
+                    フルセット一括
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPricingMode('main2')}
+                    className={`pb-2.5 text-xs sm:text-sm transition-colors ${
+                      pricingMode === 'main2'
+                        ? 'border-b-2 border-[#171A20] font-semibold text-[#171A20]'
+                        : 'border-b border-black/15 font-medium text-[#5C5E62] hover:text-[#171A20]'
+                    }`}
+                  >
+                    メイン機2点（リール＋竿）
+                  </button>
+                </div>
+              </div>
+
+              {/* =================================================================
+                  2. 【添付3枚目 上部コンテナ完全再現】
+                     ・箱なし3列テレメトリー数値（690km / 261km/h / 3.1秒 スタイル）
+                     ・縦積み3段グレード選択カード（Model 3 RWD / AWD / パフォーマンス スタイル）
+                     ・「タックル仕様を比較する ＞」白ボタン
+                 ================================================================= */}
+              <div className="rounded-2xl p-5 sm:p-6 space-y-5 bg-[#F4F4F4] text-[#171A20]">
+                {/* 3列の主要スペック数値（箱なしクリーン表示） */}
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <div>
+                    <div className="font-oswald text-xl sm:text-2xl font-bold text-[#171A20] tabular-nums">
+                      {rig.reel?.dragMaxKg}
+                      <span className="text-xs sm:text-sm font-semibold ml-0.5">kg</span>
+                    </div>
+                    <div className="text-[11px] text-[#5C5E62] mt-0.5">最大ドラグ力</div>
+                    <button
+                      type="button"
+                      onClick={() => setIsCompareModalOpen(true)}
+                      className="text-[11px] text-[#5C5E62] hover:text-[#171A20] underline underline-offset-2 text-left leading-tight mt-0.5"
+                    >
+                      （物理適合審査値）
+                    </button>
+                  </div>
+
+                  <div>
+                    <div className="font-oswald text-xl sm:text-2xl font-bold text-[#171A20] tabular-nums">
+                      {totalWeightG.toLocaleString()}
+                      <span className="text-xs sm:text-sm font-semibold ml-0.5">g</span>
+                    </div>
+                    <div className="text-[11px] text-[#5C5E62] mt-0.5">装備総重量</div>
+                  </div>
+
+                  <div>
+                    <div className="font-oswald text-xl sm:text-2xl font-bold text-[#171A20] tabular-nums">
+                      {rig.lure?.totalWeightG}
+                      <span className="text-xs sm:text-sm font-semibold ml-0.5">g</span>
+                    </div>
+                    <div className="text-[11px] text-[#5C5E62] mt-0.5">
+                      針込ルアー重量
+                    </div>
+                  </div>
+                </div>
+
+                {/* 縦積み3段のグレード（ターゲットクラス）選択カード */}
+                <div className="space-y-2.5">
                   {RIG_PRESETS.map((preset) => {
                     const isSelectedTarget = route.targetId === preset.id;
-                    const shortLabel =
-                      preset.id === 'pe6'
-                        ? 'PE6 近海'
-                        : preset.id === 'pe8'
-                        ? 'PE8 大型'
-                        : 'PE10 遠征';
-                    const subFish =
-                      preset.id === 'pe6'
-                        ? 'ヒラマサ・キハダ'
-                        : preset.id === 'pe8'
-                        ? 'クロマグロ・オオマサ'
-                        : '100kg超マグロ・GT';
+                    const info = MODEL_TITLE_MAP[preset.id];
+                    const pReel = ALL_PARTS.find((p) => p.id === preset.rigIds.reel);
+                    const pRod = ALL_PARTS.find((p) => p.id === preset.rigIds.rod);
+                    const pLine = ALL_PARTS.find((p) => p.id === preset.rigIds.line);
+                    const pLure = ALL_PARTS.find((p) => p.id === preset.rigIds.lure);
+
+                    const presetPrice =
+                      pricingMode === 'cash'
+                        ? (pReel?.price ?? 0) +
+                          (pRod?.price ?? 0) +
+                          (pLine?.price ?? 0) +
+                          (pLure?.price ?? 0)
+                        : (pReel?.price ?? 0) + (pRod?.price ?? 0);
+
                     return (
                       <button
                         key={preset.id}
                         type="button"
                         onClick={() => handleSelectTarget(preset.id, 'garage')}
-                        className={`rounded-xl p-2.5 text-left transition-all ${
+                        className={`w-full rounded-lg px-4 py-3.5 text-left transition-all flex items-center justify-between gap-3 ${
                           isSelectedTarget
-                            ? 'bg-white border-2 border-[#171A20] shadow-sm'
-                            : 'bg-white/60 border border-black/10 hover:bg-white'
+                            ? 'bg-white border-2 border-[#171A20] text-[#171A20] shadow-sm'
+                            : 'bg-white/60 hover:bg-white border border-[#B5B6B8] text-[#5C5E62]'
                         }`}
                       >
-                        <div className="font-oswald text-xs font-bold tracking-wider">
-                          {shortLabel}
+                        <div className="min-w-0">
+                          <div className="text-xs sm:text-sm font-bold text-[#171A20]">
+                            {info.modelName}{' '}
+                            <span
+                              className={
+                                preset.id === 'pe10'
+                                  ? 'font-normal text-[#393C41]'
+                                  : 'italic font-normal text-[#393C41]'
+                              }
+                            >
+                              {info.trimBadge}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-[#5C5E62] truncate mt-0.5">
+                            {info.subTitle}
+                          </div>
                         </div>
-                        <div className="text-[10px] truncate mt-0.5 text-[#5C5E62]">
-                          {subFish}
+
+                        <div
+                          className={`font-oswald text-sm sm:text-base tabular-nums shrink-0 ${
+                            isSelectedTarget
+                              ? 'font-bold text-[#171A20]'
+                              : 'font-medium text-[#393C41]'
+                          }`}
+                        >
+                          ¥{presetPrice.toLocaleString()}
                         </div>
                       </button>
                     );
                   })}
                 </div>
 
-                {/* 添付画像の「車両を比較する ＞」と同一デザインの白ボタン行 */}
+                {/* 添付3枚目の「車両を比較する ＞」と同一デザインの白ボタン行 */}
                 <button
                   type="button"
                   onClick={() => setIsCompareModalOpen(true)}
-                  className="w-full rounded-xl px-4 py-3.5 flex items-center justify-between text-xs sm:text-sm font-medium bg-white hover:bg-[#FAFAFA] text-[#171A20] shadow-sm transition-all"
+                  className="w-full rounded-lg px-4 py-3.5 flex items-center justify-between text-xs sm:text-sm font-medium bg-white hover:bg-[#FAFAFA] text-[#171A20] shadow-sm transition-all"
                 >
                   <span>タックル仕様を比較する</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
 
-                {/* 番手不一致がある場合のワンタップ自動最適化アシスト */}
+                {/* カスタム変更時のリセット＆番手不一致時のワンタップ自動最適化 */}
+                {customizedSlotsCount > 0 && (
+                  <div className="flex items-center justify-between pt-1 text-xs text-[#5C5E62]">
+                    <span>{customizedSlotsCount}箇所のパーツをカスタム中</span>
+                    <button
+                      type="button"
+                      onClick={handleResetToRecommended}
+                      className="font-medium underline underline-offset-2 hover:text-[#171A20] inline-flex items-center gap-1"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>推奨構成に戻す</span>
+                    </button>
+                  </div>
+                )}
+
                 {!isAllSelectedCompatible && (
                   <div className="rounded-xl p-3.5 flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 text-amber-900">
                     <div className="flex items-center gap-2 text-xs">
@@ -517,6 +697,18 @@ export const TackleBuilder: React.FC = () => {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* モバイル専用：「機能を表示する ＞」枠ボックス */}
+              <div className="sm:hidden rounded-xl border-2 border-[#171A20] bg-white p-2.5">
+                <button
+                  type="button"
+                  onClick={() => setFeatureModalIndex(0)}
+                  className="w-full rounded-lg px-4 py-3 flex items-center justify-between text-sm font-medium bg-[#F4F4F4] text-[#171A20] hover:bg-[#E8E8EA] transition-colors"
+                >
+                  <span>機能を表示する</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
 
               {/* =================================================================
@@ -545,7 +737,7 @@ export const TackleBuilder: React.FC = () => {
                     <div className="text-sm sm:text-base font-medium">
                       {rig.reel?.brand} {rig.reel?.shortName}
                     </div>
-                    <div className="font-oswald text-base sm:text-lg font-semibold tabular-nums shrink-0">
+                    <div className="font-oswald text-sm sm:text-base font-semibold tabular-nums shrink-0">
                       ¥{rig.reel?.price.toLocaleString()}
                     </div>
                   </div>
@@ -588,8 +780,8 @@ export const TackleBuilder: React.FC = () => {
                             #{reelItem.sizeClass}
                           </span>
                           {isBase && (
-                            <span className="text-[10px] font-medium text-[#3E6AE1]">
-                              標準推奨
+                            <span className="text-[10px] font-medium text-[#5C5E62]">
+                              標準
                             </span>
                           )}
                         </div>
@@ -648,7 +840,7 @@ export const TackleBuilder: React.FC = () => {
                     <div className="text-sm sm:text-base font-medium">
                       {rig.rod?.brand} {rig.rod?.shortName}
                     </div>
-                    <div className="font-oswald text-base sm:text-lg font-semibold tabular-nums shrink-0">
+                    <div className="font-oswald text-sm sm:text-base font-semibold tabular-nums shrink-0">
                       ¥{rig.rod?.price.toLocaleString()}
                     </div>
                   </div>
@@ -694,7 +886,7 @@ export const TackleBuilder: React.FC = () => {
                           </span>
                           <span
                             className={`text-[10px] font-medium ${
-                              isReelMatched ? 'text-emerald-700' : 'text-amber-600'
+                              isReelMatched ? 'text-[#5C5E62]' : 'text-amber-600'
                             }`}
                           >
                             {isReelMatched
@@ -765,7 +957,6 @@ export const TackleBuilder: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Teslaのカラースウォッチ（丸アイコン）並び */}
                   <div className="flex items-center gap-4 pt-1 pb-2">
                     {LINE_CATALOG.map((lineItem) => {
                       const isSelected = rig.line?.id === lineItem.id;
@@ -805,12 +996,6 @@ export const TackleBuilder: React.FC = () => {
                               </span>
                             )}
                           </button>
-
-                          {isSelected && (
-                            <span className="mt-2 px-2 py-0.5 rounded bg-[#222222] text-white text-[10px] font-medium whitespace-nowrap shadow-sm">
-                              PE{lineItem.peNumber}号 ({lineItem.strengthLb}lb)
-                            </span>
-                          )}
                         </div>
                       );
                     })}
@@ -833,7 +1018,6 @@ export const TackleBuilder: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Teslaのホイール/インテリア丸スウォッチ並び */}
                   <div className="flex flex-wrap items-start gap-4 pt-1 pb-2">
                     {LURE_CATALOG.map((lureItem) => {
                       const isSelected = rig.lure?.id === lureItem.id;
@@ -873,15 +1057,208 @@ export const TackleBuilder: React.FC = () => {
                               </span>
                             )}
                           </button>
-
-                          {isSelected && (
-                            <span className="mt-2 px-2 py-0.5 rounded bg-[#222222] text-white text-[10px] font-medium whitespace-nowrap shadow-sm">
-                              {lureItem.shortName.split(' (')[0]}
-                            </span>
-                          )}
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+              </section>
+
+              {/* =================================================================
+                  6. 【添付2枚目 上部完全再現】標準パッケージ枠（「ベーシック オートパイロット 標準」相当）
+                 ================================================================= */}
+              <section
+                aria-label="標準物理適合パッケージ"
+                className="rounded-2xl p-5 sm:p-6 space-y-5 bg-[#F4F4F4] text-[#171A20]"
+              >
+                <div className="rounded-lg border border-[#8E8E93] bg-white/80 p-4 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs sm:text-sm">
+                    <span className="font-semibold text-[#5C5E62]">
+                      物理適合 ＆ ノット結束ペアリング
+                    </span>
+                    <span className="font-medium text-[#5C5E62]">標準</span>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-[#5C5E62] leading-relaxed">
+                    ショックリーダー（{rig.line?.pairedLeaderLb}lb）および太軸フック（
+                    {rig.lure?.hookSpec}）の実戦重量・強度計算が含まれます。*
+                  </p>
+                </div>
+
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setFeatureModalIndex(2)}
+                    className="px-7 py-2 rounded-md bg-white hover:bg-[#FAFAFA] text-xs font-semibold text-[#171A20] shadow-sm transition-colors"
+                  >
+                    パッケージを見る
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-[#5C5E62] leading-relaxed">
+                  *現在選択されているタックル構成は、リール番手・スプール糸巻量・ロッド許容ルアー重量上限（
+                  {rig.rod?.lureMaxG}g）・最大ドラグ耐荷重（{rig.rod?.dragMaxKg}
+                  kg）の物理計算に基づいています。実釣時の破断強度はアングラー自身のノット結束精度およびドラグ設定に依存します。詳細については
+                  <button
+                    type="button"
+                    onClick={() => navigateTo({ view: 'checkout' })}
+                    className="underline underline-offset-2 text-[#393C41] hover:text-[#171A20] ml-0.5 mr-0.5"
+                  >
+                    完成装備仕様書
+                  </button>
+                  をお読みください。
+                </p>
+              </section>
+
+              {/* =================================================================
+                  7. 【添付2枚目 下部完全再現】インライン決済サマリー（「お客様のModel PE6」）
+                     ・デザインを保存
+                     ・お届け予定日
+                     ・価格詳細を表示 ∨
+                     ・購入価格 ＆ 本日必要なお支払い
+                     ・黒太枠・白背景の「Amazonで注文する」ボタン
+                 ================================================================= */}
+              <section
+                ref={inlineCheckoutRef}
+                aria-label="ご注文サマリー"
+                className="pt-8 pb-6 px-1 sm:px-2 bg-white text-[#171A20] space-y-6"
+              >
+                {/* 中央揃えヘッダー部 */}
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#171A20]">
+                    お客様の{currentModelInfo.modelName}
+                  </h2>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleSaveDesignInline}
+                      className="text-xs sm:text-[13px] text-[#5C5E62] hover:text-[#171A20] underline underline-offset-4 transition-colors"
+                    >
+                      {inlineSavedCopied
+                        ? '✓ デザインURLをクリップボードに保存しました'
+                        : 'デザインを保存'}
+                    </button>
+                  </div>
+
+                  <div className="text-xs sm:text-[13px] text-[#393C41] pt-0.5">
+                    お届け予定日：最短翌日〜2日以内（Amazon公式配送）
+                  </div>
+
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsInlinePriceDetailOpen((prev) => !prev)}
+                      className="inline-flex items-center gap-1 text-xs sm:text-[13px] font-semibold text-[#171A20] hover:opacity-75 transition-opacity"
+                    >
+                      <span>価格詳細を表示</span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isInlinePriceDetailOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 「価格詳細を表示 ∨」を展開した際の4点内訳リスト */}
+                {isInlinePriceDetailOpen && (
+                  <div className="rounded-xl bg-[#F4F4F4] p-4 space-y-2.5 text-xs border border-black/5">
+                    {CATEGORY_ORDER.map((cat) => {
+                      const part = rig[cat];
+                      if (!part) return null;
+                      return (
+                        <div
+                          key={cat}
+                          className="flex items-center justify-between gap-2 py-1.5 border-b border-black/5 last:border-b-0"
+                        >
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-oswald text-[#5C5E62] uppercase mr-2">
+                              {STEP_META[cat].label}
+                            </span>
+                            <span className="font-medium text-[#171A20] truncate">
+                              {part.brand} {part.shortName}
+                            </span>
+                          </div>
+                          <span className="font-oswald font-bold tabular-nums shrink-0">
+                            ¥{part.price.toLocaleString()}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    <div className="pt-1 flex items-center justify-between text-[11px] text-[#5C5E62]">
+                      <span>推奨リーダー（{rig.line?.pairedLeaderLb}lb）＆太軸フック（{rig.lure?.hookSpec}）</span>
+                      <span>注文画面で同時追加可能</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 購入価格 行 */}
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="text-base sm:text-lg font-bold text-[#171A20]">
+                      購入価格
+                    </span>
+                    <span className="font-oswald text-lg sm:text-xl font-bold text-[#171A20] tabular-nums">
+                      ¥{totalValue.toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#5C5E62] leading-relaxed">
+                    上記以外に、予備のショックリーダーやスプリットリング等の消耗金具を別途追加可能です。
+                  </p>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPricingMode((prev) => (prev === 'cash' ? 'main2' : 'cash'))
+                      }
+                      className="text-xs text-[#5C5E62] hover:text-[#171A20] underline underline-offset-4"
+                    >
+                      {pricingMode === 'cash'
+                        ? 'メイン機2点（リール＋ロッド）先行購入シミュレーションを見る'
+                        : '4点フルセット一括価格に戻す'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 本日必要なお支払い 行 */}
+                <div className="space-y-1 pt-2">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="text-base sm:text-lg font-bold text-[#171A20]">
+                      本日必要なお支払い
+                    </span>
+                    <span className="font-oswald text-lg sm:text-xl font-bold text-[#171A20] tabular-nums">
+                      ¥
+                      {(pricingMode === 'cash'
+                        ? totalValue
+                        : mainTwoPrice
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#5C5E62]">
+                    {pricingMode === 'cash'
+                      ? '4点フルセット合計（Amazon公式カートにて1点ずつ個別注文も可能）'
+                      : 'リール＋ロッド2点合計（ライン＆ルアーは後から個別追加可能）'}
+                  </p>
+                </div>
+
+                {/* 添付2枚目の黒太枠・白背景ボタン「カードで注文する」完全再現 */}
+                <div className="space-y-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsOrderDispatchModalOpen(true)}
+                    className="w-full py-3.5 px-6 rounded-md border-2 border-[#171A20] bg-white hover:bg-[#171A20] text-[#171A20] hover:text-white font-bold text-xs sm:text-sm tracking-wide transition-colors text-center shadow-sm"
+                  >
+                    Amazonで注文する
+                  </button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => navigateTo({ view: 'checkout' })}
+                      className="text-xs font-medium text-[#5C5E62] hover:text-[#171A20] underline underline-offset-4"
+                    >
+                      完成装備仕様書（フル画面ビュー・印刷用）を開く
+                    </button>
                   </div>
                 </div>
               </section>
@@ -889,7 +1266,7 @@ export const TackleBuilder: React.FC = () => {
           </div>
         )}
 
-        {/* -------------------- 【画面3】最終確認・購入（完成仕様書） -------------------- */}
+        {/* -------------------- 【画面3】最終確認・購入（完成仕様書フルビュー） -------------------- */}
         {route.view === 'checkout' && (
           <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 flex-1 flex flex-col">
             <SpecCheckoutView
@@ -912,13 +1289,12 @@ export const TackleBuilder: React.FC = () => {
       </main>
 
       {/* =================================================================
-          最下部固定：Tesla Model 3 スタイル 決済・サマリーバー（白ベース統一）
-          ・左：ロッド × リール 構成タイトル ＆ サブ構成
-          ・右：¥218,500 ∨ (購入参考価格) ＋ 青い「今すぐ注文」ボタン (#3E6AE1)
+          最下部固定：Tesla Model 3 スタイル 決済・サマリーバー（添付3枚目）
+          ・スクロール途中では表示され、右カラム最下部の「お客様のModel PE6」到達時は自動で隠れる（添付2枚目）
          ================================================================= */}
-      {route.view !== 'home' && (
-        <footer className="sticky bottom-0 z-40 shrink-0 px-4 sm:px-8 lg:px-12 py-3.5 bg-white border-t border-black/10 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] text-[#171A20]">
-          {/* 価格内訳ポップオーバー（¥218,500 ∨ をクリックした時に展開） */}
+      {route.view === 'garage' && !isInlineCheckoutVisible && (
+        <footer className="sticky bottom-0 z-40 shrink-0 px-4 sm:px-8 lg:px-12 py-3.5 bg-white border-t border-black/10 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] text-[#171A20] transition-all duration-300">
+          {/* 価格内訳ポップオーバー（¥228,090 ∨ をクリックした時に展開） */}
           {isPriceBreakdownOpen && (
             <div className="max-w-[1680px] mx-auto mb-3 p-4 rounded-2xl border border-black/10 bg-[#F8F9FA] text-[#171A20] shadow-xl transition-all">
               <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-black/10">
@@ -967,22 +1343,23 @@ export const TackleBuilder: React.FC = () => {
           )}
 
           <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-4">
-            {/* 左（PC表示）：Teslaの「Model 3 パフォーマンス / デュアルモーターAWD...」と同じ構成サマリー */}
+            {/* 左（PC表示）：添付3枚目左下の「Model 3 パフォーマンス / デュアルモーターAWD...」と同じ構成サマリー */}
             <div className="hidden md:block min-w-0">
-              <div className="flex items-baseline gap-2.5">
-                <span className="text-lg font-bold tracking-tight truncate">
-                  {rig.rod?.shortName} × {rig.reel?.shortName}
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-bold tracking-tight">
+                  {currentModelInfo.modelName}
                 </span>
-                <span className="text-xs font-normal text-[#5C5E62]">
-                  {targetProfile.badge}
+                <span className="text-sm font-normal text-[#393C41]">
+                  {currentModelInfo.trimBadge}
                 </span>
               </div>
               <div className="text-xs truncate mt-0.5 text-[#5C5E62]">
-                {rig.line?.shortName} ・ {rig.lure?.shortName} ・ 総重量 {totalWeightG}g
+                {rig.rod?.shortName} ・ {rig.reel?.shortName} ・ {rig.line?.shortName} ・{' '}
+                {rig.lure?.shortName}
               </div>
             </div>
 
-            {/* 右（PC・モバイル共通）：合計金額（¥218,500 ∨ 購入価格） ＋ 青い「今すぐ注文」ボタン */}
+            {/* 右（PC・モバイル共通）：合計金額（¥228,090 ∨ 購入価格） ＋ 青い「今すぐ注文」ボタン */}
             <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-6 sm:gap-8">
               <button
                 type="button"
@@ -992,39 +1369,174 @@ export const TackleBuilder: React.FC = () => {
               >
                 <div className="flex items-center gap-1.5">
                   <span className="font-oswald text-xl sm:text-2xl font-bold tabular-nums tracking-tight">
-                    ¥{totalValue.toLocaleString()}
+                    ¥
+                    {(pricingMode === 'cash'
+                      ? totalValue
+                      : mainTwoPrice
+                    ).toLocaleString()}
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-200 ${
+                    className={`w-4 h-4 text-[#5C5E62] transition-transform duration-200 ${
                       isPriceBreakdownOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </div>
                 <div className="text-[11px] text-[#5C5E62]">
-                  購入価格（4点合計）
+                  {pricingMode === 'cash'
+                    ? '購入価格（4点合計）'
+                    : 'メイン機2点価格（リール＋竿）'}
                 </div>
               </button>
 
-              {route.view === 'garage' ? (
-                <button
-                  type="button"
-                  onClick={() => navigateTo({ view: 'checkout' })}
-                  className="px-7 sm:px-9 py-3 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs sm:text-sm font-semibold tracking-wide transition-colors shadow-sm shrink-0"
-                >
-                  今すぐ注文
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => navigateTo({ view: 'garage' })}
-                  className="px-6 py-2.5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs sm:text-sm font-semibold tracking-wide transition-colors shrink-0"
-                >
-                  コンフィギュレーターへ戻る
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleStickyOrderClick}
+                className="px-7 sm:px-9 py-3 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs sm:text-sm font-semibold tracking-wide transition-colors shadow-sm shrink-0"
+              >
+                今すぐ注文
+              </button>
             </div>
           </div>
         </footer>
+      )}
+
+      {/* =================================================================
+          ドロワー：Tesla風「メニュー」スライドオーバー（添付1枚目右上の「メニュー」ボタン連動）
+         ================================================================= */}
+      {isMenuDrawerOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex justify-end"
+          onClick={() => setIsMenuDrawerOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white h-full p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <span className="font-oswald text-base font-bold tracking-[0.35em] text-[#171A20]">
+                  R I G s
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsMenuDrawerOpen(false)}
+                  className="w-8 h-8 rounded-full hover:bg-[#F4F4F4] flex items-center justify-center"
+                  aria-label="メニューを閉じる"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[11px] font-oswald tracking-widest text-[#5C5E62] uppercase px-3 pb-1">
+                  MODELS // ターゲットクラス
+                </div>
+                {RIG_PRESETS.map((preset) => {
+                  const info = MODEL_TITLE_MAP[preset.id];
+                  const isCurrent =
+                    route.view === 'garage' && route.targetId === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => {
+                        setIsMenuDrawerOpen(false);
+                        handleSelectTarget(preset.id, 'garage');
+                      }}
+                      className={`w-full px-3 py-3 rounded-lg text-left flex items-center justify-between transition-colors ${
+                        isCurrent ? 'bg-[#F4F4F4] font-bold' : 'hover:bg-[#F4F4F4]/60'
+                      }`}
+                    >
+                      <div>
+                        <div className="text-sm font-semibold text-[#171A20]">
+                          {info.modelName}
+                        </div>
+                        <div className="text-xs text-[#5C5E62]">{info.subTitle}</div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#5C5E62]" />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="h-[1px] bg-black/10" />
+
+              <div className="space-y-1">
+                <div className="text-[11px] font-oswald tracking-widest text-[#5C5E62] uppercase px-3 pb-1">
+                  NAVIGATION // 画面切替
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuDrawerOpen(false);
+                    navigateTo({ view: 'home' });
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors ${
+                    route.view === 'home'
+                      ? 'bg-[#F4F4F4] font-bold'
+                      : 'hover:bg-[#F4F4F4]/60'
+                  }`}
+                >
+                  ホーム（モデル一覧）
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuDrawerOpen(false);
+                    navigateTo({ view: 'garage' });
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors ${
+                    route.view === 'garage'
+                      ? 'bg-[#F4F4F4] font-bold'
+                      : 'hover:bg-[#F4F4F4]/60'
+                  }`}
+                >
+                  コンフィギュレーター（カスタム注文）
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuDrawerOpen(false);
+                    navigateTo({ view: 'checkout' });
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors ${
+                    route.view === 'checkout'
+                      ? 'bg-[#F4F4F4] font-bold'
+                      : 'hover:bg-[#F4F4F4]/60'
+                  }`}
+                >
+                  完成装備仕様書（一覧・共有）
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuDrawerOpen(false);
+                    setIsCompareModalOpen(true);
+                  }}
+                  className="w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium hover:bg-[#F4F4F4]/60 transition-colors"
+                >
+                  タックル仕様を比較する
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-black/10 space-y-3">
+              <button
+                type="button"
+                onClick={handleCopyShareUrl}
+                className="w-full py-2.5 px-4 rounded-lg bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-semibold text-[#171A20] flex items-center justify-between"
+              >
+                <span className="flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  <span>日本 (日本語) // 構成URLをコピー</span>
+                </span>
+                {headerUrlCopied && (
+                  <span className="text-emerald-600 font-bold">COPIED</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* =================================================================
@@ -1143,7 +1655,7 @@ export const TackleBuilder: React.FC = () => {
             <div className="flex items-center justify-between border-b border-black/10 pb-4">
               <div>
                 <span className="text-xs font-oswald font-bold tracking-widest text-[#3E6AE1] uppercase">
-                  SPECIFICATION & TELEMETRY COMPARISON
+                  SPECIFICATION &amp; TELEMETRY COMPARISON
                 </span>
                 <h3 className="text-xl font-bold mt-0.5">
                   推奨ベース構成とのスペック・戦闘力比較
@@ -1233,18 +1745,228 @@ export const TackleBuilder: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsCompareModalOpen(false)}
+                className="px-5 py-2.5 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-semibold text-[#171A20]"
+              >
+                閉じる
+              </button>
               <button
                 type="button"
                 onClick={() => {
                   setIsCompareModalOpen(false);
-                  navigateTo({ view: 'checkout' });
+                  setIsOrderDispatchModalOpen(true);
                 }}
                 className="px-6 py-2.5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold flex items-center gap-2"
               >
-                <span>完成仕様書・注文画面へ進む</span>
+                <span>この構成で注文手続きへ</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================
+          モーダル3：インライン決済「Amazonで注文する」から直接開く購入ディスパッチモーダル
+         ================================================================= */}
+      {isOrderDispatchModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="inline-order-modal-title"
+          onClick={() => setIsOrderDispatchModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-2xl rounded-3xl bg-white text-[#171A20] shadow-2xl overflow-hidden my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 bg-[#F4F4F4] border-b border-black/10 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-[#3E6AE1]" />
+                <div>
+                  <div className="text-[10px] font-oswald font-bold tracking-[0.18em] text-[#3E6AE1]">
+                    ORDER YOUR {currentModelInfo.modelName.toUpperCase()}
+                  </div>
+                  <h3
+                    id="inline-order-modal-title"
+                    className="text-base font-bold text-[#171A20]"
+                  >
+                    お客様の{currentModelInfo.modelName}（合計 ¥
+                    {totalValue.toLocaleString()}）— Amazon公式注文リスト
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOrderDispatchModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-white hover:bg-[#E5E5E5] flex items-center justify-center"
+                aria-label="閉じる"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+              <div className="rounded-xl bg-[#F4F4F4] p-3.5 flex flex-wrap items-center justify-around gap-3 text-xs text-[#171A20]">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Lock className="w-3.5 h-3.5 text-[#3E6AE1]" />
+                  <span>Amazon公式安全決済</span>
+                </span>
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Truck className="w-3.5 h-3.5 text-[#3E6AE1]" />
+                  <span>全国送料無料対象</span>
+                </span>
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Award className="w-3.5 h-3.5 text-[#3E6AE1]" />
+                  <span>100%物理適合確認済</span>
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="text-xs text-[#5C5E62]">
+                  各アイテムの「Amazonで注文」ボタンから公式ストアのカートへ追加してください：
+                </div>
+                {CATEGORY_ORDER.map((cat) => {
+                  const meta = STEP_META[cat];
+                  const item = rig[cat];
+                  if (!item) return null;
+                  const url = buildAmazonAffiliateUrl(item.amazon);
+                  const subUrl =
+                    item.amazon.subItemAsin || item.amazon.subItemQuery
+                      ? buildAmazonAffiliateUrl({
+                          asin: item.amazon.subItemAsin,
+                          searchQuery: item.amazon.subItemQuery ?? '',
+                        })
+                      : null;
+                  const isVisited = Boolean(checkedOutSlots[cat]);
+
+                  return (
+                    <div
+                      key={cat}
+                      className="rounded-xl bg-[#F4F4F4] p-3.5 space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <RigPartShowcase part={item} isSelected={isVisited} size="sm" />
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-oswald text-[#3E6AE1] font-bold tracking-wider">
+                              {meta.stepNum} {meta.label}
+                            </div>
+                            <div className="text-xs sm:text-sm font-bold text-[#171A20] truncate">
+                              {item.brand} — {item.name}
+                            </div>
+                            <div className="font-oswald text-sm text-[#171A20] tabular-nums mt-0.5">
+                              ¥{item.price.toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          onClick={() =>
+                            setCheckedOutSlots((prev) => ({ ...prev, [cat]: true }))
+                          }
+                          className={`px-4 py-2.5 rounded-md text-xs font-semibold flex items-center gap-2 shrink-0 transition-all ${
+                            isVisited
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-[#3E6AE1] hover:bg-[#3457B1] text-white'
+                          }`}
+                        >
+                          {isVisited ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              <span>確認済</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Amazonで注文</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </>
+                          )}
+                        </a>
+                      </div>
+
+                      {subUrl && item.amazon.subItemLabel && (
+                        <div className="pt-2 border-t border-black/10 flex items-center justify-between gap-3 text-[11px]">
+                          <span className="text-[#5C5E62] truncate">
+                            ＋ {item.amazon.subItemLabel}
+                          </span>
+                          <a
+                            href={subUrl}
+                            target="_blank"
+                            rel="noopener noreferrer sponsored"
+                            className="text-[#3E6AE1] hover:underline shrink-0 inline-flex items-center gap-1 font-medium"
+                          >
+                            <span>ペア金具も確認</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="rounded-2xl bg-[#F4F4F4] p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-[#171A20]">
+                    構成の保存・完成仕様書ページ
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOrderDispatchModalOpen(false);
+                      navigateTo({ view: 'checkout' });
+                    }}
+                    className="text-xs font-semibold text-[#3E6AE1] hover:underline"
+                  >
+                    フル画面仕様書を開く ＞
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSaveDesignInline}
+                    className="py-3 px-4 rounded-md bg-[#171A20] hover:bg-black text-white text-xs font-semibold flex items-center justify-center gap-2"
+                  >
+                    {inlineSavedCopied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Link2 className="w-4 h-4" />
+                    )}
+                    <span>
+                      {inlineSavedCopied ? '共有URLをコピーしました' : 'デザインURLを保存'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const lines = [
+                        `【RIGs — お客様の${currentModelInfo.modelName} 仕様書】`,
+                        `■ 01 REEL: ${rig.reel?.name ?? ''}`,
+                        `■ 02 ROD: ${rig.rod?.name ?? ''}`,
+                        `■ 03 LINE: ${rig.line?.name ?? ''}`,
+                        `■ 04 LURE: ${rig.lure?.name ?? ''} (針込 ${rig.lure?.totalWeightG ?? 0}g)`,
+                        `■ 合計金額: ¥${totalValue.toLocaleString()}`,
+                        shareUrl,
+                      ];
+                      navigator.clipboard.writeText(lines.join('\n'));
+                      setInlineSavedCopied(true);
+                      setTimeout(() => setInlineSavedCopied(false), 2500);
+                    }}
+                    className="py-3 px-4 rounded-md bg-white hover:bg-[#EAEAEA] border border-black/15 text-xs font-semibold text-[#171A20] flex items-center justify-center gap-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span>仕様書テキストをコピー</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

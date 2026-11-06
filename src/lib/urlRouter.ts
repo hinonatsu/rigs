@@ -31,7 +31,7 @@ export function parseUrlState(): {
   if (typeof window === 'undefined') {
     return {
       route: {
-        view: 'garage',
+        view: 'home',
         targetId: 'pe6',
         activeStep: 'reel',
       },
@@ -69,7 +69,7 @@ export function parseUrlState(): {
       }
     : presetFallback;
 
-  let view: PageView = 'garage';
+  let view: PageView = 'home';
   if (rawView === 'garage' || rawView === 'builder') {
     view = 'garage';
   } else if (rawView === 'checkout' || rawView === 'spec') {

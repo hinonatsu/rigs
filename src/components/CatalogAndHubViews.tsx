@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  Activity,
   ArrowRight,
-  ChevronDown,
-  Crosshair,
-  Flame,
-  Lock,
-  MapPin,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
   ShieldCheck,
-  Truck,
-  Waves,
-  Zap,
+  Sparkles,
+  X,
 } from 'lucide-react';
 import {
   ALL_PARTS,
@@ -25,257 +22,523 @@ interface TargetSelectHomeViewProps {
   onSelectTargetAndGoCheckout?: (targetId: TargetId) => void;
 }
 
-const DISPLAY_TITLE_MAP: Record<
+const TESLA_CARD_META: Record<
   TargetId,
   {
-    mainSpecies: string;
-    subSpecies: string;
+    categoryLabel: string;
+    modelTitle: string;
+    speciesSubtitle: string;
+    tagline: string;
   }
 > = {
   pe6: {
-    mainSpecies: '近海ヒラマサ ＆ キハダ',
-    subSpecies: 'ヒラマサ 10〜20kg / キハダ 20〜40kg',
+    categoryLabel: 'オフショア キャスティング // PE6号・14000番基準',
+    modelTitle: 'Model PE6',
+    speciesSubtitle: '近海ヒラマサ (10〜20kg) ＆ キハダマグロ',
+    tagline: '1日300投の誘い出しと初動3秒の根ズレ制圧を両立する近海スタンダード',
   },
   pe8: {
-    mainSpecies: '大型クロマグロ ＆ オオマサ',
-    subSpecies: 'クロマグロ 40〜80kg / オオマサ 20〜30kg超',
+    categoryLabel: 'ヘビー キャスティング // PE8号・18000番基準',
+    modelTitle: 'Model PE8',
+    speciesSubtitle: '大型クロマグロ (40〜80kg) ＆ オオマサ',
+    tagline: '高負荷ドラグ15kg超で深場へのファーストランをねじ伏せるパワー構成',
   },
   pe10: {
-    mainSpecies: '100kg超クロマグロ ＆ GT',
-    subSpecies: 'モンスターマグロ 80〜150kg超 / 離島遠征GT',
+    categoryLabel: 'モンスター エクスペディション // PE10号・20000番基準',
+    modelTitle: 'Model PE10',
+    speciesSubtitle: '100kg超クロマグロ ＆ 離島遠征GT',
+    tagline: '最大ドラグ30kg・耐熱Si-Xラインで100kg超の巨魚と真っ向勝負する決戦仕様',
   },
 };
 
 export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
-  currentTargetId,
+  currentTargetId = 'pe6',
   onSelectTargetAndGoGarage,
   onSelectTargetAndGoCheckout,
 }) => {
-  const [expandedMobileTargetId, setExpandedMobileTargetId] = useState<TargetId | null>(null);
+  // 上段フルワイド・ダークヒーローのアクティブスライド (0: 全ラインナップ集合ステージ, 1: PE6, 2: PE8, 3: PE10)
+  const [heroSlide, setHeroSlide] = useState<number>(3);
+  // 中段カードカルーセルのアクティブドット (0, 1, 2)
+  const [activeCardIdx, setActiveCardIdx] = useState<number>(0);
+  // 最下部「タックル比較・診断（試乗予約風）」モーダル開閉
+  const [isDiagnosticOpen, setIsDiagnosticOpen] = useState<boolean>(false);
 
-  const toggleMobileDetails = (e: React.MouseEvent, targetId: TargetId) => {
-    e.stopPropagation();
-    setExpandedMobileTargetId((prev) => (prev === targetId ? null : targetId));
+  const cardTrackRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToCard = (index: number) => {
+    setActiveCardIdx(index);
+    if (!cardTrackRef.current) return;
+    const cards = cardTrackRef.current.querySelectorAll('[data-tesla-card]');
+    const targetEl = cards[index] as HTMLElement | undefined;
+    if (targetEl) {
+      targetEl.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'start',
+      });
+    }
+  };
+
+  const handleCardTrackScroll = () => {
+    if (!cardTrackRef.current) return;
+    const { scrollLeft, clientWidth } = cardTrackRef.current;
+    const approxIdx = Math.round(scrollLeft / (clientWidth * 0.48));
+    const clamped = Math.max(0, Math.min(RIG_PRESETS.length - 1, approxIdx));
+    if (clamped !== activeCardIdx) {
+      setActiveCardIdx(clamped);
+    }
   };
 
   return (
-    <div className="relative flex-1 min-h-0 flex flex-col justify-between gap-8 sm:gap-10 py-2 sm:py-4 text-[#171A20]">
-      {/* ==================== 上部：タイトル ＆ トラストシグナル（クリーン・ホワイトスタジオ） ==================== */}
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-black/10 pb-6 shrink-0">
-        <div className="space-y-2.5 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F4F4F4] text-[11px] font-oswald font-semibold tracking-[0.2em] text-[#3E6AE1]">
-            <Crosshair className="w-3.5 h-3.5" />
-            <span>SELECT TARGET MONSTER</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#171A20] leading-tight">
-            ターゲット魚種・海域クラスを選択
-          </h1>
-          <p className="text-xs sm:text-sm text-[#5C5E62] leading-relaxed">
-            狙うターゲットを選択すると、物理計算済みの推奨ロッド＆リール構成がコンフィギュレーターにロードされます。
-          </p>
-        </div>
+    <div className="flex-1 min-h-0 flex flex-col justify-between bg-white text-[#171A20] select-none">
+      {/* =====================================================================
+          1. 上段：Tesla風 フルワイド・ダークステージ ヒーローカルーセル
+             （暗闇のステージ照明＋赤いレーザーステージライン＋下部ドット ● ● ● ●）
+         ===================================================================== */}
+      <section
+        aria-label="ラインナップ・メインステージ"
+        className="relative w-full h-[340px] sm:h-[440px] lg:h-[500px] bg-black text-white overflow-hidden shrink-0"
+      >
+        {/* スポットライト＆ステージスモーク風グラデーション演出 */}
+        <div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 65% 55% at 58% 28%, rgba(56, 88, 168, 0.28) 0%, rgba(15, 20, 30, 0.65) 55%, rgba(0, 0, 0, 0.96) 100%)',
+          }}
+        />
 
-        <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-[#5C5E62]">
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F4F4F4]">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#3E6AE1]" />
-            <span>100% 物理互換性検証済</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F4F4F4]">
-            <Lock className="w-3.5 h-3.5 text-[#3E6AE1]" />
-            <span>Amazon公式 安全決済</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F4F4F4]">
-            <Truck className="w-3.5 h-3.5 text-[#3E6AE1]" />
-            <span>全国送料無料対象</span>
-          </span>
-        </div>
-      </div>
+        {/* スライド別ビジュアル */}
+        {heroSlide === 3 ? (
+          /* スライド3 (初期表示: 添付1枚目と同じ4番目ドット点灯・全ラインナップ集合ステージ) */
+          <div className="relative z-20 w-full h-full max-w-[1600px] mx-auto px-4 sm:px-10 flex flex-col justify-between pt-8 pb-12">
+            <div className="flex items-center justify-between text-xs text-white/70">
+              <span className="font-oswald tracking-[0.3em] uppercase text-white/80">
+                RIGs OFFSHORE LINEUP // 100% VERIFIED SYNERGY
+              </span>
+              <span className="hidden sm:inline text-white/60">
+                Model PE6 ・ Model PE8 ・ Model PE10
+              </span>
+            </div>
 
-      {/* ==================== メイン：3つのターゲット選択カード（白＆ライトグレー基調） ==================== */}
-      <div className="relative z-10 flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
-        {RIG_PRESETS.map((target: TargetFishProfile, idx: number) => {
-          const displayTitle = DISPLAY_TITLE_MAP[target.id];
-          const isSelected = currentTargetId === target.id;
-          const isMobileExpanded = expandedMobileTargetId === target.id;
-
-          const pReel = ALL_PARTS.find((p) => p.id === target.rigIds.reel);
-          const pRod = ALL_PARTS.find((p) => p.id === target.rigIds.rod);
-          const pLine = ALL_PARTS.find((p) => p.id === target.rigIds.line);
-          const pLure = ALL_PARTS.find((p) => p.id === target.rigIds.lure);
-          const totalPrice =
-            (pReel?.price ?? 0) +
-            (pRod?.price ?? 0) +
-            (pLine?.price ?? 0) +
-            (pLure?.price ?? 0);
-
-          return (
-            <article
-              key={target.id}
-              onClick={() => onSelectTargetAndGoGarage(target.id)}
-              role="button"
-              tabIndex={0}
-              aria-label={`${displayTitle.mainSpecies}（${target.badge}）を選択`}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onSelectTargetAndGoGarage(target.id);
-                }
-              }}
-              className={`group relative rounded-2xl bg-[#F4F4F4] overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col justify-between ${
-                isSelected
-                  ? 'ring-2 ring-[#171A20] shadow-md'
-                  : 'border border-black/5 hover:border-black/20'
-              }`}
-            >
-              {/* 1. ビジュアルステージ */}
-              <div className="relative h-64 sm:h-72 w-full overflow-hidden bg-white">
-                <img
-                  src={target.heroImage}
-                  alt={target.fishName}
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-20">
-                  <span className="px-3 py-1 rounded-full bg-white/95 text-xs font-oswald font-bold text-[#171A20] tracking-wider shadow-sm">
-                    CLASS 0{idx + 1} // {target.weightRange}
-                  </span>
-
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#171A20]/90 text-white text-xs font-oswald font-semibold tracking-wider">
-                    <Waves className="w-3.5 h-3.5 shrink-0 text-[#3E6AE1]" />
-                    <span>{target.badge}</span>
-                  </span>
-                </div>
-
-                <div className="absolute bottom-4 left-5 right-5 z-10 space-y-1 text-white">
-                  <div className="text-xs font-medium text-white/85">
-                    {displayTitle.subSpecies}
+            {/* ステージ中央：3大ターゲット＆フラッグシップ機が並ぶ集合コンポジット */}
+            <div className="relative my-auto flex items-end justify-center gap-2 sm:gap-6 lg:gap-10 pt-4 pb-4">
+              {RIG_PRESETS.map((preset, idx) => {
+                const meta = TESLA_CARD_META[preset.id];
+                const isCenter = idx === 1;
+                return (
+                  <div
+                    key={preset.id}
+                    onClick={() => onSelectTargetAndGoGarage(preset.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectTargetAndGoGarage(preset.id);
+                      }
+                    }}
+                    className={`group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 border border-white/15 hover:border-white/50 shadow-2xl ${
+                      isCenter
+                        ? 'w-[42%] sm:w-[36%] lg:w-[34%] h-[190px] sm:h-[260px] lg:h-[300px] z-30 -translate-y-2'
+                        : 'w-[28%] sm:w-[27%] lg:w-[26%] h-[155px] sm:h-[210px] lg:h-[245px] z-20 opacity-85 hover:opacity-100'
+                    }`}
+                  >
+                    <img
+                      src={preset.heroImage}
+                      alt={meta.modelTitle}
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                    <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
+                      <div className="text-[10px] font-oswald tracking-widest text-white/75 uppercase truncate">
+                        {preset.badge}
+                      </div>
+                      <div className="text-sm sm:text-xl lg:text-2xl font-bold text-white tracking-tight">
+                        {meta.modelTitle}
+                      </div>
+                      <div className="hidden sm:block text-[11px] text-white/75 truncate">
+                        {meta.speciesSubtitle}
+                      </div>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-bold tracking-tight leading-tight">
-                    {displayTitle.mainSpecies}
-                  </h2>
-                  <div className="pt-0.5 flex items-center gap-1.5 text-xs text-white/80">
-                    <MapPin className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{target.field}</span>
+                );
+              })}
+
+              {/* 添付1枚目のステージ床面「赤いレーザーライン照明」再現 */}
+              <div className="absolute -bottom-1 left-[8%] right-[8%] h-[3px] bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_24px_4px_rgba(239,68,68,0.85)] z-30" />
+              <div className="absolute -bottom-3 left-[15%] right-[15%] h-[10px] bg-red-600/25 blur-md z-20" />
+            </div>
+
+            <div className="text-center">
+              <p className="text-xs sm:text-sm text-white/80 font-medium tracking-wide">
+                魚種クラスを選ぶだけで、物理適合100%のロッド・リール・ライン・ルアーが即座に組み上がる
+              </p>
+            </div>
+          </div>
+        ) : (
+          /* スライド 0, 1, 2: 各モデルの個別フルワイド・シネマティックスライド */
+          (() => {
+            const preset = RIG_PRESETS[heroSlide] ?? RIG_PRESETS[0];
+            const meta = TESLA_CARD_META[preset.id];
+            return (
+              <div className="relative z-20 w-full h-full">
+                <img
+                  src={preset.heroImage}
+                  alt={preset.fishName}
+                  className="w-full h-full object-cover object-center opacity-75"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/30" />
+                <div className="absolute inset-0 max-w-[1440px] mx-auto px-6 sm:px-12 flex flex-col justify-center items-start space-y-3">
+                  <span className="px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-oswald tracking-widest uppercase">
+                    {meta.categoryLabel}
+                  </span>
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white">
+                    {meta.modelTitle}
+                  </h1>
+                  <p className="text-sm sm:text-base text-white/85 max-w-xl">
+                    {meta.speciesSubtitle} — {meta.tagline}
+                  </p>
+                  <div className="pt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => onSelectTargetAndGoGarage(preset.id)}
+                      className="px-7 py-2.5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs sm:text-sm font-semibold transition-colors"
+                    >
+                      今すぐ注文
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onSelectTargetAndGoCheckout
+                          ? onSelectTargetAndGoCheckout(preset.id)
+                          : onSelectTargetAndGoGarage(preset.id)
+                      }
+                      className="px-7 py-2.5 rounded-md bg-white hover:bg-[#F4F4F4] text-[#171A20] text-xs sm:text-sm font-semibold transition-colors"
+                    >
+                      推奨仕様を見る
+                    </button>
                   </div>
                 </div>
               </div>
+            );
+          })()
+        )}
 
-              {/* 2. カード下部：スペック要約・価格・CTA */}
-              <div className="p-6 bg-[#F4F4F4] space-y-5 flex-1 flex flex-col justify-between">
-                <div className="space-y-4">
-                  {/* 推奨ロッド×リール表示 */}
-                  <div className="rounded-xl bg-white p-3.5 border border-black/5 space-y-1">
-                    <div className="text-[10px] font-oswald tracking-wider text-[#5C5E62] uppercase">
-                      STANDARD RECOMMENDED SETUP
-                    </div>
-                    <div className="text-xs sm:text-sm font-bold text-[#171A20] truncate">
-                      {pRod?.shortName} × {pReel?.shortName}
-                    </div>
-                    <div className="text-[11px] text-[#5C5E62] truncate">
-                      {pLine?.shortName} ・ {pLure?.shortName}
-                    </div>
-                  </div>
+        {/* 下部中央：ページネーションドット (● ● ● ●) */}
+        <div className="absolute bottom-4 left-0 right-0 z-30 flex items-center justify-center gap-2.5">
+          {[0, 1, 2, 3].map((dotIdx) => {
+            const isActive = heroSlide === dotIdx;
+            return (
+              <button
+                key={dotIdx}
+                type="button"
+                onClick={() => setHeroSlide(dotIdx)}
+                aria-label={`ヒーロースライド ${dotIdx + 1}`}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                  isActive
+                    ? 'bg-white scale-110 shadow-[0_0_8px_rgba(255,255,255,0.9)]'
+                    : 'bg-white/40 hover:bg-white/70'
+                }`}
+              />
+            );
+          })}
+        </div>
+      </section>
 
-                  {/* 3大数値 */}
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-xl bg-white p-2.5 border border-black/5">
-                      <div className="text-[10px] text-[#5C5E62] flex items-center justify-center gap-1">
-                        <Zap className="w-3 h-3 text-[#3E6AE1]" />
-                        <span>初動時速</span>
-                      </div>
-                      <div className="text-sm font-oswald font-bold text-[#171A20] mt-0.5">
-                        {target.strikeSpeedKmh}km/h
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white p-2.5 border border-black/5">
-                      <div className="text-[10px] text-[#5C5E62] flex items-center justify-center gap-1">
-                        <Flame className="w-3 h-3 text-[#3E6AE1]" />
-                        <span>初動負荷</span>
-                      </div>
-                      <div className="text-sm font-oswald font-bold text-[#3E6AE1] mt-0.5">
-                        {target.initialRunLoadKg}kg
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white p-2.5 border border-black/5">
-                      <div className="text-[10px] text-[#5C5E62] flex items-center justify-center gap-1">
-                        <Activity className="w-3 h-3 text-[#3E6AE1]" />
-                        <span>1日投数</span>
-                      </div>
-                      <div className="text-sm font-oswald font-bold text-[#171A20] mt-0.5">
-                        {target.dailyCastCount}投
-                      </div>
-                    </div>
-                  </div>
+      {/* =====================================================================
+          2. 中段：Tesla Model 3 / Model Y 型 大判フォトカード並置セクション
+             （カード下に説明箱を置かず、写真全面にカテゴリ・モデル名・2ボタンをオーバーレイ）
+         ===================================================================== */}
+      <section
+        aria-label="モデルラインナップ"
+        className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-10 pt-6 sm:pt-8 pb-6 flex-1 flex flex-col justify-between"
+      >
+        <div className="relative">
+          {/* 横スクロール＆2大カード並置トラック */}
+          <div
+            ref={cardTrackRef}
+            onScroll={handleCardTrackScroll}
+            className="flex gap-5 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-2 no-scrollbar"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            {RIG_PRESETS.map((target: TargetFishProfile, idx: number) => {
+              const meta = TESLA_CARD_META[target.id];
+              const isSelected = currentTargetId === target.id;
 
-                  {/* モバイル用詳細展開 */}
-                  <div className="lg:hidden">
-                    <button
-                      type="button"
-                      onClick={(e) => toggleMobileDetails(e, target.id)}
-                      aria-expanded={isMobileExpanded}
-                      className="w-full py-2 px-3.5 rounded-xl bg-white border border-black/5 text-xs font-medium text-[#5C5E62] flex items-center justify-between"
-                    >
-                      <span>ターゲットの習性・ベイトを見る</span>
-                      <ChevronDown
-                        className={`w-4 h-4 transition-transform duration-200 ${
-                          isMobileExpanded ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-                    {isMobileExpanded && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-2 p-3.5 rounded-xl bg-white text-xs text-[#393C41] leading-relaxed"
-                      >
-                        {target.fishHabit}（主なベイト: {target.baitSizeMm}）
-                      </div>
-                    )}
-                  </div>
-                </div>
+              const pReel = ALL_PARTS.find((p) => p.id === target.rigIds.reel);
+              const pRod = ALL_PARTS.find((p) => p.id === target.rigIds.rod);
+              const pLine = ALL_PARTS.find((p) => p.id === target.rigIds.line);
+              const pLure = ALL_PARTS.find((p) => p.id === target.rigIds.lure);
+              const totalPrice =
+                (pReel?.price ?? 0) +
+                (pRod?.price ?? 0) +
+                (pLine?.price ?? 0) +
+                (pLure?.price ?? 0);
 
-                <div className="space-y-4 pt-2 border-t border-black/10">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs font-medium text-[#5C5E62]">
-                      推奨4点フルセット価格
+              return (
+                <article
+                  key={target.id}
+                  data-tesla-card
+                  onClick={() => onSelectTargetAndGoGarage(target.id)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${meta.modelTitle}（${meta.speciesSubtitle}）をカスタム`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectTargetAndGoGarage(target.id);
+                    }
+                  }}
+                  className={`group relative shrink-0 w-[90vw] sm:w-[75vw] md:w-[calc(50%-12px)] lg:w-[calc(47%-12px)] h-[440px] sm:h-[520px] lg:h-[560px] rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer snap-start transition-all duration-300 ${
+                    isSelected ? 'ring-2 ring-[#171A20]/20' : ''
+                  }`}
+                >
+                  {/* 全面フォト背景 */}
+                  <img
+                    src={target.heroImage}
+                    alt={meta.modelTitle}
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+
+                  {/* 写真上の視認性を確保する上下グラデーション */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/75" />
+
+                  {/* 左上：カテゴリー小ラベル（添付1枚目の「スポーツ セダン」「ミッドサイズSUV」位置） */}
+                  <div className="absolute top-6 left-6 right-6 z-10 flex items-center justify-between">
+                    <span className="text-xs sm:text-sm font-bold text-white tracking-wide drop-shadow">
+                      {meta.categoryLabel}
                     </span>
-                    <span className="font-oswald font-bold text-2xl text-[#171A20] tabular-nums">
-                      ¥{totalPrice.toLocaleString()}
+                    <span className="px-2.5 py-1 rounded-full bg-black/45 backdrop-blur-md text-[11px] font-oswald text-white/90 tracking-wider">
+                      ¥{totalPrice.toLocaleString()} (4点推奨)
                     </span>
                   </div>
 
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectTargetAndGoGarage(target.id);
-                      }}
-                      className="w-full py-3.5 px-5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white font-semibold text-sm transition-colors flex items-center justify-between"
-                    >
-                      <span>このクラスでロッド＆リールを選ぶ</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                  {/* 下部：巨大モデル名 ＋ 横並び2ボタン（添付1枚目と同一レイアウト） */}
+                  <div className="absolute bottom-6 left-6 right-6 z-10 space-y-4">
+                    <div className="space-y-1">
+                      <div className="text-xs sm:text-sm font-medium text-white/90 drop-shadow">
+                        {meta.speciesSubtitle}（{pRod?.shortName} × {pReel?.shortName}）
+                      </div>
+                      <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight drop-shadow-sm">
+                        {meta.modelTitle}
+                      </h2>
+                    </div>
 
-                    {onSelectTargetAndGoCheckout && (
+                    {/* 青「今すぐ注文」＋ 白「推奨仕様を見る」横並び2列ボタン */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-[520px]">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onSelectTargetAndGoCheckout(target.id);
+                          onSelectTargetAndGoGarage(target.id);
                         }}
-                        className="w-full py-2.5 px-4 rounded-md bg-white hover:bg-[#EAEAEA] text-xs font-medium text-[#171A20] transition-colors text-center"
+                        className="w-full py-3 px-4 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white font-semibold text-xs sm:text-sm text-center transition-colors shadow-md"
                       >
-                        推奨セットのまま注文確認へ進む
+                        今すぐ注文
                       </button>
-                    )}
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onSelectTargetAndGoCheckout) {
+                            onSelectTargetAndGoCheckout(target.id);
+                          } else {
+                            onSelectTargetAndGoGarage(target.id);
+                          }
+                        }}
+                        className="w-full py-3 px-4 rounded-md bg-white hover:bg-[#F4F4F4] text-[#171A20] font-semibold text-xs sm:text-sm text-center transition-colors shadow-md"
+                      >
+                        推奨仕様を見る
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </article>
-          );
-        })}
+                </article>
+              );
+            })}
+          </div>
+
+          {/* PC用 左右送り補助ボタン（控えめなフローティング） */}
+          <button
+            type="button"
+            onClick={() =>
+              scrollToCard(
+                (activeCardIdx - 1 + RIG_PRESETS.length) % RIG_PRESETS.length
+              )
+            }
+            aria-label="前のモデルカードへ"
+            className="hidden lg:flex absolute top-1/2 -translate-y-1/2 left-2 z-20 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-[#171A20] shadow-md items-center justify-center transition-all"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToCard((activeCardIdx + 1) % RIG_PRESETS.length)}
+            aria-label="次のモデルカードへ"
+            className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-2 z-20 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-[#171A20] shadow-md items-center justify-center transition-all"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* カード下部：添付1枚目と同じ3連カルーセルドット (● ○ ○) */}
+        <div className="pt-4 pb-1 flex items-center justify-center gap-2.5">
+          {RIG_PRESETS.map((preset, idx) => {
+            const isCurrent = activeCardIdx === idx;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => scrollToCard(idx)}
+                aria-label={`${TESLA_CARD_META[preset.id].modelTitle} を表示`}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                  isCurrent
+                    ? 'bg-[#171A20] scale-110'
+                    : 'bg-[#B5B6B8] hover:bg-[#757678]'
+                }`}
+              />
+            );
+          })}
+        </div>
+      </section>
+
+      {/* =====================================================================
+          3. 最下部スティッキーバー：添付1枚目最下部の `[🛞 試乗予約]` ボタン完全再現
+         ===================================================================== */}
+      <div className="sticky bottom-0 z-30 w-full bg-white/95 backdrop-blur-md border-t border-black/10 py-3 px-4 flex items-center justify-center shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
+        <button
+          type="button"
+          onClick={() => setIsDiagnosticOpen(true)}
+          className="w-full max-w-[260px] py-2.5 px-6 rounded-md bg-[#F4F4F4] hover:bg-[#E8E8EA] border border-black/10 flex items-center justify-center gap-2.5 text-xs sm:text-sm font-semibold text-[#171A20] transition-colors shadow-sm"
+        >
+          <span className="w-5 h-5 rounded-full bg-[#3E6AE1] text-white flex items-center justify-center shrink-0">
+            <Compass className="w-3.5 h-3.5" />
+          </span>
+          <span>タックル比較・診断</span>
+        </button>
       </div>
+
+      {/* =====================================================================
+          モーダル：3クラス（Model PE6 / PE8 / PE10）一括比較・クイック診断
+         ===================================================================== */}
+      {isDiagnosticOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setIsDiagnosticOpen(false)}
+        >
+          <div
+            className="w-full max-w-4xl rounded-3xl bg-white text-[#171A20] p-6 sm:p-8 shadow-2xl space-y-6 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-black/10 pb-4">
+              <div>
+                <span className="text-xs font-oswald font-bold tracking-widest text-[#3E6AE1] uppercase">
+                  LINEUP COMPARISON &amp; DIAGNOSTIC
+                </span>
+                <h3 className="text-xl font-bold mt-0.5">
+                  全3モデル 推奨タックル＆対象ターゲット比較
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDiagnosticOpen(false)}
+                className="w-8 h-8 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] flex items-center justify-center"
+                aria-label="閉じる"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {RIG_PRESETS.map((preset) => {
+                const meta = TESLA_CARD_META[preset.id];
+                const pReel = ALL_PARTS.find((p) => p.id === preset.rigIds.reel);
+                const pRod = ALL_PARTS.find((p) => p.id === preset.rigIds.rod);
+                const pLine = ALL_PARTS.find((p) => p.id === preset.rigIds.line);
+                const pLure = ALL_PARTS.find((p) => p.id === preset.rigIds.lure);
+                const price =
+                  (pReel?.price ?? 0) +
+                  (pRod?.price ?? 0) +
+                  (pLine?.price ?? 0) +
+                  (pLure?.price ?? 0);
+
+                return (
+                  <div
+                    key={preset.id}
+                    className="rounded-2xl bg-[#F4F4F4] p-5 flex flex-col justify-between space-y-4 border border-black/5"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold">{meta.modelTitle}</span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-white text-[11px] font-oswald font-bold text-[#3E6AE1]">
+                          {preset.badge}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-[#171A20]">
+                        {meta.speciesSubtitle}
+                      </div>
+                      <p className="text-xs text-[#5C5E62] leading-relaxed">
+                        {meta.tagline}
+                      </p>
+
+                      <div className="rounded-xl bg-white p-3 space-y-1.5 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-[#5C5E62]">リール</span>
+                          <span className="font-semibold">{pReel?.shortName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#5C5E62]">ロッド</span>
+                          <span className="font-semibold">{pRod?.shortName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#5C5E62]">ライン</span>
+                          <span className="font-semibold">{pLine?.shortName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#5C5E62]">ルアー</span>
+                          <span className="font-semibold">{pLure?.shortName}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2 border-t border-black/10">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-[#5C5E62]">4点合計価格</span>
+                        <span className="font-oswald text-xl font-bold">
+                          ¥{price.toLocaleString()}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsDiagnosticOpen(false);
+                          onSelectTargetAndGoGarage(preset.id);
+                        }}
+                        className="w-full py-2.5 px-4 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <span>{meta.modelTitle} をカスタム注文</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-[#5C5E62] pt-2">
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#3E6AE1]" />
+                <span>全モデル 100% 物理適合検証済・Amazon公式決済対応</span>
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-[#3E6AE1]" />
+                <span>カスタム画面で1パーツずつ自由に変更可能</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
