@@ -44,8 +44,10 @@ import {
 } from '../lib/urlRouter';
 import { TargetSelectHomeView } from './CatalogAndHubViews';
 import {
+  getPartStudioFilter,
   resolvePartStudioImage,
   RigPartShowcase,
+  ROD_OPEN_STAGE_MASK_STYLE,
   TeslaHeroConfiguratorStage,
 } from './RigPartShowcase';
 import { SpecCheckoutView } from './SpecCheckoutView';
@@ -339,6 +341,7 @@ export const TackleBuilder: React.FC = () => {
     const lure = rig.lure!;
     return [
       {
+        category: 'rod' as const,
         tag: 'ROD ARCHITECTURE // ブランクス設計',
         title: `${rod.brand} ${rod.shortName}`,
         subtitle: rod.subCode,
@@ -347,6 +350,7 @@ export const TackleBuilder: React.FC = () => {
         metrics: rod.specs,
       },
       {
+        category: 'reel' as const,
         tag: 'REEL DRAG & DRIVE // ドラグ制動・巻上機構',
         title: `${reel.brand} ${reel.shortName}`,
         subtitle: reel.subCode,
@@ -355,6 +359,7 @@ export const TackleBuilder: React.FC = () => {
         metrics: reel.specs,
       },
       {
+        category: 'lure' as const,
         tag: 'PHYSICAL SYNERGY // ルアー＆ロッド物理適合',
         title: `実戦ルアー総重量 ${lure.totalWeightG}g × ロッド上限 ${rod.lureMaxG}g`,
         subtitle: `${lure.shortName} (${lure.hookSpec})`,
@@ -365,6 +370,7 @@ export const TackleBuilder: React.FC = () => {
         metrics: lure.specs,
       },
       {
+        category: 'line' as const,
         tag: 'LINE CAPACITY & RETRIEVE // 糸巻量＆高速回収',
         title: `${line.shortName} × 1回転 ${reel.retrieveCm}cm`,
         subtitle: line.subCode,
@@ -385,37 +391,39 @@ export const TackleBuilder: React.FC = () => {
           ・右：ビルダー/仕様書時は「構成URLをコピー」＋「メニュー」、ホーム時は「メニュー」
          ===================================================================== */}
       <header className="sticky top-0 z-30 shrink-0 bg-white/95 backdrop-blur-md border-b border-black/5 px-4 sm:px-8 lg:px-12 py-3.5">
-        <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-4">
-          {/* 左：ワイドレタースペーシング ブランドロゴ */}
+        <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-2 sm:gap-4">
+          {/* 左：ワイドレタースペーシング ブランドロゴ（折返し防止） */}
           <button
             type="button"
             onClick={() => navigateTo({ view: 'home' })}
-            className="flex items-center gap-2 text-left group"
+            className="flex items-center gap-2 text-left group shrink-0 whitespace-nowrap"
             title="RIGs ホームへ戻る"
           >
-            <span className="font-oswald text-lg sm:text-xl font-bold tracking-[0.42em] text-[#171A20] group-hover:text-[#3E6AE1] transition-colors">
+            <span className="font-oswald text-lg sm:text-xl font-bold tracking-[0.36em] sm:tracking-[0.42em] text-[#171A20] group-hover:text-[#3E6AE1] transition-colors whitespace-nowrap">
               R I G s
             </span>
           </button>
 
           {/* 右：構成URL共有ボタン ＋ メニューボタン */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {route.view !== 'home' && (
               <button
                 type="button"
                 onClick={handleCopyShareUrl}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#171A20] hover:bg-[#F4F4F4] transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium text-[#171A20] hover:bg-[#F4F4F4] transition-colors whitespace-nowrap shrink-0"
                 title="現在のカスタム構成URLをコピー"
               >
                 {headerUrlCopied ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-600 font-semibold">コピー完了</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span className="text-emerald-600 font-semibold whitespace-nowrap">コピー完了</span>
                   </>
                 ) : (
                   <>
-                    <Link2 className="w-3.5 h-3.5 text-[#5C5E62]" />
-                    <span>構成URLをコピー</span>
+                    <Link2 className="w-3.5 h-3.5 text-[#5C5E62] shrink-0" />
+                    <span className="whitespace-nowrap">
+                      <span className="hidden sm:inline">構成</span>URLをコピー
+                    </span>
                   </>
                 )}
               </button>
@@ -424,7 +432,7 @@ export const TackleBuilder: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsMenuDrawerOpen(true)}
-              className="px-4 py-1.5 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-semibold text-[#171A20] transition-colors"
+              className="px-3.5 sm:px-4 py-1.5 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-semibold text-[#171A20] transition-colors whitespace-nowrap shrink-0"
             >
               メニュー
             </button>
@@ -732,9 +740,9 @@ export const TackleBuilder: React.FC = () => {
                             : 'bg-white/80 hover:bg-white border border-black/5'
                         } ${!isReelMatched && !isSelected ? 'opacity-75' : ''}`}
                       >
-                        <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <div className="flex items-center justify-between gap-1 mb-1.5 min-h-[20px]">
                           <span
-                            className={`font-oswald text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            className={`font-oswald text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${
                               isSelected
                                 ? 'bg-[#171A20] text-white'
                                 : 'bg-[#F4F4F4] text-[#5C5E62]'
@@ -743,13 +751,13 @@ export const TackleBuilder: React.FC = () => {
                             MAX {rodItem.lureMaxG}g
                           </span>
                           <span
-                            className={`text-[10px] font-medium ${
+                            className={`text-[10px] font-medium whitespace-nowrap truncate ${
                               isReelMatched ? 'text-[#5C5E62]' : 'text-amber-600'
                             }`}
                           >
                             {isReelMatched
-                              ? `✓ ${rig.reel?.sizeClass}番適合`
-                              : `${rodItem.compatibleReelSizes.join('/')}番用`}
+                              ? `✓ #${rig.reel?.sizeClass}`
+                              : `#${rodItem.compatibleReelSizes.join('/')}`}
                           </span>
                         </div>
 
@@ -801,60 +809,65 @@ export const TackleBuilder: React.FC = () => {
                   </button>
                 </div>
 
-                {/* -------- 5-A. PEライン（丸型スウォッチ選択） -------- */}
+                {/* -------- 5-A. PEライン（3カラム 純白スタジオビジュアル選択） -------- */}
                 <div className="space-y-3">
                   <div className="flex items-baseline justify-between gap-2">
-                    <div>
-                      <div className="text-sm font-medium">{rig.line?.shortName}</div>
-                      <div className="text-[11px] mt-0.5 text-[#5C5E62]">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-[#171A20] truncate">
+                        {rig.line?.shortName}
+                      </div>
+                      <div className="text-[11px] mt-0.5 text-[#5C5E62] truncate">
                         ＋ {rig.line?.pairedLeaderSpec}
                       </div>
                     </div>
-                    <div className="font-oswald text-sm sm:text-base font-semibold tabular-nums shrink-0">
+                    <div className="font-oswald text-sm sm:text-base font-semibold tabular-nums shrink-0 whitespace-nowrap">
                       ¥{rig.line?.price.toLocaleString()}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 pt-1 pb-2">
+                  <div className="grid grid-cols-3 gap-2.5 pt-1">
                     {LINE_CATALOG.map((lineItem) => {
                       const isSelected = rig.line?.id === lineItem.id;
                       const isCompat = checkPartCompatibility(lineItem, rig).compatible;
                       return (
-                        <div key={lineItem.id} className="relative flex flex-col items-center">
-                          <button
-                            type="button"
-                            onClick={() => handleEquipOption(lineItem)}
-                            aria-label={lineItem.shortName}
-                            className={`group relative w-14 h-14 rounded-full p-0.5 transition-all duration-200 ${
-                              isSelected
-                                ? 'ring-2 ring-[#171A20] ring-offset-2 ring-offset-[#F4F4F4] scale-105'
-                                : 'opacity-80 hover:opacity-100 hover:scale-105'
-                            }`}
-                          >
-                            <RigPartShowcase
-                              part={lineItem}
-                              isSelected={isSelected}
-                              size="swatch"
+                        <button
+                          key={lineItem.id}
+                          type="button"
+                          onClick={() => handleEquipOption(lineItem)}
+                          aria-label={lineItem.shortName}
+                          className={`group relative rounded-xl p-2 text-left transition-all flex flex-col justify-between ${
+                            isSelected
+                              ? 'bg-white ring-2 ring-[#171A20] shadow-sm'
+                              : 'bg-white/80 hover:bg-white border border-black/5'
+                          }`}
+                        >
+                          <div className="w-full h-18 rounded-lg bg-white flex items-center justify-center p-1 overflow-hidden">
+                            <img
+                              src={resolvePartStudioImage(lineItem)}
+                              alt={lineItem.shortName}
+                              style={{ filter: getPartStudioFilter(lineItem) }}
+                              className="w-full h-full object-contain mix-blend-multiply scale-105 group-hover:scale-110 transition-transform duration-300"
                             />
+                          </div>
+
+                          <div className="mt-1.5 text-center">
+                            <div className="font-oswald text-xs font-bold text-[#171A20] whitespace-nowrap">
+                              PE {lineItem.peNumber}号
+                            </div>
+                            <div className="text-[10px] text-[#5C5E62] whitespace-nowrap">
+                              {lineItem.strengthLb}lb・300m
+                            </div>
+                          </div>
+
+                          {!isCompat && (
                             <span
-                              className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full font-oswald text-[10px] font-bold shadow ${
-                                isSelected
-                                  ? 'bg-[#171A20] text-white'
-                                  : 'bg-white text-[#171A20] border border-black/15'
-                              }`}
+                              className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs"
+                              title="リール番手と容量が異なります"
                             >
-                              {lineItem.peNumber}号
+                              !
                             </span>
-                            {!isCompat && (
-                              <span
-                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center"
-                                title="リール番手と容量が異なります"
-                              >
-                                !
-                              </span>
-                            )}
-                          </button>
-                        </div>
+                          )}
+                        </button>
                       );
                     })}
                   </div>
@@ -862,60 +875,68 @@ export const TackleBuilder: React.FC = () => {
 
                 <div className="h-[1px] w-full bg-black/10" />
 
-                {/* -------- 5-B. オフショアルアー（丸型スウォッチ選択） -------- */}
+                {/* -------- 5-B. オフショアルアー（2×2 ワイドスタジオカード選択 — プラグ全体像を鮮明表示） -------- */}
                 <div className="space-y-3">
                   <div className="flex items-baseline justify-between gap-2">
-                    <div>
-                      <div className="text-sm font-medium">{rig.lure?.shortName}</div>
-                      <div className="text-[11px] mt-0.5 text-[#5C5E62]">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-[#171A20] truncate">
+                        {rig.lure?.shortName}
+                      </div>
+                      <div className="text-[11px] mt-0.5 text-[#5C5E62] truncate">
                         実戦総重量 {rig.lure?.totalWeightG}g ({rig.lure?.hookSpec})
                       </div>
                     </div>
-                    <div className="font-oswald text-sm sm:text-base font-semibold tabular-nums shrink-0">
+                    <div className="font-oswald text-sm sm:text-base font-semibold tabular-nums shrink-0 whitespace-nowrap">
                       ¥{rig.lure?.price.toLocaleString()}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-start gap-4 pt-1 pb-2">
+                  <div className="grid grid-cols-2 gap-2.5 pt-1">
                     {LURE_CATALOG.map((lureItem) => {
                       const isSelected = rig.lure?.id === lureItem.id;
                       const isCompat = checkPartCompatibility(lureItem, rig).compatible;
+                      const cleanModelLabel = lureItem.shortName.split(' (')[0];
                       return (
-                        <div key={lureItem.id} className="relative flex flex-col items-center">
-                          <button
-                            type="button"
-                            onClick={() => handleEquipOption(lureItem)}
-                            aria-label={lureItem.shortName}
-                            className={`group relative w-14 h-14 rounded-full p-0.5 transition-all duration-200 ${
-                              isSelected
-                                ? 'ring-2 ring-[#171A20] ring-offset-2 ring-offset-[#F4F4F4] scale-105'
-                                : 'opacity-80 hover:opacity-100 hover:scale-105'
-                            }`}
-                          >
-                            <RigPartShowcase
-                              part={lureItem}
-                              isSelected={isSelected}
-                              size="swatch"
-                            />
-                            <span
-                              className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full font-oswald text-[10px] font-bold shadow ${
-                                isSelected
-                                  ? 'bg-[#171A20] text-white'
-                                  : 'bg-white text-[#171A20] border border-black/15'
-                              }`}
-                            >
-                              {Math.round(lureItem.totalWeightG)}g
-                            </span>
-                            {!isCompat && (
-                              <span
-                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center"
-                                title="ロッドのルアー重量上限を超過しています"
-                              >
-                                !
+                        <button
+                          key={lureItem.id}
+                          type="button"
+                          onClick={() => handleEquipOption(lureItem)}
+                          aria-label={lureItem.shortName}
+                          className={`group relative rounded-xl p-2.5 text-left transition-all flex flex-col justify-between ${
+                            isSelected
+                              ? 'bg-white ring-2 ring-[#171A20] shadow-sm'
+                              : 'bg-white/80 hover:bg-white border border-black/5'
+                          }`}
+                        >
+                          <RigPartShowcase
+                            part={lureItem}
+                            isSelected={isSelected}
+                            size="wide"
+                          />
+
+                          <div className="mt-2 space-y-0.5">
+                            <div className="text-[11px] sm:text-xs font-semibold text-[#171A20] truncate">
+                              {cleanModelLabel}
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-[#5C5E62]">
+                              <span className="font-oswald font-bold text-[#171A20] whitespace-nowrap">
+                                針込 {lureItem.totalWeightG}g
                               </span>
-                            )}
-                          </button>
-                        </div>
+                              <span className="font-oswald whitespace-nowrap">
+                                ¥{lureItem.price.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {!isCompat && (
+                            <span
+                              className="absolute top-2 right-2 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center z-20 shadow-xs"
+                              title="ロッドのルアー重量上限を超過しています"
+                            >
+                              !
+                            </span>
+                          )}
+                        </button>
                       );
                     })}
                   </div>
@@ -1380,12 +1401,30 @@ export const TackleBuilder: React.FC = () => {
               </button>
             </div>
 
-            <div className="h-56 sm:h-64 rounded-2xl bg-[#FAFAFA] flex items-center justify-center p-6">
-              <img
-                src={featureHighlights[featureModalIndex].image}
-                alt={featureHighlights[featureModalIndex].title}
-                className="w-full h-full object-contain mix-blend-multiply"
-              />
+            <div className="h-56 sm:h-64 rounded-2xl bg-white border border-black/8 flex items-center justify-center p-5 overflow-hidden">
+              <div
+                style={
+                  featureHighlights[featureModalIndex].category === 'rod'
+                    ? ROD_OPEN_STAGE_MASK_STYLE
+                    : undefined
+                }
+                className="w-full h-full flex items-center justify-center"
+              >
+                <img
+                  src={featureHighlights[featureModalIndex].image}
+                  alt={featureHighlights[featureModalIndex].title}
+                  style={{
+                    filter: getPartStudioFilter(
+                      featureHighlights[featureModalIndex].category
+                    ),
+                  }}
+                  className={`w-full h-full mix-blend-multiply ${
+                    featureHighlights[featureModalIndex].category === 'lure'
+                      ? 'object-cover object-[50%_52%] max-w-[420px]'
+                      : 'object-contain scale-105'
+                  }`}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
