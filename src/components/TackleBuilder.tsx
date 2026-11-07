@@ -51,6 +51,11 @@ import {
   TeslaHeroConfiguratorStage,
 } from './RigPartShowcase';
 import { SpecCheckoutView } from './SpecCheckoutView';
+import {
+  DesktopStageRadarDeck,
+  MobileStickyStageRadarBar,
+  TacklePentagonRadar,
+} from './TackleRadarChart';
 
 export type {
   PartCategory,
@@ -99,6 +104,9 @@ export const TackleBuilder: React.FC = () => {
 
   // メインフォトステージのカルーセルスライド番号 (0: ロッド×リール統合, 1: リール単体, 2: ロッド単体, 3: ライン&ルアー, 4: ターゲット魚)
   const [activeSlide, setActiveSlide] = useState<number>(0);
+
+  // PCで右カラムの道具カードにマウスホバーした際の先行レーダー比較プレビュー用ステート
+  const [hoveredPart, setHoveredPart] = useState<AnyRigPart | null>(null);
 
   // Tesla風「機能を表示する (コールアウト [＋])」モーダル
   const [featureModalIndex, setFeatureModalIndex] = useState<number | null>(null);
@@ -187,6 +195,7 @@ export const TackleBuilder: React.FC = () => {
   const handleSelectTarget = (targetId: TargetId) => {
     const presetRig = getPresetRigState(targetId);
     setActiveSlide(0);
+    setHoveredPart(null);
 
     navigateTo(
       {
@@ -207,6 +216,7 @@ export const TackleBuilder: React.FC = () => {
       ...route,
       activeStep: part.category,
     };
+    setHoveredPart(null);
     setRig(nextRig);
     setRoute(nextRoute);
     if (typeof preferredSlide === 'number') {
@@ -246,12 +256,14 @@ export const TackleBuilder: React.FC = () => {
       line: matchedLine,
       lure: matchedLure,
     };
+    setHoveredPart(null);
     setRig(nextRig);
     syncUrlInPlace(route, nextRig);
   };
 
   const handleResetToRecommended = () => {
     const presetRig = getPresetRigState(route.targetId);
+    setHoveredPart(null);
     setRig(presetRig);
     setActiveSlide(0);
     syncUrlInPlace(route, presetRig);
@@ -390,7 +402,7 @@ export const TackleBuilder: React.FC = () => {
           ・左：R I G s ワイドレタースペーシングロゴ（クリックでホームへ）
           ・右：ビルダー/仕様書時は「構成URLをコピー」＋「メニュー」、ホーム時は「メニュー」
          ===================================================================== */}
-      <header className="sticky top-0 z-30 shrink-0 bg-white/95 backdrop-blur-md border-b border-black/5 px-4 sm:px-8 lg:px-12 py-3.5">
+      <header className="sticky top-0 z-40 shrink-0 bg-white/95 backdrop-blur-md border-b border-black/5 px-4 sm:px-8 lg:px-12 py-3.5">
         <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-2 sm:gap-4">
           {/* 左：ワイドレタースペーシング ブランドロゴ（折返し防止） */}
           <button
@@ -463,20 +475,41 @@ export const TackleBuilder: React.FC = () => {
                 最下部: 標準パッケージ枠 ＋ 「お客様のModel PE6」＋ 黒太枠「Amazonで注文する」
            ================================================================= */}
         {route.view === 'garage' && (
-          <div className="max-w-[1680px] w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 items-start">
-            {/* -----------------------------------------------------------------
-                左ペイン (PC: 8 cols Sticky / モバイル: 上部固定フォトステージ)
-               ----------------------------------------------------------------- */}
-            <div className="lg:col-span-8 lg:sticky lg:top-[57px] lg:h-[calc(100dvh-137px)] w-full flex flex-col justify-between z-20 bg-white border-b lg:border-b-0 border-black/5">
-              <TeslaHeroConfiguratorStage
-                rig={rig}
-                target={targetProfile}
-                activeSlide={activeSlide}
-                onChangeSlide={(idx) => setActiveSlide(idx)}
-                onOpenFeatureModal={(featIdx) => setFeatureModalIndex(featIdx ?? 0)}
-                isAllCompatible={isAllSelectedCompatible}
-              />
-            </div>
+          <div className="w-full flex-1 flex flex-col">
+            {/* モバイル・タブレット縦 (lg未満) 専用：上部Sticky固定「ミニ写真 ＋ ミニ5軸レーダー」スリムバー */}
+            <MobileStickyStageRadarBar
+              rig={rig}
+              target={targetProfile}
+              activeSlide={activeSlide}
+              onChangeSlide={(idx) => setActiveSlide(idx)}
+              onOpenFeatureModal={(featIdx) => setFeatureModalIndex(featIdx ?? 0)}
+              onResetToRecommended={handleResetToRecommended}
+            />
+
+            <div className="max-w-[1680px] w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 items-start">
+              {/* -----------------------------------------------------------------
+                  左ペイン (PC専用: 8 cols Sticky固定 — 上段スタジオ写真 ＋ 下段推奨比較レーダーデッキ)
+                 ----------------------------------------------------------------- */}
+              <div className="hidden lg:flex lg:col-span-8 lg:sticky lg:top-[57px] lg:h-[calc(100dvh-132px)] lg:min-h-[540px] w-full flex-col justify-between z-20 bg-white overflow-hidden">
+                <div className="flex-1 min-h-0 w-full">
+                  <TeslaHeroConfiguratorStage
+                    rig={rig}
+                    target={targetProfile}
+                    activeSlide={activeSlide}
+                    onChangeSlide={(idx) => setActiveSlide(idx)}
+                    onOpenFeatureModal={(featIdx) => setFeatureModalIndex(featIdx ?? 0)}
+                    isAllCompatible={isAllSelectedCompatible}
+                  />
+                </div>
+                <div className="shrink-0 w-full">
+                  <DesktopStageRadarDeck
+                    rig={rig}
+                    previewPart={hoveredPart}
+                    target={targetProfile}
+                    onResetToRecommended={handleResetToRecommended}
+                  />
+                </div>
+              </div>
 
             {/* -----------------------------------------------------------------
                 右ペイン (PC: 4 cols 縦スクロール / モバイル: 下部ストリーム)
@@ -571,12 +604,12 @@ export const TackleBuilder: React.FC = () => {
                 )}
               </div>
 
-              {/* モバイル専用：「各パーツのスペック・適合詳細を見る ＞」枠ボックス */}
-              <div className="sm:hidden rounded-xl border-2 border-[#171A20] bg-white p-2.5">
+              {/* モバイル専用：「各パーツのスペック・適合詳細を見る ＞」ボタン */}
+              <div className="sm:hidden rounded-2xl bg-[#F4F4F4] p-3">
                 <button
                   type="button"
                   onClick={() => setFeatureModalIndex(0)}
-                  className="w-full rounded-lg px-4 py-3 flex items-center justify-between text-sm font-medium bg-[#F4F4F4] text-[#171A20] hover:bg-[#E8E8EA] transition-colors"
+                  className="w-full rounded-lg px-4 py-3.5 flex items-center justify-between text-xs font-medium bg-white text-[#171A20] hover:bg-[#FAFAFA] shadow-sm transition-colors"
                 >
                   <span>各パーツのスペック・適合詳細を見る</span>
                   <ChevronRight className="w-4 h-4" />
@@ -628,6 +661,8 @@ export const TackleBuilder: React.FC = () => {
                       <button
                         key={reelItem.id}
                         type="button"
+                        onMouseEnter={() => setHoveredPart(reelItem)}
+                        onMouseLeave={() => setHoveredPart(null)}
                         onClick={() =>
                           handleEquipOption(
                             reelItem,
@@ -728,6 +763,8 @@ export const TackleBuilder: React.FC = () => {
                       <button
                         key={rodItem.id}
                         type="button"
+                        onMouseEnter={() => setHoveredPart(rodItem)}
+                        onMouseLeave={() => setHoveredPart(null)}
                         onClick={() =>
                           handleEquipOption(
                             rodItem,
@@ -833,6 +870,8 @@ export const TackleBuilder: React.FC = () => {
                         <button
                           key={lineItem.id}
                           type="button"
+                          onMouseEnter={() => setHoveredPart(lineItem)}
+                          onMouseLeave={() => setHoveredPart(null)}
                           onClick={() => handleEquipOption(lineItem)}
                           aria-label={lineItem.shortName}
                           className={`group relative rounded-xl p-2 text-left transition-all flex flex-col justify-between ${
@@ -900,6 +939,8 @@ export const TackleBuilder: React.FC = () => {
                         <button
                           key={lureItem.id}
                           type="button"
+                          onMouseEnter={() => setHoveredPart(lureItem)}
+                          onMouseLeave={() => setHoveredPart(null)}
                           onClick={() => handleEquipOption(lureItem)}
                           aria-label={lureItem.shortName}
                           className={`group relative rounded-xl p-2.5 text-left transition-all flex flex-col justify-between ${
@@ -1105,6 +1146,7 @@ export const TackleBuilder: React.FC = () => {
                   </div>
                 </div>
               </section>
+              </div>
             </div>
           </div>
         )}
@@ -1408,7 +1450,11 @@ export const TackleBuilder: React.FC = () => {
                     ? ROD_OPEN_STAGE_MASK_STYLE
                     : undefined
                 }
-                className="w-full h-full flex items-center justify-center"
+                className={`h-full flex items-center justify-center ${
+                  featureHighlights[featureModalIndex].category === 'rod'
+                    ? 'aspect-square max-w-full'
+                    : 'w-full'
+                }`}
               >
                 <img
                   src={featureHighlights[featureModalIndex].image}
@@ -1421,6 +1467,8 @@ export const TackleBuilder: React.FC = () => {
                   className={`w-full h-full mix-blend-multiply ${
                     featureHighlights[featureModalIndex].category === 'lure'
                       ? 'object-cover object-[50%_52%] max-w-[420px]'
+                      : featureHighlights[featureModalIndex].category === 'rod'
+                      ? 'object-contain'
                       : 'object-contain scale-105'
                   }`}
                 />
@@ -1580,23 +1628,72 @@ export const TackleBuilder: React.FC = () => {
             <div className="space-y-3">
               <h4 className="text-sm font-bold flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-[#3E6AE1]" />
-                <span>対「{targetProfile.fishName}」5項目トータルバランス</span>
+                <span>対「{targetProfile.fishName}」5項目トータルバランス（推奨比較）</span>
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
-                {combatStats.map((stat) => (
-                  <div key={stat.id} className="rounded-xl bg-[#F4F4F4] p-3 text-center">
-                    <div className="text-[10px] font-oswald text-[#5C5E62]">
-                      {stat.label}
-                    </div>
-                    <div className="font-oswald text-xl font-bold text-[#171A20] my-0.5">
-                      {stat.score}
-                      <span className="text-xs font-normal text-[#5C5E62]">/100</span>
-                    </div>
-                    <div className="text-[10px] text-[#5C5E62] truncate">
-                      {stat.subLabel}
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center rounded-2xl bg-[#F4F4F4] p-4">
+                <div className="md:col-span-5 flex flex-col items-center">
+                  <div className="w-full max-w-[260px]">
+                    <TacklePentagonRadar
+                      stats={combatStats}
+                      isCompatible={isAllSelectedCompatible}
+                      variant="desktop"
+                    />
                   </div>
-                ))}
+                  <div className="flex items-center justify-center gap-4 text-[11px] text-[#5C5E62] mt-1">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-3.5 h-0 border-t-2 border-dashed border-[#8E8E93] inline-block" />
+                      <span>推奨構成</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 font-semibold text-[#171A20]">
+                      <span
+                        className={`w-2.5 h-2.5 rounded-sm inline-block ${
+                          isAllSelectedCompatible ? 'bg-[#3E6AE1]' : 'bg-amber-600'
+                        }`}
+                      />
+                      <span>現在構成</span>
+                    </span>
+                  </div>
+                </div>
+                <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-5 md:grid-cols-1 gap-2">
+                  {combatStats.map((stat) => {
+                    const diff = stat.score - stat.baseScore;
+                    const diffLabel = diff > 0 ? `+${diff}` : diff === 0 ? '±0' : `${diff}`;
+                    return (
+                      <div
+                        key={stat.id}
+                        className="rounded-xl bg-white px-3.5 py-2.5 flex items-center justify-between gap-2 border border-black/5"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-[#171A20]">
+                            {stat.shortJpLabel}
+                            <span className="text-[10px] font-oswald font-normal text-[#5C5E62] ml-1.5">
+                              {stat.label}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-[#5C5E62] truncate">
+                            {stat.metricText}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 tabular-nums">
+                          <span className="font-oswald text-lg font-bold text-[#171A20]">
+                            {stat.score}
+                          </span>
+                          <span
+                            className={`font-oswald text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                              diff > 0
+                                ? 'bg-blue-50 text-blue-700'
+                                : diff < 0
+                                ? 'bg-rose-50 text-rose-700'
+                                : 'bg-[#F4F4F4] text-[#5C5E62]'
+                            }`}
+                          >
+                            {diffLabel}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 

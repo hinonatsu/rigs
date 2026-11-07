@@ -31,6 +31,7 @@ import {
 } from '../data/rigCatalog';
 import { buildShareableSpecUrl } from '../lib/urlRouter';
 import { getFishFocalPosition, RigPartShowcase } from './RigPartShowcase';
+import { TacklePentagonRadar } from './TackleRadarChart';
 
 interface SpecCheckoutViewProps {
   target: TargetFishProfile;
@@ -55,7 +56,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
 }) => {
   const [urlCopied, setUrlCopied] = useState(false);
   const [textCopied, setTextCopied] = useState(false);
-  const [showCombatDetails, setShowCombatDetails] = useState(false);
+  const [showCombatDetails, setShowCombatDetails] = useState(true);
   const [expandedCardCat, setExpandedCardCat] = useState<PartCategory | null>(null);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [checkedOutSlots, setCheckedOutSlots] = useState<Record<string, boolean>>({});
@@ -91,7 +92,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
   return (
     <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 py-2 items-start text-[#171A20]">
       {/* ==================== 左カラム (5 cols): 注文サマリー・トラスト保証・Primary CTA ==================== */}
-      <div className="lg:col-span-5 lg:sticky lg:top-20 flex flex-col justify-between rounded-2xl bg-[#F4F4F4] p-6 sm:p-8 space-y-6">
+      <div className="lg:col-span-5 lg:sticky lg:top-20 flex flex-col justify-between rounded-2xl bg-[#F4F4F4] p-4 sm:p-8 space-y-6">
         <div className="space-y-6">
           {/* ヘッダー */}
           <div className="flex items-center justify-between gap-4 border-b border-black/10 pb-4">
@@ -153,22 +154,22 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
               </div>
             </div>
 
-            <div className="p-4 grid grid-cols-3 gap-2.5 text-center bg-white">
-              <div className="bg-[#F4F4F4] rounded-xl p-3">
+            <div className="p-3 sm:p-4 grid grid-cols-3 gap-2 sm:gap-2.5 text-center bg-white">
+              <div className="bg-[#F4F4F4] rounded-xl px-1.5 py-2.5 sm:p-3">
                 <div className="text-[10px] text-[#5C5E62] whitespace-nowrap">推奨初期ドラグ</div>
-                <div className="font-oswald text-sm sm:text-base font-bold text-[#3E6AE1] tabular-nums mt-0.5 whitespace-nowrap">
+                <div className="font-oswald text-[13px] sm:text-base font-bold text-[#3E6AE1] tabular-nums mt-0.5 whitespace-nowrap">
                   {recommendedDragText}
                 </div>
               </div>
-              <div className="bg-[#F4F4F4] rounded-xl p-3">
+              <div className="bg-[#F4F4F4] rounded-xl px-1.5 py-2.5 sm:p-3">
                 <div className="text-[10px] text-[#5C5E62] whitespace-nowrap">装備総重量</div>
-                <div className="font-oswald text-sm sm:text-base font-bold text-[#171A20] tabular-nums mt-0.5 whitespace-nowrap">
+                <div className="font-oswald text-[13px] sm:text-base font-bold text-[#171A20] tabular-nums mt-0.5 whitespace-nowrap">
                   {totalWeightG}g
                 </div>
               </div>
-              <div className="bg-[#F4F4F4] rounded-xl p-3">
+              <div className="bg-[#F4F4F4] rounded-xl px-1.5 py-2.5 sm:p-3">
                 <div className="text-[10px] text-[#5C5E62] whitespace-nowrap">針込ルアー重量</div>
-                <div className="font-oswald text-sm sm:text-base font-bold text-[#171A20] tabular-nums mt-0.5 whitespace-nowrap">
+                <div className="font-oswald text-[13px] sm:text-base font-bold text-[#171A20] tabular-nums mt-0.5 whitespace-nowrap">
                   {rig.lure?.totalWeightG ?? 0}g
                 </div>
               </div>
@@ -252,6 +253,29 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
 
             {showCombatDetails && (
               <div className="mt-4 pt-4 border-t border-black/10 space-y-3">
+                <div className="rounded-xl bg-[#F4F4F4] p-3 flex flex-col items-center">
+                  <div className="w-full max-w-[248px]">
+                    <TacklePentagonRadar
+                      stats={combatStats}
+                      isCompatible={isAllSelectedCompatible}
+                      variant="desktop"
+                    />
+                  </div>
+                  <div className="flex items-center justify-center gap-4 text-[11px] text-[#5C5E62] mt-1">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-3.5 h-0 border-t-2 border-dashed border-[#8E8E93] inline-block" />
+                      <span>推奨構成</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 font-semibold text-[#171A20]">
+                      <span
+                        className={`w-2.5 h-2.5 rounded-sm inline-block ${
+                          isAllSelectedCompatible ? 'bg-[#3E6AE1]' : 'bg-amber-600'
+                        }`}
+                      />
+                      <span>現在構成</span>
+                    </span>
+                  </div>
+                </div>
                 {combatStats.map((stat) => {
                   const diff = stat.score - stat.baseScore;
                   return (
@@ -331,7 +355,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
       </div>
 
       {/* ==================== 右カラム (7 cols): 決定した4点装備リスト（白スタジオカード） ==================== */}
-      <div className="lg:col-span-7 flex flex-col justify-between rounded-2xl bg-[#F4F4F4] p-6 sm:p-8 space-y-6">
+      <div className="lg:col-span-7 flex flex-col justify-between rounded-2xl bg-[#F4F4F4] p-4 sm:p-8 space-y-6">
         <div className="flex items-center justify-between gap-4 border-b border-black/10 pb-4">
           <div className="space-y-1">
             <span className="text-[11px] font-oswald font-bold tracking-[0.2em] text-[#3E6AE1] block uppercase">
@@ -370,12 +394,12 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             return (
               <div
                 key={cat}
-                className={`group rounded-2xl bg-white border p-5 sm:p-6 transition-all shadow-sm ${
+                className={`group rounded-2xl bg-white border p-4 sm:p-6 transition-all shadow-sm ${
                   compatible ? 'border-black/5 hover:border-black/20' : 'border-amber-400'
                 }`}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                  <div className="flex items-center gap-4 sm:gap-5 min-w-0 flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-5">
+                  <div className="flex items-center gap-3.5 sm:gap-5 min-w-0 flex-1">
                     <RigPartShowcase part={item} isSelected={compatible} size="checkout" />
 
                     <div className="min-w-0 flex-1 space-y-1.5">
@@ -398,7 +422,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                         onClick={() =>
                           setExpandedCardCat((prev) => (prev === cat ? null : cat))
                         }
-                        className="text-[11px] font-medium text-[#3E6AE1] hover:underline inline-flex items-center gap-1"
+                        className="text-[11px] font-medium text-[#3E6AE1] hover:underline inline-flex items-center gap-1 text-left"
                       >
                         <span>
                           {isExpanded
@@ -406,7 +430,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                             : '＋ 物理適合データ・必須ペア金具を表示'}
                         </span>
                         <ChevronDown
-                          className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                          className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
                             isExpanded ? 'rotate-180' : ''
                           }`}
                         />
@@ -414,17 +438,17 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-3 shrink-0 border-t sm:border-t-0 border-black/5 pt-3 sm:pt-0">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 sm:gap-3 shrink-0 border-t sm:border-t-0 border-black/5 pt-3 sm:pt-0">
                     <button
                       type="button"
                       onClick={() => onBackToGarage(cat)}
-                      className="px-2.5 py-1 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-medium text-[#5C5E62] hover:text-[#171A20] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
+                      className="px-2.5 py-1 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[11px] sm:text-xs font-medium text-[#5C5E62] hover:text-[#171A20] transition-colors inline-flex items-center gap-1 whitespace-nowrap"
                     >
                       <Pencil className="w-3 h-3" />
                       <span>変更</span>
                     </button>
 
-                    <div className="font-oswald text-2xl font-bold text-[#171A20] tabular-nums leading-none whitespace-nowrap">
+                    <div className="font-oswald text-xl sm:text-2xl font-bold text-[#171A20] tabular-nums leading-none whitespace-nowrap">
                       ¥{item.price.toLocaleString()}
                     </div>
 
@@ -435,10 +459,10 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                       onClick={() =>
                         setCheckedOutSlots((prev) => ({ ...prev, [cat]: true }))
                       }
-                      className="px-4 py-2 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold tracking-wide transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                      className="px-3 sm:px-4 py-2 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold tracking-wide transition-colors flex items-center gap-1.5 whitespace-nowrap"
                     >
                       <span>Amazonで購入</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                     </a>
                   </div>
                 </div>

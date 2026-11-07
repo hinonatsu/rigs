@@ -1477,10 +1477,19 @@ export function comparePartAgainstRecommended(
 export interface CombatStatBar {
   id: string;
   label: string;
+  shortJpLabel: string;
   subLabel: string;
   score: number; // 0 - 100
   baseScore: number; // 推奨ベース時のスコア (0 - 100)
   metricText: string;
+}
+
+export interface RadarComparisonSummary {
+  isCustomized: boolean;
+  customizedCount: number;
+  isCompatible: boolean;
+  headline: string;
+  incompatReasons: string[];
 }
 
 export function calculateOverallCombatStats(
@@ -1492,43 +1501,100 @@ export function calculateOverallCombatStats(
   const calcScores = (r: RigState) => {
     const reelDrag = r.reel?.dragMaxKg ?? 25;
     const rodDrag = r.rod?.dragMaxKg ?? 11;
-    const lineKg = r.line?.strengthKg ?? 40;
+    const lineKg = r.line?.strengthKg ?? 40.8;
+    const peNum = r.line?.peNumber ?? 6;
+    const leaderLb = r.line?.pairedLeaderLb ?? 130;
+    const retrieveCm = r.reel?.retrieveCm ?? 134;
     const totalWt =
       (r.reel?.weightG ?? 675) +
-      (r.rod?.weightG ?? 350) +
-      Math.round(r.lure?.totalWeightG ?? 95);
+      (r.rod?.weightG ?? 346) +
+      Math.round(r.lure?.totalWeightG ?? 97);
     const rodLenIn = r.rod?.lengthInches ?? 98;
-    const lureWt = r.lure?.totalWeightG ?? 96;
+    const lureWt = r.lure?.totalWeightG ?? 96.5;
+    const rodMin = r.rod?.lureMinG ?? 40;
     const rodMax = r.rod?.lureMaxG ?? 110;
 
     // 1. STOPPING POWER (制動力・根剥がし)
-    const stopping = clampPct(((rodDrag * 3.5 + reelDrag * 1.2 + lineKg * 0.5) / 115) * 100);
+    const isRigidBody = r.reel?.brand === 'シマノ' ? 2 : 0;
+    const isPowerGear = r.reel && r.reel.gearRatioNum <= 5.8 ? 2.5 : 0;
+    const stopping = clampPct(
+      14 + rodDrag * 2.2 + reelDrag * 0.7 + lineKg * 0.28 + isRigidBody + isPowerGear
+    );
 
     // 2. CASTING RANGE (遠投飛距離)
-    const lureOverPenalty = lureWt > rodMax ? -20 : 0;
+    const loadRatio = lureWt / rodMax;
+    const weightFitBonus =
+      lureWt > rodMax
+        ? -22
+        : lureWt < rodMin
+        ? -14
+        : loadRatio >= 0.65 && loadRatio <= 0.92
+        ? 5
+        : 1;
     const casting = clampPct(
-      ((rodLenIn - 92) * 3.5 + (lureWt / 145) * 45 + (12 - (r.line?.peNumber ?? 6)) * 3) +
-        lureOverPenalty
+      36 +
+        (rodLenIn - 96) * 4.2 +
+        (lureWt - 70) * 0.28 +
+        (11 - peNum) * 3.8 +
+        (retrieveCm - 125) * 0.35 +
+        weightFitBonus
     );
 
-    // 3. STAMINA / AGILITY (1日投げ続ける軽快さ)
-    const stamina = clampPct(100 - ((totalWt - 1050) / 550) * 45);
+    // 3. STAMINA & AGILITY (1日投げ続ける軽快さ)
+    const isLightMonocoque = r.reel?.id.includes('saltiga-14000') ? 2 : 0;
+    const lurePullResist = r.lure?.id.includes('bazoo')
+      ? -4
+      : r.lure?.id.includes('gamma')
+      ? 3
+      : 0;
+    const stamina = clampPct(
+      92 -
+        ((totalWt - 1080) / 400) * 44 -
+        (rodLenIn - 98) * 1.5 +
+        isLightMonocoque +
+        lurePullResist
+    );
 
     // 4. BITE & HOLD (喰わせ・バラシ耐性)
-    const isAtd = r.reel?.id.includes('saltiga') ? 8 : 0;
-    const isFinesseLure = r.lure?.id.includes('gamma') ? 8 : 0;
-    const isSoftTip = r.rod?.id.includes('aquila') ? 8 : 0;
-    const biteHold = clampPct(74 + isAtd + isFinesseLure + isSoftTip);
+    const reelBite = (r.reel?.id.includes('saltiga') ? 8 : 2) + (retrieveCm >= 134 ? 3 : 0);
+    const rodBite = r.rod?.id.includes('aquila')
+      ? 11
+      : r.rod?.id.includes('explosion')
+      ? 5
+      : r.rod?.id.includes('ultimo')
+      ? 2
+      : 0;
+    const lureBite = r.lure?.id.includes('gamma')
+      ? 13
+      : r.lure?.id.includes('ryan')
+      ? 7
+      : r.lure?.id.includes('bazoo')
+      ? 5
+      : 3;
+    const leaderSuppleness = peNum <= 6 ? 5 : peNum <= 8 ? 2 : 0;
+    const biteHold = clampPct(58 + reelBite + rodBite + lureBite + leaderSuppleness);
 
-    // 5. SAFETY MARGIN (大物急襲時の破断余裕度)
-    const allCompat = [r.reel, r.rod, r.line, r.lure]
-      .filter((x): x is AnyRigPart => x !== null)
-      .every((item) => checkPartCompatibility(item, r).compatible);
-    const safety = clampPct(
-      (allCompat ? 82 : 45) + ((r.line?.pairedLeaderLb ?? 130) - 120) * 0.16
+    // 5. SAFETY MARGIN (大物急襲時の破断余裕度・物理適合)
+    const activeParts = [r.reel, r.rod, r.line, r.lure].filter(
+      (x): x is AnyRigPart => x !== null
     );
+    const incompatCount = activeParts.filter(
+      (item) => !checkPartCompatibility(item, r).compatible
+    ).length;
+    const compatBase = incompatCount === 0 ? 68 : Math.max(24, 68 - incompatCount * 15);
+    const lineMargin = Math.min(
+      16,
+      Math.max(-6, (lineKg / target.initialRunLoadKg - 3.2) * 7.5)
+    );
+    const leaderHeatBonus =
+      (leaderLb - 130) * 0.08 + (r.line?.id.includes('six') ? 4 : 0);
+    const rodMargin = Math.min(
+      10,
+      Math.max(-6, (rodDrag - target.initialRunLoadKg) * 2.0)
+    );
+    const safety = clampPct(compatBase + lineMargin + leaderHeatBonus + rodMargin);
 
-    return { stopping, casting, stamina, biteHold, safety, rodDrag, totalWt, lineKg };
+    return { stopping, casting, stamina, biteHold, safety, totalWt };
   };
 
   const cur = calcScores(rig);
@@ -1538,6 +1604,7 @@ export function calculateOverallCombatStats(
     {
       id: 'stopping',
       label: 'STOPPING POWER',
+      shortJpLabel: '制動力',
       subLabel: '瀬際で魚を止める制動力',
       score: cur.stopping,
       baseScore: base.stopping,
@@ -1546,6 +1613,7 @@ export function calculateOverallCombatStats(
     {
       id: 'casting',
       label: 'CASTING RANGE',
+      shortJpLabel: '遠投性',
       subLabel: 'ナブラへ届かせる飛距離',
       score: cur.casting,
       baseScore: base.casting,
@@ -1554,6 +1622,7 @@ export function calculateOverallCombatStats(
     {
       id: 'stamina',
       label: 'STAMINA & AGILITY',
+      shortJpLabel: '軽快さ',
       subLabel: `1日${target.dailyCastCount}投の持久力・軽快さ`,
       score: cur.stamina,
       baseScore: base.stamina,
@@ -1562,6 +1631,7 @@ export function calculateOverallCombatStats(
     {
       id: 'bite',
       label: 'BITE & HOLD',
+      shortJpLabel: '喰わせ',
       subLabel: '見切らせない誘い＆バラシ耐性',
       score: cur.biteHold,
       baseScore: base.biteHold,
@@ -1570,12 +1640,91 @@ export function calculateOverallCombatStats(
     {
       id: 'safety',
       label: 'SAFETY MARGIN',
+      shortJpLabel: '安全余裕',
       subLabel: 'モンスター急襲時の破断余裕度',
       score: cur.safety,
       baseScore: base.safety,
       metricText: `直線 ${rig.line?.strengthLb ?? '-'}lb + ${rig.line?.pairedLeaderLb ?? '-'}lbリーダー`,
     },
   ];
+}
+
+export function buildRadarComparisonSummary(
+  rig: RigState,
+  target: TargetFishProfile,
+  stats: CombatStatBar[]
+): RadarComparisonSummary {
+  const baseRig = getPresetRigState(target.id);
+  const customizedCount = CATEGORY_ORDER.filter(
+    (cat) => rig[cat]?.id !== baseRig[cat]?.id
+  ).length;
+
+  const incompatReasons: string[] = [];
+  for (const cat of CATEGORY_ORDER) {
+    const part = rig[cat];
+    if (part) {
+      const check = checkPartCompatibility(part, rig);
+      if (!check.compatible && !incompatReasons.includes(check.reason)) {
+        incompatReasons.push(check.reason);
+      }
+    }
+  }
+  const isCompatible = incompatReasons.length === 0;
+
+  if (!isCompatible) {
+    return {
+      isCustomized: customizedCount > 0,
+      customizedCount,
+      isCompatible: false,
+      headline: `${incompatReasons[0]}。推奨構成に対して安全余裕・バランスが低下しています。`,
+      incompatReasons,
+    };
+  }
+
+  if (customizedCount === 0) {
+    return {
+      isCustomized: false,
+      customizedCount: 0,
+      isCompatible: true,
+      headline: `対「${target.fishName.split(' ')[0]}」の推奨ベース構成です。道具を選ぶとここからの変化がリアルタイムに表示されます。`,
+      incompatReasons: [],
+    };
+  }
+
+  const diffs = stats.map((s) => ({
+    label: s.shortJpLabel,
+    diff: s.score - s.baseScore,
+  }));
+  const ups = diffs.filter((d) => d.diff > 0).sort((a, b) => b.diff - a.diff);
+  const downs = diffs.filter((d) => d.diff < 0).sort((a, b) => a.diff - b.diff);
+
+  const upText =
+    ups.length > 0
+      ? `推奨比で「${ups[0].label} (+${ups[0].diff})」${
+          ups[1] ? `・「${ups[1].label} (+${ups[1].diff})」` : ''
+        }が向上`
+      : '';
+  const downText =
+    downs.length > 0
+      ? `トレードオフとして「${downs[0].label} (${downs[0].diff})」が変化`
+      : '弱点化なく強化';
+
+  const headline =
+    upText && downText
+      ? `${upText}し、${downText}しています。`
+      : upText
+      ? `${upText}しています。`
+      : downText
+      ? `${downText}しています。`
+      : '推奨構成と同等のバランスを維持しています。';
+
+  return {
+    isCustomized: true,
+    customizedCount,
+    isCompatible: true,
+    headline,
+    incompatReasons: [],
+  };
 }
 
 export function getNextUnselectedStep(

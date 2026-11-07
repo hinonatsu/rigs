@@ -421,7 +421,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                   {presetRig.reel && presetRig.rod && presetRig.lure && (
                     <div className="rounded-xl bg-[#F7F8F9] border border-black/[0.05] p-3 space-y-2.5">
                       <div className="grid grid-cols-3 gap-2">
-                        <div className="h-16 rounded-lg bg-white border border-black/[0.05] p-1.5 flex items-center justify-center overflow-hidden">
+                        <div className="h-[72px] rounded-lg bg-white border border-black/[0.05] p-1.5 flex items-center justify-center overflow-hidden">
                           <img
                             src={resolvePartStudioImage(presetRig.reel)}
                             alt={presetRig.reel.shortName}
@@ -429,15 +429,15 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                             className="w-full h-full object-contain mix-blend-multiply scale-105"
                           />
                         </div>
-                        <div className="h-16 rounded-lg bg-white border border-black/[0.05] pl-1.5 pr-0 py-1 flex items-center justify-center overflow-hidden">
+                        <div className="h-[72px] rounded-lg bg-white border border-black/[0.05] pl-1 pr-0 flex items-center justify-center overflow-hidden">
                           <img
                             src={resolvePartStudioImage(presetRig.rod)}
                             alt={presetRig.rod.shortName}
                             style={{ filter: getPartStudioFilter(presetRig.rod) }}
-                            className="w-full h-full object-contain object-right mix-blend-multiply scale-110 translate-x-[2%]"
+                            className="w-full h-full object-cover object-[50%_47%] mix-blend-multiply"
                           />
                         </div>
-                        <div className="h-16 rounded-lg bg-white border border-black/[0.05] px-1 flex items-center justify-center overflow-hidden">
+                        <div className="h-[72px] rounded-lg bg-white border border-black/[0.05] px-1 flex items-center justify-center overflow-hidden">
                           <img
                             src={resolvePartStudioImage(presetRig.lure)}
                             alt={presetRig.lure.shortName}

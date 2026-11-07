@@ -61,12 +61,13 @@ export function getPartStudioFilter(partOrCategory: AnyRigPart | AnyRigPart['cat
 }
 
 /**
- * ロッド画像（右端 x=1.00 でブランクスが切れているスタジオ素材）をオープンステージ上で
- * 自然にフェードさせ、空中で垂直にスパッと切れて見える現象を防ぐマスクスタイル
+ * ロッド画像（1200x1200 = 1:1、右端 x=1.00 で下部ブランクスと床影が切れているスタジオ素材）を
+ * 1:1 コンテナ上で x=85%→99.5% にて滑らかにフェードさせ、ガイドリング（x≤84.2%）を一切薄くせずに
+ * 右端の垂直な切断線だけを純白背景へ自然に溶け込ませるマスクスタイル
  */
 export const ROD_OPEN_STAGE_MASK_STYLE: React.CSSProperties = {
-  WebkitMaskImage: 'linear-gradient(to right, #000 0%, #000 82%, transparent 99.5%)',
-  maskImage: 'linear-gradient(to right, #000 0%, #000 82%, transparent 99.5%)',
+  WebkitMaskImage: 'linear-gradient(to right, #000 0%, #000 85%, rgba(0, 0, 0, 0) 99.5%)',
+  maskImage: 'linear-gradient(to right, #000 0%, #000 85%, rgba(0, 0, 0, 0) 99.5%)',
 };
 
 /**
@@ -122,7 +123,6 @@ export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
         <img
           src={imgSrc}
           alt={part.shortName}
-          loading="lazy"
           onError={() => {
             if (!useFallback) setUseFallback(true);
           }}
@@ -144,7 +144,6 @@ export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
         <img
           src={imgSrc}
           alt={part.name}
-          loading="lazy"
           onError={() => {
             if (!useFallback) setUseFallback(true);
           }}
@@ -193,7 +192,6 @@ export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
       <img
         src={imgSrc}
         alt={part.name}
-        loading="lazy"
         onError={() => {
           if (!useFallback) setUseFallback(true);
         }}
@@ -282,15 +280,15 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between select-none bg-white text-[#171A20]">
+    <div className="relative w-full h-full min-h-0 flex flex-col justify-between select-none bg-white text-[#171A20]">
       {/* 上部ステータスラベル＆スライド切替タブ（モバイル・PC両対応） */}
-      <div className="flex items-center justify-between gap-2 px-3 sm:px-6 pt-3 sm:pt-4 z-20">
+      <div className="flex items-center justify-between gap-2 px-3 sm:px-6 pt-2.5 sm:pt-3 z-20 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <span className="hidden md:inline-block text-[11px] font-medium tracking-wider uppercase px-3 py-1 rounded-full bg-[#F4F4F4] text-[#5C5E62] truncate">
             {slideLabels[activeSlide]}
           </span>
           <span
-            className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 ${
+            className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold px-2 sm:px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 ${
               isAllCompatible
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                 : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -298,12 +296,12 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
           >
             {isAllCompatible ? (
               <>
-                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <ShieldCheck className="w-3 sm:w-3.5 h-3 sm:h-3.5 shrink-0" />
                 <span>物理バランス100%適合</span>
               </>
             ) : (
               <>
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <AlertTriangle className="w-3 sm:w-3.5 h-3 sm:h-3.5 shrink-0" />
                 <span>番手バランス要確認</span>
               </>
             )}
@@ -311,13 +309,13 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
         </div>
 
         {/* スライドクイックピル */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
           {(['SET', 'REEL', 'ROD', 'RIG', 'FISH'] as const).map((tab, idx) => (
             <button
               key={tab}
               type="button"
               onClick={() => onChangeSlide(idx)}
-              className={`px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-[11px] font-oswald tracking-wider transition-all whitespace-nowrap ${
+              className={`px-1.5 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-[11px] font-oswald tracking-wider transition-all whitespace-nowrap ${
                 activeSlide === idx
                   ? 'bg-[#171A20] text-white font-semibold'
                   : 'text-[#5C5E62] hover:bg-[#F4F4F4]'
@@ -330,15 +328,15 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
       </div>
 
       {/* =================================================================
-          中央：純白スタジオ・フォトキャンバス（グレー枠ゼロ・高迫力スケール）
+          中央：純白スタジオ・フォトキャンバス（下段レーダーデッキと共存する可変スケール）
          ================================================================= */}
-      <div className="relative flex-1 min-h-[260px] sm:min-h-[430px] lg:min-h-[500px] w-full flex items-center justify-center px-3 sm:px-8 py-2 overflow-hidden">
-        <div className="relative w-full max-w-[960px] h-full min-h-[245px] sm:min-h-[400px] lg:min-h-[470px] rounded-3xl flex items-center justify-center bg-white">
+      <div className="relative flex-1 min-h-[190px] w-full flex items-center justify-center px-3 sm:px-8 py-1 overflow-hidden">
+        <div className="relative w-full max-w-[960px] h-full min-h-0 rounded-3xl flex items-center justify-center bg-white">
           {/* ---------------- SLIDE 0: ロッド × リール 統合スタジオビュー ---------------- */}
           {activeSlide === 0 && (
-            <div className="relative w-full h-full flex items-center justify-center py-4 sm:py-8">
+            <div className="relative w-full h-full min-h-0 flex items-center justify-center py-2 sm:py-3">
               {/* コールアウト1（左上：ロッド特性） */}
-              <div className="hidden sm:flex flex-col items-start absolute top-3 lg:top-5 left-[5%] lg:left-[7%] z-30">
+              <div className="hidden sm:flex flex-col items-start absolute top-1.5 xl:top-3 left-[4%] lg:left-[6%] z-30">
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(0)}
@@ -351,14 +349,14 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                   </span>
                 </button>
-                <div className="flex flex-col items-center ml-3 mt-1">
-                  <div className="w-[1px] h-10 lg:h-14 bg-[#C4C6C8]" />
+                <div className="flex flex-col items-center ml-3 mt-0.5">
+                  <div className="w-[1px] h-6 xl:h-10 bg-[#C4C6C8]" />
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
                 </div>
               </div>
 
               {/* コールアウト2（右上：リール最大ドラグ＆機構） */}
-              <div className="hidden sm:flex flex-col items-end absolute top-3 lg:top-5 right-[5%] lg:right-[7%] z-30">
+              <div className="hidden sm:flex flex-col items-end absolute top-1.5 xl:top-3 right-[4%] lg:right-[6%] z-30">
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(1)}
@@ -371,35 +369,39 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                   </span>
                 </button>
-                <div className="flex flex-col items-center mr-8 mt-1">
-                  <div className="w-[1px] h-8 lg:h-12 bg-[#C4C6C8]" />
+                <div className="flex flex-col items-center mr-8 mt-0.5">
+                  <div className="w-[1px] h-5 xl:h-9 bg-[#C4C6C8]" />
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
                 </div>
               </div>
 
               {/* メイン・デュアルフォトコンポジット（左〜中央：ロッド、中央〜右：大型リール） */}
-              <div className="relative z-10 w-full max-w-[880px] h-[230px] sm:h-[360px] lg:h-[420px] flex items-center justify-center">
+              <div className="relative z-10 w-full max-w-[840px] h-full max-h-[380px] min-h-0 flex items-center justify-center">
                 <div
                   onClick={() => onChangeSlide(2)}
                   title="クリックしてロッド単体を拡大"
-                  style={ROD_OPEN_STAGE_MASK_STYLE}
-                  className="w-[58%] sm:w-[60%] h-full flex items-center justify-center cursor-pointer group -mr-6 sm:-mr-12 lg:-mr-16 z-10"
+                  className="w-[56%] sm:w-[58%] h-full flex items-center justify-center cursor-pointer group -mr-4 sm:-mr-10 lg:-mr-14 z-10"
                 >
-                  <img
-                    src={resolvePartStudioImage(rod, rodFallback)}
-                    alt={rod.name}
-                    onError={() => {
-                      if (!rodFallback) setRodFallback(true);
-                    }}
-                    style={{ filter: getPartStudioFilter(rod) }}
-                    className="w-full h-full object-contain mix-blend-multiply scale-[1.06] transition-transform duration-500 group-hover:scale-[1.11]"
-                  />
+                  <div
+                    style={ROD_OPEN_STAGE_MASK_STYLE}
+                    className="aspect-square h-full max-w-full flex items-center justify-center transition-transform duration-500 group-hover:scale-105"
+                  >
+                    <img
+                      src={resolvePartStudioImage(rod, rodFallback)}
+                      alt={rod.name}
+                      onError={() => {
+                        if (!rodFallback) setRodFallback(true);
+                      }}
+                      style={{ filter: getPartStudioFilter(rod) }}
+                      className="w-full h-full object-contain mix-blend-multiply"
+                    />
+                  </div>
                 </div>
 
                 <div
                   onClick={() => onChangeSlide(1)}
                   title="クリックしてリール単体を拡大"
-                  className="w-[52%] sm:w-[50%] h-[94%] flex items-center justify-center cursor-pointer group z-20"
+                  className="w-[52%] sm:w-[50%] h-[92%] flex items-center justify-center cursor-pointer group z-20"
                 >
                   <img
                     src={resolvePartStudioImage(reel, reelFallback)}
@@ -408,16 +410,16 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                       if (!reelFallback) setReelFallback(true);
                     }}
                     style={{ filter: getPartStudioFilter(reel) }}
-                    className="w-full h-full object-contain mix-blend-multiply scale-[1.06] transition-transform duration-500 group-hover:scale-[1.11]"
+                    className="w-full h-full object-contain mix-blend-multiply scale-[1.04] transition-transform duration-500 group-hover:scale-[1.09]"
                   />
                 </div>
               </div>
 
               {/* コールアウト3（左下：適合ルアー＆ドラグ耐荷重） */}
-              <div className="hidden sm:flex flex-col items-start absolute bottom-3 lg:bottom-4 left-[6%] lg:left-[9%] z-30">
-                <div className="flex flex-col items-center ml-3 mb-1">
+              <div className="hidden sm:flex flex-col items-start absolute bottom-1.5 xl:bottom-2.5 left-[5%] lg:left-[8%] z-30">
+                <div className="flex flex-col items-center ml-3 mb-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
-                  <div className="w-[1px] h-8 lg:h-11 bg-[#C4C6C8]" />
+                  <div className="w-[1px] h-5 xl:h-8 bg-[#C4C6C8]" />
                 </div>
                 <button
                   type="button"
@@ -434,10 +436,10 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
               </div>
 
               {/* コールアウト4（右下：巻上スピード＆スプール糸巻量） */}
-              <div className="hidden sm:flex flex-col items-end absolute bottom-3 lg:bottom-4 right-[5%] lg:right-[8%] z-30">
-                <div className="flex flex-col items-center mr-8 mb-1">
+              <div className="hidden sm:flex flex-col items-end absolute bottom-1.5 xl:bottom-2.5 right-[4%] lg:right-[7%] z-30">
+                <div className="flex flex-col items-center mr-8 mb-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
-                  <div className="w-[1px] h-8 lg:h-11 bg-[#C4C6C8]" />
+                  <div className="w-[1px] h-5 xl:h-8 bg-[#C4C6C8]" />
                 </div>
                 <button
                   type="button"
@@ -457,12 +459,12 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
 
           {/* ---------------- SLIDE 1: リール単体 スタジオ・クローズアップ ---------------- */}
           {activeSlide === 1 && (
-            <div className="relative w-full h-full flex items-center justify-center py-4 sm:py-8">
-              <div className="hidden sm:flex flex-col items-start absolute top-4 left-[10%] z-30">
+            <div className="relative w-full h-full min-h-0 flex items-center justify-center py-2 sm:py-3">
+              <div className="hidden sm:flex flex-col items-start absolute top-2 left-[8%] z-30">
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(1)}
-                  className="group flex items-center gap-2 text-left"
+                  className="group flex items-center gap-2 text-left bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
                     PE{reel.peCapacityNum}号-{reel.peCapacityMeter}m フル格納スプール
@@ -471,17 +473,17 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     <Plus className="w-3.5 h-3.5" />
                   </span>
                 </button>
-                <div className="flex flex-col items-center ml-3 mt-1">
-                  <div className="w-[1px] h-12 bg-[#C4C6C8]" />
+                <div className="flex flex-col items-center ml-3 mt-0.5">
+                  <div className="w-[1px] h-6 xl:h-9 bg-[#C4C6C8]" />
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
                 </div>
               </div>
 
-              <div className="hidden sm:flex flex-col items-end absolute top-4 right-[10%] z-30">
+              <div className="hidden sm:flex flex-col items-end absolute top-2 right-[8%] z-30">
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(1)}
-                  className="group flex items-center gap-2 text-left"
+                  className="group flex items-center gap-2 text-left bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
                     {reel.propertyTags[0]} (自重 {reel.weightG}g)
@@ -490,13 +492,13 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     <Plus className="w-3.5 h-3.5" />
                   </span>
                 </button>
-                <div className="flex flex-col items-center mr-8 mt-1">
-                  <div className="w-[1px] h-12 bg-[#C4C6C8]" />
+                <div className="flex flex-col items-center mr-8 mt-0.5">
+                  <div className="w-[1px] h-6 xl:h-9 bg-[#C4C6C8]" />
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
                 </div>
               </div>
 
-              <div className="w-[250px] sm:w-[390px] lg:w-[460px] h-[230px] sm:h-[350px] lg:h-[415px] flex items-center justify-center">
+              <div className="w-[240px] sm:w-[360px] lg:w-[430px] h-full max-h-[360px] min-h-0 flex items-center justify-center">
                 <img
                   src={resolvePartStudioImage(reel, reelFallback)}
                   alt={reel.name}
@@ -504,19 +506,19 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     if (!reelFallback) setReelFallback(true);
                   }}
                   style={{ filter: getPartStudioFilter(reel) }}
-                  className="w-full h-full object-contain mix-blend-multiply scale-[1.06] transition-all duration-500"
+                  className="w-full h-full object-contain mix-blend-multiply scale-[1.04] transition-all duration-500"
                 />
               </div>
 
-              <div className="hidden sm:flex flex-col items-start absolute bottom-4 left-[12%] z-30">
-                <div className="flex flex-col items-center ml-3 mb-1">
+              <div className="hidden sm:flex flex-col items-start absolute bottom-2 left-[10%] z-30">
+                <div className="flex flex-col items-center ml-3 mb-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
-                  <div className="w-[1px] h-10 bg-[#C4C6C8]" />
+                  <div className="w-[1px] h-5 xl:h-8 bg-[#C4C6C8]" />
                 </div>
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(1)}
-                  className="group flex items-center gap-2 text-left"
+                  className="group flex items-center gap-2 text-left bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
                     最大ドラグ力 {reel.dragMaxKg}kg (実用 {reel.practicalDragKg}kg)
@@ -527,15 +529,15 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                 </button>
               </div>
 
-              <div className="hidden sm:flex flex-col items-end absolute bottom-4 right-[12%] z-30">
-                <div className="flex flex-col items-center mr-8 mb-1">
+              <div className="hidden sm:flex flex-col items-end absolute bottom-2 right-[10%] z-30">
+                <div className="flex flex-col items-center mr-8 mb-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
-                  <div className="w-[1px] h-10 bg-[#C4C6C8]" />
+                  <div className="w-[1px] h-5 xl:h-8 bg-[#C4C6C8]" />
                 </div>
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(3)}
-                  className="group flex items-center gap-2 text-left"
+                  className="group flex items-center gap-2 text-left bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
                     ギア比 {reel.gearRatio} 高速回収
@@ -550,12 +552,12 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
 
           {/* ---------------- SLIDE 2: ロッド単体 スタジオ・クローズアップ ---------------- */}
           {activeSlide === 2 && (
-            <div className="relative w-full h-full flex items-center justify-center py-4 sm:py-8">
-              <div className="hidden sm:flex flex-col items-start absolute top-4 left-[10%] z-30">
+            <div className="relative w-full h-full min-h-0 flex items-center justify-center py-2 sm:py-3">
+              <div className="hidden sm:flex flex-col items-start absolute top-2 left-[8%] z-30">
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(0)}
-                  className="group flex items-center gap-2 text-left"
+                  className="group flex items-center gap-2 text-left bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
                     全長 {rod.lengthFt} (自重 {rod.weightG}g)
@@ -564,17 +566,17 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     <Plus className="w-3.5 h-3.5" />
                   </span>
                 </button>
-                <div className="flex flex-col items-center ml-3 mt-1">
-                  <div className="w-[1px] h-12 bg-[#C4C6C8]" />
+                <div className="flex flex-col items-center ml-3 mt-0.5">
+                  <div className="w-[1px] h-6 xl:h-9 bg-[#C4C6C8]" />
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
                 </div>
               </div>
 
-              <div className="hidden sm:flex flex-col items-end absolute top-4 right-[10%] z-30">
+              <div className="hidden sm:flex flex-col items-end absolute top-2 right-[8%] z-30">
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(2)}
-                  className="group flex items-center gap-2 text-left"
+                  className="group flex items-center gap-2 text-left bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
                     適合ルアー {rod.lureMinG}〜{rod.lureMaxG}g
@@ -583,36 +585,38 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     <Plus className="w-3.5 h-3.5" />
                   </span>
                 </button>
-                <div className="flex flex-col items-center mr-8 mt-1">
-                  <div className="w-[1px] h-12 bg-[#C4C6C8]" />
+                <div className="flex flex-col items-center mr-8 mt-0.5">
+                  <div className="w-[1px] h-6 xl:h-9 bg-[#C4C6C8]" />
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
                 </div>
               </div>
 
-              <div
-                style={ROD_OPEN_STAGE_MASK_STYLE}
-                className="w-[300px] sm:w-[540px] lg:w-[660px] h-[230px] sm:h-[350px] lg:h-[415px] flex items-center justify-center"
-              >
-                <img
-                  src={resolvePartStudioImage(rod, rodFallback)}
-                  alt={rod.name}
-                  onError={() => {
-                    if (!rodFallback) setRodFallback(true);
-                  }}
-                  style={{ filter: getPartStudioFilter(rod) }}
-                  className="w-full h-full object-contain mix-blend-multiply scale-[1.06] transition-all duration-500"
-                />
+              <div className="w-[260px] sm:w-[390px] lg:w-[440px] h-full max-h-[360px] min-h-0 flex items-center justify-center">
+                <div
+                  style={ROD_OPEN_STAGE_MASK_STYLE}
+                  className="aspect-square h-full max-w-full flex items-center justify-center"
+                >
+                  <img
+                    src={resolvePartStudioImage(rod, rodFallback)}
+                    alt={rod.name}
+                    onError={() => {
+                      if (!rodFallback) setRodFallback(true);
+                    }}
+                    style={{ filter: getPartStudioFilter(rod) }}
+                    className="w-full h-full object-contain mix-blend-multiply transition-all duration-500"
+                  />
+                </div>
               </div>
 
-              <div className="hidden sm:flex flex-col items-start absolute bottom-4 left-[12%] z-30">
-                <div className="flex flex-col items-center ml-3 mb-1">
+              <div className="hidden sm:flex flex-col items-start absolute bottom-2 left-[10%] z-30">
+                <div className="flex flex-col items-center ml-3 mb-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
-                  <div className="w-[1px] h-10 bg-[#C4C6C8]" />
+                  <div className="w-[1px] h-5 xl:h-8 bg-[#C4C6C8]" />
                 </div>
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(0)}
-                  className="group flex items-center gap-2 text-left"
+                  className="group flex items-center gap-2 text-left bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
                     最大ドラグ負荷 {rod.dragMaxKg}kg (45°)
@@ -623,15 +627,15 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                 </button>
               </div>
 
-              <div className="hidden sm:flex flex-col items-end absolute bottom-4 right-[12%] z-30">
-                <div className="flex flex-col items-center mr-8 mb-1">
+              <div className="hidden sm:flex flex-col items-end absolute bottom-2 right-[10%] z-30">
+                <div className="flex flex-col items-center mr-8 mb-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#8E8E93]" />
-                  <div className="w-[1px] h-10 bg-[#C4C6C8]" />
+                  <div className="w-[1px] h-5 xl:h-8 bg-[#C4C6C8]" />
                 </div>
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(2)}
-                  className="group flex items-center gap-2 text-left"
+                  className="group flex items-center gap-2 text-left bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41]">
                     適合ライン PE {rod.minPe}〜{rod.maxPe}号
@@ -646,9 +650,9 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
 
           {/* ---------------- SLIDE 3: ライン ＆ ルアー ペアビュー ---------------- */}
           {activeSlide === 3 && (
-            <div className="relative w-full h-full flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 lg:gap-14 py-6 px-4 sm:px-8">
-              <div className="flex flex-col items-center text-center max-w-[300px]">
-                <div className="w-40 h-40 sm:w-56 sm:h-56 lg:w-64 lg:h-64 flex items-center justify-center bg-white">
+            <div className="relative w-full h-full min-h-0 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-12 py-2 px-4 sm:px-8">
+              <div className="flex flex-col items-center text-center max-w-[280px]">
+                <div className="w-32 h-32 sm:w-44 sm:h-44 xl:w-52 xl:h-52 flex items-center justify-center bg-white">
                   <img
                     src={resolvePartStudioImage(line, lineFallback)}
                     alt={line.name}
@@ -659,7 +663,7 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     className="w-full h-full object-contain mix-blend-multiply scale-[1.05]"
                   />
                 </div>
-                <span className="text-[11px] font-oswald tracking-widest text-[#3E6AE1] font-bold uppercase mt-2">
+                <span className="text-[11px] font-oswald tracking-widest text-[#3E6AE1] font-bold uppercase mt-1.5">
                   PE LINE &amp; SHOCK LEADER
                 </span>
                 <div className="text-sm sm:text-base font-bold text-[#171A20] mt-0.5">
@@ -670,10 +674,10 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                 </div>
               </div>
 
-              <div className="hidden sm:block w-[1px] h-56 bg-black/10" />
+              <div className="hidden sm:block w-[1px] h-44 xl:h-52 bg-black/10" />
 
-              <div className="flex flex-col items-center text-center max-w-[380px]">
-                <div className="w-64 sm:w-80 lg:w-[370px] aspect-[1.85/1] flex items-center justify-center bg-white overflow-hidden">
+              <div className="flex flex-col items-center text-center max-w-[360px]">
+                <div className="w-56 sm:w-64 xl:w-[330px] aspect-[1.85/1] flex items-center justify-center bg-white overflow-hidden">
                   <img
                     src={resolvePartStudioImage(lure, lureFallback)}
                     alt={lure.name}
@@ -684,7 +688,7 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     className="w-full h-full object-cover object-[50%_52%] mix-blend-multiply px-1"
                   />
                 </div>
-                <span className="text-[11px] font-oswald tracking-widest text-[#3E6AE1] font-bold uppercase mt-3">
+                <span className="text-[11px] font-oswald tracking-widest text-[#3E6AE1] font-bold uppercase mt-2">
                   OFFSHORE PLUG &amp; HEAVY HOOK
                 </span>
                 <div className="text-sm sm:text-base font-bold text-[#171A20] mt-0.5">
@@ -699,7 +703,7 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
 
           {/* ---------------- SLIDE 4: ターゲット魚 ＆ 実戦海域（16:9 高迫力フルステージ） ---------------- */}
           {activeSlide === 4 && (
-            <div className="relative w-full h-full min-h-[245px] sm:min-h-[400px] lg:min-h-[465px] rounded-2xl sm:rounded-3xl overflow-hidden bg-black">
+            <div className="relative w-full h-full min-h-[190px] max-h-[410px] rounded-2xl sm:rounded-3xl overflow-hidden bg-black">
               <img
                 src={activeFishMedia.url}
                 alt={activeFishMedia.label}
@@ -716,7 +720,7 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
 
               {/* 右上：実戦ギャラリー切替サムネイル（3シーン） */}
               {target.gallery.length > 1 && (
-                <div className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 z-20 flex items-center gap-2 bg-black/45 backdrop-blur-md p-1.5 rounded-xl border border-white/15">
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-2 bg-black/45 backdrop-blur-md p-1.5 rounded-xl border border-white/15">
                   {target.gallery.map((item, gIdx) => {
                     const isCurrentMedia = fishGalleryIdx === gIdx;
                     return (
@@ -725,7 +729,7 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                         type="button"
                         onClick={() => setFishGalleryIdx(gIdx)}
                         title={item.label}
-                        className={`relative w-12 h-8 sm:w-16 sm:h-10 rounded-lg overflow-hidden transition-all ${
+                        className={`relative w-12 h-8 sm:w-14 sm:h-9 rounded-lg overflow-hidden transition-all ${
                           isCurrentMedia
                             ? 'ring-2 ring-white scale-105 opacity-100'
                             : 'opacity-65 hover:opacity-95'
@@ -743,7 +747,7 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                 </div>
               )}
 
-              <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 text-white space-y-1.5 z-10">
+              <div className="absolute bottom-3.5 left-4 right-4 sm:bottom-5 sm:left-6 sm:right-6 text-white space-y-1 z-10">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-block px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-oswald tracking-wider">
                     {target.badge} // MAX {target.initialRunLoadKg}kg LOAD
@@ -752,10 +756,10 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     {activeFishMedia.tag}
                   </span>
                 </div>
-                <h3 className="text-base sm:text-2xl font-bold tracking-tight drop-shadow-sm">
+                <h3 className="text-base sm:text-xl xl:text-2xl font-bold tracking-tight drop-shadow-sm">
                   {fishGalleryIdx === 0 ? target.fishName : activeFishMedia.label}
                 </h3>
-                <p className="text-xs sm:text-sm text-white/90 max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+                <p className="text-xs sm:text-sm text-white/90 max-w-2xl leading-relaxed line-clamp-2">
                   {fishGalleryIdx === 0 ? target.fishHabit : activeFishMedia.caption}
                 </p>
               </div>
@@ -767,28 +771,28 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
       {/* =================================================================
           下部：カルーセルコントロール (< ● ○ ○ ○ ○ >)
          ================================================================= */}
-      <div className="relative z-20 px-4 sm:px-6 pb-3 sm:pb-5 flex items-center justify-between">
+      <div className="relative z-20 px-4 sm:px-6 pb-2 pt-1 shrink-0 flex items-center justify-between">
         <button
           type="button"
           onClick={() => onOpenFeatureModal(0)}
           title="タックル適合ハイライト・スペック詳細を表示"
           aria-label="タックル適合ハイライト・スペック詳細を表示"
-          className="flex w-10 h-9 rounded-md items-center justify-center transition-colors bg-[#EAEBEC] hover:bg-[#DADBDD] text-[#171A20]"
+          className="flex w-9 h-8 rounded-md items-center justify-center transition-colors bg-[#EAEBEC] hover:bg-[#DADBDD] text-[#171A20]"
         >
           <ShieldCheck className="w-4 h-4 stroke-[2]" />
         </button>
 
-        <div className="mx-auto flex items-center gap-3">
+        <div className="mx-auto flex items-center gap-2.5">
           <button
             type="button"
             onClick={handlePrev}
             aria-label="前のスライド"
-            className="w-9 h-9 rounded-md flex items-center justify-center transition-colors bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]"
+            className="w-8 h-8 rounded-md flex items-center justify-center transition-colors bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]"
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.2]" />
           </button>
 
-          <div className="h-9 px-4 rounded-md flex items-center gap-2.5 bg-[#F4F4F4]">
+          <div className="h-8 px-3.5 rounded-md flex items-center gap-2.5 bg-[#F4F4F4]">
             {Array.from({ length: totalSlides }).map((_, idx) => {
               const isCurrent = activeSlide === idx;
               return (
@@ -797,7 +801,7 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                   type="button"
                   onClick={() => onChangeSlide(idx)}
                   aria-label={`スライド ${idx + 1}: ${slideLabels[idx]}`}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
                     isCurrent
                       ? 'bg-[#171A20] scale-110'
                       : 'bg-[#B5B6B8] hover:bg-[#757678]'
@@ -811,13 +815,13 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
             type="button"
             onClick={handleNext}
             aria-label="次のスライド"
-            className="w-9 h-9 rounded-md flex items-center justify-center transition-colors bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]"
+            className="w-8 h-8 rounded-md flex items-center justify-center transition-colors bg-[#F4F4F4] hover:bg-[#E5E5E5] text-[#171A20]"
           >
             <ChevronRight className="w-4 h-4 stroke-[2.2]" />
           </button>
         </div>
 
-        <div className="hidden sm:block w-10" />
+        <div className="hidden sm:block w-9" />
       </div>
     </div>
   );
