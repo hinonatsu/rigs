@@ -187,7 +187,7 @@ export const RigPartShowcase: React.FC<RigPartShowcaseProps> = ({
   return (
     <div
       className={`relative overflow-hidden flex items-center justify-center transition-all duration-300 bg-white ${sizeClass} ${
-        isSelected ? 'border border-[#171A20]/15 shadow-xs' : 'border border-black/[0.06]'
+        isSelected ? 'border border-[#171A20]/15 shadow-sm' : 'border border-black/[0.06]'
       }`}
     >
       <img
@@ -342,12 +342,12 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(0)}
-                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md"
+                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41] tracking-tight">
                     {rod.propertyTags[0] || `${rod.lengthFt} 高反発ブランクス`}
                   </span>
-                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-xs border border-black/5">
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-sm border border-black/5">
                     <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                   </span>
                 </button>
@@ -362,12 +362,12 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(1)}
-                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md"
+                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41] tracking-tight">
                     最大ドラグ {reel.dragMaxKg}kg・{reel.propertyTags[0]}
                   </span>
-                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-xs border border-black/5">
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-sm border border-black/5">
                     <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                   </span>
                 </button>
@@ -422,12 +422,12 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(2)}
-                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md"
+                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41] tracking-tight">
                     適合ルアー MAX {rod.lureMaxG}g (耐荷重 {rod.dragMaxKg}kg)
                   </span>
-                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-xs border border-black/5">
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-sm border border-black/5">
                     <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                   </span>
                 </button>
@@ -442,12 +442,12 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                 <button
                   type="button"
                   onClick={() => onOpenFeatureModal(3)}
-                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md"
+                  className="group flex items-center gap-2 text-left hover:opacity-80 transition-opacity bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md"
                 >
                   <span className="text-xs lg:text-[13px] font-medium text-[#393C41] tracking-tight">
                     1回転 {reel.retrieveCm}cm・PE{reel.peCapacityNum}号-{reel.peCapacityMeter}m
                   </span>
-                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-xs border border-black/5">
+                  <span className="w-5 h-5 rounded bg-[#F4F4F4] group-hover:bg-[#E2E3E5] text-[#171A20] flex items-center justify-center transition-colors shadow-sm border border-black/5">
                     <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                   </span>
                 </button>
@@ -752,7 +752,7 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
                     {activeFishMedia.tag}
                   </span>
                 </div>
-                <h3 className="text-base sm:text-2xl font-bold tracking-tight drop-shadow-xs">
+                <h3 className="text-base sm:text-2xl font-bold tracking-tight drop-shadow-sm">
                   {fishGalleryIdx === 0 ? target.fishName : activeFishMedia.label}
                 </h3>
                 <p className="text-xs sm:text-sm text-white/90 max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">

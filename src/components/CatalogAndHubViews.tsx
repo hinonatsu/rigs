@@ -107,7 +107,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                     onClick={() => setHeroSlide(idx)}
                     className={`px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
                       active
-                        ? 'bg-white text-[#171A20] shadow-xs'
+                        ? 'bg-white text-[#171A20] shadow-sm'
                         : 'text-white/80 hover:text-white'
                     }`}
                   >
@@ -120,7 +120,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                 onClick={() => setHeroSlide(3)}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
                   heroSlide === 3
-                    ? 'bg-white text-[#171A20] shadow-xs'
+                    ? 'bg-white text-[#171A20] shadow-sm'
                     : 'text-white/80 hover:text-white'
                 }`}
               >
@@ -213,7 +213,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                 />
 
                 {/* 下部コンテンツバー（魚の顔に一切被らないロープロファイル配置） */}
-                <div className="absolute inset-x-0 bottom-11 sm:bottom-13 max-w-[1680px] mx-auto px-5 sm:px-8 lg:px-12 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div className="absolute inset-x-0 bottom-11 sm:bottom-12 max-w-[1680px] mx-auto px-5 sm:px-8 lg:px-12 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                   <div className="space-y-2 sm:space-y-2.5 max-w-2xl">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-oswald tracking-wider uppercase text-white whitespace-nowrap">
@@ -390,7 +390,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                     <span className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-[11px] font-oswald font-semibold text-white tracking-wider whitespace-nowrap">
                       {target.badge}
                     </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/92 text-[11px] font-oswald font-bold text-[#171A20] tracking-wider whitespace-nowrap shadow-xs">
+                    <span className="px-2.5 py-1 rounded-full bg-white/95 text-[11px] font-oswald font-bold text-[#171A20] tracking-wider whitespace-nowrap shadow-sm">
                       {target.weightRange}
                     </span>
                   </div>
@@ -458,7 +458,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                       e.stopPropagation();
                       onSelectTargetAndGoGarage(target.id);
                     }}
-                    className="w-full py-3 px-5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors shadow-xs"
+                    className="w-full py-3 px-5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors shadow-sm"
                   >
                     <span>{meta.classTitle} でタックルを組む</span>
                     <ArrowRight className="w-4 h-4" />
@@ -473,14 +473,14 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
       {/* =====================================================================
           3. 下部セクションバー：タックル比較・診断（カードに被らないクリーン配置）
          ===================================================================== */}
-      <div className="w-full bg-[#F8F9FA] border-t border-black/8 py-5 px-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+      <div className="w-full bg-[#F8F9FA] border-t border-black/10 py-5 px-4 flex flex-col sm:flex-row items-center justify-center gap-3">
         <span className="text-xs text-[#5C5E62]">
           どのクラスから始めるか迷ったら、対象ウェイトと海域から一括比較できます
         </span>
         <button
           type="button"
           onClick={() => setIsDiagnosticOpen(true)}
-          className="py-2.5 px-6 rounded-md bg-white hover:bg-[#EFEFF1] border border-black/12 flex items-center justify-center gap-2.5 text-xs sm:text-sm font-semibold text-[#171A20] transition-colors shadow-xs whitespace-nowrap cursor-pointer"
+          className="py-2.5 px-6 rounded-md bg-white hover:bg-[#EFEFF1] border border-black/15 flex items-center justify-center gap-2.5 text-xs sm:text-sm font-semibold text-[#171A20] transition-colors shadow-sm whitespace-nowrap cursor-pointer"
         >
           <span className="w-5 h-5 rounded-full bg-[#3E6AE1] text-white flex items-center justify-center shrink-0">
             <Compass className="w-3.5 h-3.5" />

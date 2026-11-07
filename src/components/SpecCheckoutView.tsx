@@ -125,7 +125,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
               <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 via-[36%] to-transparent pointer-events-none" />
               <div className="absolute top-3 left-3.5 right-3.5 flex items-center justify-between gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-white/95 text-[10px] font-oswald font-bold text-[#171A20] tracking-wider flex items-center gap-1 whitespace-nowrap shadow-xs">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/95 text-[10px] font-oswald font-bold text-[#171A20] tracking-wider flex items-center gap-1 whitespace-nowrap shadow-sm">
                   {isAllSelectedCompatible ? (
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   ) : (
@@ -134,7 +134,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                   <span>{target.badge}</span>
                 </span>
                 <span
-                  className={`text-[10px] px-2.5 py-0.5 rounded-full font-oswald font-bold tracking-wider whitespace-nowrap shadow-xs ${
+                  className={`text-[10px] px-2.5 py-0.5 rounded-full font-oswald font-bold tracking-wider whitespace-nowrap shadow-sm ${
                     isAllSelectedCompatible
                       ? 'bg-emerald-600 text-white'
                       : 'bg-amber-500 text-white'
@@ -147,7 +147,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                 <div className="text-[10px] font-oswald tracking-widest text-white/80 uppercase">
                   {target.weightRange} // {target.field}
                 </div>
-                <div className="text-sm sm:text-base font-bold text-white leading-snug drop-shadow-xs">
+                <div className="text-sm sm:text-base font-bold text-white leading-snug drop-shadow-sm">
                   {target.fishName}
                 </div>
               </div>

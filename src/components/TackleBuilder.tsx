@@ -841,7 +841,7 @@ export const TackleBuilder: React.FC = () => {
                               : 'bg-white/80 hover:bg-white border border-black/5'
                           }`}
                         >
-                          <div className="w-full h-18 rounded-lg bg-white flex items-center justify-center p-1 overflow-hidden">
+                          <div className="w-full h-[72px] rounded-lg bg-white flex items-center justify-center p-1 overflow-hidden">
                             <img
                               src={resolvePartStudioImage(lineItem)}
                               alt={lineItem.shortName}
@@ -861,7 +861,7 @@ export const TackleBuilder: React.FC = () => {
 
                           {!isCompat && (
                             <span
-                              className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs"
+                              className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm"
                               title="リール番手と容量が異なります"
                             >
                               !
@@ -930,7 +930,7 @@ export const TackleBuilder: React.FC = () => {
 
                           {!isCompat && (
                             <span
-                              className="absolute top-2 right-2 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center z-20 shadow-xs"
+                              className="absolute top-2 right-2 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center z-20 shadow-sm"
                               title="ロッドのルアー重量上限を超過しています"
                             >
                               !
@@ -1242,7 +1242,7 @@ export const TackleBuilder: React.FC = () => {
          ================================================================= */}
       {isMenuDrawerOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex justify-end"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end"
           onClick={() => setIsMenuDrawerOpen(false)}
         >
           <div
@@ -1401,7 +1401,7 @@ export const TackleBuilder: React.FC = () => {
               </button>
             </div>
 
-            <div className="h-56 sm:h-64 rounded-2xl bg-white border border-black/8 flex items-center justify-center p-5 overflow-hidden">
+            <div className="h-56 sm:h-64 rounded-2xl bg-white border border-black/10 flex items-center justify-center p-5 overflow-hidden">
               <div
                 style={
                   featureHighlights[featureModalIndex].category === 'rod'
