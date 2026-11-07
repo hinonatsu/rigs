@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
-  ArrowRight,
   Award,
   Check,
   ChevronDown,
@@ -19,7 +18,6 @@ import {
 } from 'lucide-react';
 import { buildAmazonAffiliateUrl } from '../config/amazonAssociate';
 import {
-  ALL_PARTS,
   AnyRigPart,
   calculateOverallCombatStats,
   CATEGORY_ORDER,
@@ -99,10 +97,6 @@ export const TackleBuilder: React.FC = () => {
 
   // メインフォトステージのカルーセルスライド番号 (0: ロッド×リール統合, 1: リール単体, 2: ロッド単体, 3: ライン&ルアー, 4: ターゲット魚)
   const [activeSlide, setActiveSlide] = useState<number>(0);
-
-  // 右カラム上部の支払いモード切替タブ (添付3枚目の「現金 | ローン」相当)
-  // 'cash' = 4点フルセット一括 / 'main2' = ロッド＆リール2点先行（分割ステップ購入）
-  const [pricingMode, setPricingMode] = useState<'cash' | 'main2'>('cash');
 
   // Tesla風「機能を表示する (コールアウト [＋])」モーダル
   const [featureModalIndex, setFeatureModalIndex] = useState<number | null>(null);
@@ -188,38 +182,13 @@ export const TackleBuilder: React.FC = () => {
     }
   };
 
-  const handleSelectTarget = (
-    targetId: TargetId,
-    destination: 'garage' | 'checkout' | 'inline-checkout'
-  ) => {
+  const handleSelectTarget = (targetId: TargetId) => {
     const presetRig = getPresetRigState(targetId);
     setActiveSlide(0);
 
-    if (destination === 'inline-checkout') {
-      const updatedRoute: RouteState = {
-        ...route,
-        view: 'garage',
-        targetId,
-        activeStep: 'reel',
-      };
-      setRoute(updatedRoute);
-      setRig(presetRig);
-      const urlStr = buildUrlString(updatedRoute, presetRig);
-      if (typeof window !== 'undefined' && urlStr) {
-        window.history.pushState({}, '', urlStr);
-      }
-      setTimeout(() => {
-        inlineCheckoutRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
-      }, 120);
-      return;
-    }
-
     navigateTo(
       {
-        view: destination,
+        view: 'garage',
         targetId,
         activeStep: 'reel',
       },
@@ -293,10 +262,6 @@ export const TackleBuilder: React.FC = () => {
       (rig.line?.price ?? 0) +
       (rig.lure?.price ?? 0)
     );
-  }, [rig]);
-
-  const mainTwoPrice = useMemo(() => {
-    return (rig.reel?.price ?? 0) + (rig.rod?.price ?? 0);
   }, [rig]);
 
   const totalWeightG = useMemo(() => {
@@ -469,16 +434,13 @@ export const TackleBuilder: React.FC = () => {
 
       {/* ==================== メインステージ ==================== */}
       <main className="flex-1 min-h-0 w-full flex flex-col bg-white">
-        {/* -------------------- 【画面1】Tesla型 ホーム画面（添付1枚目） -------------------- */}
+        {/* -------------------- 【画面1】ホーム画面 -------------------- */}
         {route.view === 'home' && (
           <div className="w-full flex-1 flex flex-col">
             <TargetSelectHomeView
               currentTargetId={route.targetId}
               onSelectTargetAndGoGarage={(targetId) =>
-                handleSelectTarget(targetId, 'garage')
-              }
-              onSelectTargetAndGoCheckout={(targetId) =>
-                handleSelectTarget(targetId, 'inline-checkout')
+                handleSelectTarget(targetId)
               }
             />
           </div>
@@ -513,42 +475,14 @@ export const TackleBuilder: React.FC = () => {
                ----------------------------------------------------------------- */}
             <div className="lg:col-span-4 w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 pb-24">
               {/* =================================================================
-                  1. ターゲットクラス大見出し ＆ 購入点数2タブ切替
+                  1. ターゲットクラス大見出し
                  ================================================================= */}
-              <div className="space-y-4 pt-1">
-                <div className="text-center space-y-1">
-                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#171A20]">
-                    {currentClassInfo.classNameLabel}
-                  </h1>
-                  <div className="text-xs text-[#5C5E62]">
-                    {currentClassInfo.subTitle}
-                  </div>
-                </div>
-
-                {/* 4点フルセット / リール＋ロッド2点 アンダーライン2タブ */}
-                <div className="grid grid-cols-2 text-center">
-                  <button
-                    type="button"
-                    onClick={() => setPricingMode('cash')}
-                    className={`pb-2.5 text-xs sm:text-sm transition-colors ${
-                      pricingMode === 'cash'
-                        ? 'border-b-2 border-[#171A20] font-semibold text-[#171A20]'
-                        : 'border-b border-black/15 font-medium text-[#5C5E62] hover:text-[#171A20]'
-                    }`}
-                  >
-                    4点フルセット
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPricingMode('main2')}
-                    className={`pb-2.5 text-xs sm:text-sm transition-colors ${
-                      pricingMode === 'main2'
-                        ? 'border-b-2 border-[#171A20] font-semibold text-[#171A20]'
-                        : 'border-b border-black/15 font-medium text-[#5C5E62] hover:text-[#171A20]'
-                    }`}
-                  >
-                    リール＋ロッド 2点
-                  </button>
+              <div className="pt-1 text-center space-y-1">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#171A20]">
+                  {currentClassInfo.classNameLabel}
+                </h1>
+                <div className="text-xs text-[#5C5E62]">
+                  {currentClassInfo.subTitle}
                 </div>
               </div>
 
@@ -600,24 +534,12 @@ export const TackleBuilder: React.FC = () => {
                   {RIG_PRESETS.map((preset) => {
                     const isSelectedTarget = route.targetId === preset.id;
                     const info = CLASS_TITLE_MAP[preset.id];
-                    const pReel = ALL_PARTS.find((p) => p.id === preset.rigIds.reel);
-                    const pRod = ALL_PARTS.find((p) => p.id === preset.rigIds.rod);
-                    const pLine = ALL_PARTS.find((p) => p.id === preset.rigIds.line);
-                    const pLure = ALL_PARTS.find((p) => p.id === preset.rigIds.lure);
-
-                    const presetPrice =
-                      pricingMode === 'cash'
-                        ? (pReel?.price ?? 0) +
-                          (pRod?.price ?? 0) +
-                          (pLine?.price ?? 0) +
-                          (pLure?.price ?? 0)
-                        : (pReel?.price ?? 0) + (pRod?.price ?? 0);
 
                     return (
                       <button
                         key={preset.id}
                         type="button"
-                        onClick={() => handleSelectTarget(preset.id, 'garage')}
+                        onClick={() => handleSelectTarget(preset.id)}
                         className={`w-full rounded-lg px-4 py-3.5 text-left transition-all flex items-center justify-between gap-3 ${
                           isSelectedTarget
                             ? 'bg-white border-2 border-[#171A20] text-[#171A20] shadow-sm'
@@ -637,13 +559,13 @@ export const TackleBuilder: React.FC = () => {
                         </div>
 
                         <div
-                          className={`font-oswald text-sm sm:text-base tabular-nums shrink-0 ${
+                          className={`text-xs tabular-nums shrink-0 ${
                             isSelectedTarget
                               ? 'font-bold text-[#171A20]'
-                              : 'font-medium text-[#393C41]'
+                              : 'font-medium text-[#5C5E62]'
                           }`}
                         >
-                          ¥{presetPrice.toLocaleString()}
+                          {preset.weightRange}
                         </div>
                       </button>
                     );
@@ -663,14 +585,14 @@ export const TackleBuilder: React.FC = () => {
                 {/* カスタム変更時のリセット＆番手不一致時のワンタップ自動最適化 */}
                 {customizedSlotsCount > 0 && (
                   <div className="flex items-center justify-between pt-1 text-xs text-[#5C5E62]">
-                    <span>{customizedSlotsCount}箇所のパーツをカスタム中</span>
+                    <span>{customizedSlotsCount}箇所のパーツを変更中</span>
                     <button
                       type="button"
                       onClick={handleResetToRecommended}
                       className="font-medium underline underline-offset-2 hover:text-[#171A20] inline-flex items-center gap-1"
                     >
                       <RotateCcw className="w-3 h-3" />
-                      <span>推奨構成に戻す</span>
+                      <span>初期設定に戻す</span>
                     </button>
                   </div>
                 )}
@@ -745,7 +667,6 @@ export const TackleBuilder: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   {REEL_CATALOG.map((reelItem) => {
                     const isSelected = rig.reel?.id === reelItem.id;
-                    const isBase = recommendedRig.reel?.id === reelItem.id;
                     return (
                       <button
                         key={reelItem.id}
@@ -772,11 +693,6 @@ export const TackleBuilder: React.FC = () => {
                           >
                             #{reelItem.sizeClass}
                           </span>
-                          {isBase && (
-                            <span className="text-[10px] font-medium text-[#5C5E62]">
-                              推奨
-                            </span>
-                          )}
                         </div>
 
                         <RigPartShowcase
@@ -1177,58 +1093,24 @@ export const TackleBuilder: React.FC = () => {
                       );
                     })}
                     <div className="pt-1 flex items-center justify-between text-[11px] text-[#5C5E62]">
-                      <span>推奨リーダー（{rig.line?.pairedLeaderLb}lb）＆太軸フック（{rig.lure?.hookSpec}）</span>
+                      <span>適合リーダー（{rig.line?.pairedLeaderLb}lb）＆太軸フック（{rig.lure?.hookSpec}）</span>
                       <span>購入リストから同時確認可能</span>
                     </div>
                   </div>
                 )}
 
-                {/* 4点フルセット参考合計 行 */}
+                {/* 選択構成 参考合計 行 */}
                 <div className="space-y-1.5 pt-2">
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="text-base sm:text-lg font-bold text-[#171A20]">
-                      4点フルセット参考合計
+                      選択構成 参考合計
                     </span>
                     <span className="font-oswald text-lg sm:text-xl font-bold text-[#171A20] tabular-nums">
                       ¥{totalValue.toLocaleString()}
                     </span>
                   </div>
                   <p className="text-[11px] text-[#5C5E62] leading-relaxed">
-                    ※ショックリーダーおよびスプリットリング・フック等の推奨ペア金具も購入リストから個別確認できます。
-                  </p>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPricingMode((prev) => (prev === 'cash' ? 'main2' : 'cash'))
-                      }
-                      className="text-xs text-[#5C5E62] hover:text-[#171A20] underline underline-offset-4"
-                    >
-                      {pricingMode === 'cash'
-                        ? 'リール＋ロッドの2点セット価格で試算する'
-                        : '4点フルセット合計に戻す'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* 選択プラン参考合計 行 */}
-                <div className="space-y-1 pt-2">
-                  <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-base sm:text-lg font-bold text-[#171A20]">
-                      選択プラン参考合計
-                    </span>
-                    <span className="font-oswald text-lg sm:text-xl font-bold text-[#171A20] tabular-nums">
-                      ¥
-                      {(pricingMode === 'cash'
-                        ? totalValue
-                        : mainTwoPrice
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#5C5E62]">
-                    {pricingMode === 'cash'
-                      ? '4点フルセット合計（Amazon公式ストアにて1点ずつ個別購入も可能）'
-                      : 'リール＋ロッド2点合計（ライン＆ルアーは後から個別追加可能）'}
+                    ※各パーツはAmazon公式ストアにて1点ずつ個別に確認・購入できます。ショックリーダーやフック等の適合ペア金具も購入リストから個別確認可能です。
                   </p>
                 </div>
 
@@ -1360,11 +1242,7 @@ export const TackleBuilder: React.FC = () => {
               >
                 <div className="flex items-center gap-1.5">
                   <span className="font-oswald text-xl sm:text-2xl font-bold tabular-nums tracking-tight">
-                    ¥
-                    {(pricingMode === 'cash'
-                      ? totalValue
-                      : mainTwoPrice
-                    ).toLocaleString()}
+                    ¥{totalValue.toLocaleString()}
                   </span>
                   <ChevronDown
                     className={`w-4 h-4 text-[#5C5E62] transition-transform duration-200 ${
@@ -1373,9 +1251,7 @@ export const TackleBuilder: React.FC = () => {
                   />
                 </div>
                 <div className="text-[11px] text-[#5C5E62]">
-                  {pricingMode === 'cash'
-                    ? '4点フルセット参考合計'
-                    : 'リール＋ロッド 2点参考合計'}
+                  選択構成 参考合計（4点）
                 </div>
               </button>
 
@@ -1432,7 +1308,7 @@ export const TackleBuilder: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setIsMenuDrawerOpen(false);
-                        handleSelectTarget(preset.id, 'garage');
+                        handleSelectTarget(preset.id);
                       }}
                       className={`w-full px-3 py-3 rounded-lg text-left flex items-center justify-between transition-colors ${
                         isCurrent ? 'bg-[#F4F4F4] font-bold' : 'hover:bg-[#F4F4F4]/60'
@@ -1649,7 +1525,7 @@ export const TackleBuilder: React.FC = () => {
                   SPECIFICATION &amp; TELEMETRY COMPARISON
                 </span>
                 <h3 className="text-xl font-bold mt-0.5">
-                  推奨ベース構成とのスペック・戦闘力比較
+                  初期設定（基準）とのスペック・バランス比較
                 </h3>
               </div>
               <button
@@ -1681,7 +1557,7 @@ export const TackleBuilder: React.FC = () => {
             <div className="rounded-2xl bg-[#F4F4F4] p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-bold">
-                  {equippedPartForStep.shortName} vs 推奨基準 ({basePartForStep.shortName})
+                  {equippedPartForStep.shortName} vs 初期設定 ({basePartForStep.shortName})
                 </div>
                 <span className="font-oswald text-xs font-bold px-2.5 py-1 rounded-full bg-white">
                   {comparisonReport.priceDeltaText}
@@ -1736,24 +1612,13 @@ export const TackleBuilder: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end pt-2">
               <button
                 type="button"
                 onClick={() => setIsCompareModalOpen(false)}
                 className="px-5 py-2.5 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-semibold text-[#171A20]"
               >
                 閉じる
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCompareModalOpen(false);
-                  setIsOrderDispatchModalOpen(true);
-                }}
-                className="px-6 py-2.5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold flex items-center gap-2"
-              >
-                <span>この構成で購入リストを開く</span>
-                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>

@@ -9,7 +9,6 @@ import {
   X,
 } from 'lucide-react';
 import {
-  ALL_PARTS,
   RIG_PRESETS,
   TargetFishProfile,
   TargetId,
@@ -18,7 +17,6 @@ import {
 interface TargetSelectHomeViewProps {
   currentTargetId?: TargetId;
   onSelectTargetAndGoGarage: (targetId: TargetId) => void;
-  onSelectTargetAndGoCheckout?: (targetId: TargetId) => void;
 }
 
 const TARGET_CLASS_META: Record<
@@ -53,7 +51,6 @@ const TARGET_CLASS_META: Record<
 export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
   currentTargetId = 'pe6',
   onSelectTargetAndGoGarage,
-  onSelectTargetAndGoCheckout,
 }) => {
   // 上段フルワイド・ダークヒーローのアクティブスライド (0: PE6, 1: PE8, 2: PE10, 3: 全ラインナップ集合ステージ)
   const [heroSlide, setHeroSlide] = useState<number>(3);
@@ -171,7 +168,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
 
             <div className="text-center">
               <p className="text-xs sm:text-sm text-white/80 font-medium tracking-wide">
-                魚種クラスを選ぶだけで、物理適合100%のロッド・リール・ライン・ルアーが即座に組み上がる
+                ターゲットクラスを選ぶと基準パーツが初期設定され、1パーツずつ自由に組み替えできます
               </p>
             </div>
           </div>
@@ -205,17 +202,6 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                       className="px-7 py-2.5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs sm:text-sm font-semibold transition-colors"
                     >
                       タックルを組む
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onSelectTargetAndGoCheckout
-                          ? onSelectTargetAndGoCheckout(preset.id)
-                          : onSelectTargetAndGoGarage(preset.id)
-                      }
-                      className="px-7 py-2.5 rounded-md bg-white hover:bg-[#F4F4F4] text-[#171A20] text-xs sm:text-sm font-semibold transition-colors"
-                    >
-                      推奨構成を見る
                     </button>
                   </div>
                 </div>
@@ -264,16 +250,6 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
               const meta = TARGET_CLASS_META[target.id];
               const isSelected = currentTargetId === target.id;
 
-              const pReel = ALL_PARTS.find((p) => p.id === target.rigIds.reel);
-              const pRod = ALL_PARTS.find((p) => p.id === target.rigIds.rod);
-              const pLine = ALL_PARTS.find((p) => p.id === target.rigIds.line);
-              const pLure = ALL_PARTS.find((p) => p.id === target.rigIds.lure);
-              const totalPrice =
-                (pReel?.price ?? 0) +
-                (pRod?.price ?? 0) +
-                (pLine?.price ?? 0) +
-                (pLure?.price ?? 0);
-
               return (
                 <article
                   key={target.id}
@@ -308,47 +284,31 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                       {meta.categoryLabel}
                     </span>
                     <span className="px-2.5 py-1 rounded-full bg-black/45 backdrop-blur-md text-[11px] font-oswald text-white/90 tracking-wider">
-                      ¥{totalPrice.toLocaleString()} (推奨4点合計)
+                      {target.weightRange}
                     </span>
                   </div>
 
-                  {/* 下部：クラス名 ＋ 横並び2ボタン */}
+                  {/* 下部：クラス名 ＋ 単一アクションボタン */}
                   <div className="absolute bottom-6 left-6 right-6 z-10 space-y-4">
                     <div className="space-y-1">
                       <div className="text-xs sm:text-sm font-medium text-white/90 drop-shadow">
-                        {meta.speciesSubtitle}（{pRod?.shortName} × {pReel?.shortName}）
+                        {meta.speciesSubtitle}
                       </div>
                       <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight drop-shadow-sm">
                         {meta.classTitle}
                       </h2>
                     </div>
 
-                    {/* 青「タックルを組む」＋ 白「推奨構成を見る」横並び2列ボタン */}
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-[520px]">
+                    <div className="max-w-[260px]">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           onSelectTargetAndGoGarage(target.id);
                         }}
-                        className="w-full py-3 px-4 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white font-semibold text-xs sm:text-sm text-center transition-colors shadow-md"
+                        className="w-full py-3 px-5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white font-semibold text-xs sm:text-sm text-center transition-colors shadow-md"
                       >
                         タックルを組む
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onSelectTargetAndGoCheckout) {
-                            onSelectTargetAndGoCheckout(target.id);
-                          } else {
-                            onSelectTargetAndGoGarage(target.id);
-                          }
-                        }}
-                        className="w-full py-3 px-4 rounded-md bg-white hover:bg-[#F4F4F4] text-[#171A20] font-semibold text-xs sm:text-sm text-center transition-colors shadow-md"
-                      >
-                        推奨構成を見る
                       </button>
                     </div>
                   </div>
@@ -435,7 +395,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                   TARGET CLASS COMPARISON &amp; DIAGNOSTIC
                 </span>
                 <h3 className="text-xl font-bold mt-0.5">
-                  全3クラス 推奨タックル＆対象ターゲット比較
+                  全3クラス 対象ターゲット＆基準スペック比較
                 </h3>
               </div>
               <button
@@ -451,15 +411,6 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {RIG_PRESETS.map((preset) => {
                 const meta = TARGET_CLASS_META[preset.id];
-                const pReel = ALL_PARTS.find((p) => p.id === preset.rigIds.reel);
-                const pRod = ALL_PARTS.find((p) => p.id === preset.rigIds.rod);
-                const pLine = ALL_PARTS.find((p) => p.id === preset.rigIds.line);
-                const pLure = ALL_PARTS.find((p) => p.id === preset.rigIds.lure);
-                const price =
-                  (pReel?.price ?? 0) +
-                  (pRod?.price ?? 0) +
-                  (pLine?.price ?? 0) +
-                  (pLure?.price ?? 0);
 
                 return (
                   <div
@@ -481,32 +432,34 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
                       </p>
 
                       <div className="rounded-xl bg-white p-3 space-y-1.5 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-[#5C5E62]">リール</span>
-                          <span className="font-semibold">{pReel?.shortName}</span>
+                        <div className="flex justify-between gap-2">
+                          <span className="text-[#5C5E62] shrink-0">対象ウェイト</span>
+                          <span className="font-semibold text-right">
+                            {preset.weightRange}
+                          </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#5C5E62]">ロッド</span>
-                          <span className="font-semibold">{pRod?.shortName}</span>
+                        <div className="flex justify-between gap-2">
+                          <span className="text-[#5C5E62] shrink-0">主な海域</span>
+                          <span className="font-semibold text-right truncate">
+                            {preset.field}
+                          </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#5C5E62]">ライン</span>
-                          <span className="font-semibold">{pLine?.shortName}</span>
+                        <div className="flex justify-between gap-2">
+                          <span className="text-[#5C5E62] shrink-0">想定初動負荷</span>
+                          <span className="font-semibold text-right">
+                            約{preset.initialRunLoadKg}kg / 時速{preset.strikeSpeedKmh}km
+                          </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#5C5E62]">ルアー</span>
-                          <span className="font-semibold">{pLure?.shortName}</span>
+                        <div className="flex justify-between gap-2">
+                          <span className="text-[#5C5E62] shrink-0">1日想定投数</span>
+                          <span className="font-semibold text-right">
+                            約{preset.dailyCastCount}投
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-3 pt-2 border-t border-black/10">
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-[#5C5E62]">4点参考合計</span>
-                        <span className="font-oswald text-xl font-bold">
-                          ¥{price.toLocaleString()}
-                        </span>
-                      </div>
+                    <div className="pt-2 border-t border-black/10">
                       <button
                         type="button"
                         onClick={() => {
@@ -527,7 +480,7 @@ export const TargetSelectHomeView: React.FC<TargetSelectHomeViewProps> = ({
             <div className="flex items-center justify-between text-xs text-[#5C5E62] pt-2">
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-[#3E6AE1]" />
-                <span>全クラス 100% 物理適合検証済・Amazon公式ストア対応</span>
+                <span>クラス選択時に基準パーツが初期設定されます</span>
               </span>
               <span className="inline-flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-[#3E6AE1]" />

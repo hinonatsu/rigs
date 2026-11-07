@@ -24,7 +24,6 @@ import {
   calculateOverallCombatStats,
   CATEGORY_ORDER,
   checkPartCompatibility,
-  getPresetRigState,
   PartCategory,
   RigState,
   STEP_META,
@@ -61,16 +60,8 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [checkedOutSlots, setCheckedOutSlots] = useState<Record<string, boolean>>({});
 
-  const baseRig = useMemo(() => getPresetRigState(target.id), [target.id]);
   const combatStats = useMemo(() => calculateOverallCombatStats(rig, target), [rig, target]);
   const shareUrl = useMemo(() => buildShareableSpecUrl(rig, target.id), [rig, target.id]);
-
-  const baseTotalPrice =
-    (baseRig.reel?.price ?? 0) +
-    (baseRig.rod?.price ?? 0) +
-    (baseRig.line?.price ?? 0) +
-    (baseRig.lure?.price ?? 0);
-  const priceDiffFromBase = totalValue - baseTotalPrice;
 
   const recommendedDragText = rig.rod
     ? `${(rig.rod.dragMaxKg * 0.6).toFixed(1)}–${(rig.rod.dragMaxKg * 0.8).toFixed(1)}kg`
@@ -179,25 +170,18 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
             </div>
           </div>
 
-          {/* 合計金額 ＆ Primary CTA (Tesla ロイヤルブルーボタン) */}
+          {/* 参考合計金額 ＆ Primary CTA */}
           <div className="rounded-2xl bg-white border border-black/5 p-5 space-y-5 shadow-sm">
             <div className="flex items-baseline justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-[#5C5E62]">
-                    4点フルセット 合計金額
+                    選択構成 参考合計（4点）
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-[10px] font-semibold text-emerald-700">
-                    税込・送料無料
+                  <span className="px-2 py-0.5 rounded bg-[#F4F4F4] text-[10px] font-semibold text-[#5C5E62]">
+                    Amazon参考価格
                   </span>
                 </div>
-                <span className="font-oswald text-xs text-[#3E6AE1] block mt-1">
-                  {priceDiffFromBase === 0
-                    ? 'RECOMMENDED BASE PRICE'
-                    : priceDiffFromBase > 0
-                    ? `+¥${priceDiffFromBase.toLocaleString()} FROM BASE`
-                    : `-¥${Math.abs(priceDiffFromBase).toLocaleString()} SAVED`}
-                </span>
               </div>
               <div className="font-oswald text-3xl sm:text-4xl font-bold text-[#171A20] tabular-nums tracking-tight">
                 ¥{totalValue.toLocaleString()}
@@ -213,10 +197,10 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                 <ShoppingBag className="w-5 h-5 shrink-0" />
                 <div>
                   <div className="text-sm sm:text-base font-bold leading-tight">
-                    Amazon公式ストアで購入手続きへ進む
+                    Amazon購入リストを開く
                   </div>
                   <div className="text-[11px] text-white/80 mt-0.5">
-                    4点＋推奨ペア金具の購入リストを開く
+                    選択中の各パーツ・適合金具を個別に確認
                   </div>
                 </div>
               </div>
@@ -301,7 +285,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                     className="text-[11px] font-medium text-[#5C5E62] hover:text-[#171A20] inline-flex items-center gap-1"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>推奨ベースにリセット</span>
+                    <span>初期設定に戻す</span>
                   </button>
                 </div>
               </div>
@@ -367,10 +351,8 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
           {CATEGORY_ORDER.map((cat) => {
             const meta = STEP_META[cat];
             const item = rig[cat];
-            const baseItem = baseRig[cat];
             if (!item) return null;
 
-            const isCustomized = baseItem && baseItem.id !== item.id;
             const { compatible, reason } = checkPartCompatibility(item, rig);
             const mainAmazonUrl = buildAmazonAffiliateUrl(item.amazon);
             const subAmazonUrl =
@@ -397,15 +379,6 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-oswald text-xs font-bold tracking-wider text-[#3E6AE1]">
                           {meta.stepNum} {meta.label}
-                        </span>
-                        <span
-                          className={`font-oswald text-[10px] px-2.5 py-0.5 rounded-full font-semibold tracking-wider ${
-                            isCustomized
-                              ? 'bg-[#171A20] text-white'
-                              : 'bg-[#F4F4F4] text-[#5C5E62]'
-                          }`}
-                        >
-                          {isCustomized ? 'CUSTOM' : 'RECOMMENDED'}
                         </span>
                       </div>
 
@@ -484,7 +457,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                     {subAmazonUrl && item.amazon.subItemLabel && (
                       <div className="rounded-xl bg-[#F4F4F4] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <span className="text-xs font-medium text-[#171A20]">
-                          ＋ 推奨ペアリング：{item.amazon.subItemLabel}
+                          ＋ 適合ペアリング：{item.amazon.subItemLabel}
                         </span>
                         <a
                           href={subAmazonUrl}
@@ -530,10 +503,10 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                 <ShieldCheck className="w-5 h-5 text-[#3E6AE1]" />
                 <div>
                   <div className="text-[10px] font-oswald font-bold tracking-[0.18em] text-[#3E6AE1]">
-                    ORDER DISPATCH LIST
+                    TACKLE PURCHASE LIST
                   </div>
                   <h3 id="checkout-modal-title" className="text-base font-bold text-[#171A20]">
-                    構成4点セット（合計 ¥{totalValue.toLocaleString()}）— 購入リスト
+                    選択中のタックル構成（参考合計 ¥{totalValue.toLocaleString()}）— Amazon購入リスト
                   </h3>
                 </div>
               </div>

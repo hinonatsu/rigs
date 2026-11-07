@@ -156,28 +156,28 @@ export const STEP_META: Record<
     stepNum: '01',
     label: 'リール',
     combatRole: '魚の猛烈なファーストランを受け止め、主導権を奪う心臓部',
-    fullTitle: 'スピニングリール（推奨 vs 変更オプション比較）',
+    fullTitle: 'スピニングリール（初期設定とのスペック比較）',
     shortDesc: '14000番〜20000番・ドラグ制動力＆巻上スピード比較',
   },
   rod: {
     stepNum: '02',
     label: 'ロッド',
     combatRole: 'ナブラへルアーを撃ち込み、海底の根から魚を引き剥がす刀',
-    fullTitle: 'キャスティングロッド（推奨 vs 変更オプション比較）',
+    fullTitle: 'キャスティングロッド（初期設定とのスペック比較）',
     shortDesc: '飛距離・許容ルアー重量上限・最大ドラグ耐荷重の比較',
   },
   line: {
     stepNum: '03',
     label: 'ライン',
     combatRole: '暴れる巨魚とアングラーを繋ぐ唯一の命綱（スプール100%格納）',
-    fullTitle: 'PEライン＆リーダー（推奨 vs 変更オプション比較）',
+    fullTitle: 'PEライン＆リーダー（初期設定とのスペック比較）',
     shortDesc: '直線強力(lb)・耐熱摩耗性・スプール充填率の比較',
   },
   lure: {
     stepNum: '04',
     label: 'ルアー',
     combatRole: '水面を割らせて捕食スイッチを入れる切り札（針込実戦重量）',
-    fullTitle: 'オフショアプラグ＆太軸フック（推奨 vs 変更オプション比較）',
+    fullTitle: 'オフショアプラグ＆太軸フック（初期設定とのスペック比較）',
     shortDesc: 'フック込実戦重量・アクション波動・ロッド負荷率の比較',
   },
 };
@@ -1143,8 +1143,8 @@ export function comparePartAgainstRecommended(
         statRows,
         priceDeltaText,
         priceDeltaTone,
-        fishFightHeadline: `【${target.fishName}】に対する推奨ベースリール（基準ステータス）`,
-        fishFightNarrative: `${target.fishName}の初動負荷（約${target.initialRunLoadKg}kg）と1日${target.dailyCastCount}投のキャストに最もバランス良く対応する基準機です。${candidatePart.description}`,
+        fishFightHeadline: `【${target.fishName}】に対する初期設定リール（基準ステータス）`,
+        fishFightNarrative: `${target.fishName}の初動負荷（約${target.initialRunLoadKg}kg）と1日${target.dailyCastCount}投のキャストにバランス良く対応する基準機です。${candidatePart.description}`,
         cascadeNotice,
       };
     }
@@ -1251,7 +1251,7 @@ export function comparePartAgainstRecommended(
         statRows,
         priceDeltaText,
         priceDeltaTone,
-        fishFightHeadline: `【${target.fishName}】に対する推奨ベースロッド（基準ステータス）`,
+        fishFightHeadline: `【${target.fishName}】に対する初期設定ロッド（基準ステータス）`,
         fishFightNarrative: `${target.baitSizeMm}のベイトパターンに合わせやすく、${target.fishName}の初動突っ込み（約${target.initialRunLoadKg}kg）に対してブランクス負荷率 ${baseLoadRatio}% で余裕を持って対処できる基準ロッドです。`,
         cascadeNotice,
       };
@@ -1343,8 +1343,8 @@ export function comparePartAgainstRecommended(
         statRows,
         priceDeltaText,
         priceDeltaTone,
-        fishFightHeadline: `【${target.fishName}】に対する推奨ベースライン（安全率 ${baseSafetyMultiple}倍）`,
-        fishFightNarrative: `魚の初動負荷（${target.initialRunLoadKg}kg）に対して ${baseSafetyMultiple}倍 の直線強力（${basePart.strengthKg}kg）を持ち、推奨リールに下巻きなしで300mジャスト格納できる基準ラインです。`,
+        fishFightHeadline: `【${target.fishName}】に対する初期設定ライン（安全率 ${baseSafetyMultiple}倍）`,
+        fishFightNarrative: `魚の初動負荷（${target.initialRunLoadKg}kg）に対して ${baseSafetyMultiple}倍 の直線強力（${basePart.strengthKg}kg）を持ち、初期設定リールに下巻きなしで300mジャスト格納できる基準ラインです。`,
         cascadeNotice,
       };
     }
@@ -1427,7 +1427,7 @@ export function comparePartAgainstRecommended(
         statRows,
         priceDeltaText,
         priceDeltaTone,
-        fishFightHeadline: `【${target.fishName}】に対する推奨ベースルアー（ロッド負荷率 ${baseRodRatio}%）`,
+        fishFightHeadline: `【${target.fishName}】に対する初期設定ルアー（ロッド負荷率 ${baseRodRatio}%）`,
         fishFightNarrative: `本体${basePart.bodyWeightG}gに適合フック＆リング（+${basePart.hookRingWeightG}g）を合わせた実戦総重量 ${basePart.totalWeightG}g。現在のロッド上限（${rodMax}g）に対して ${baseRodRatio}% の理想的なスイートスポットで振り抜ける基準プラグです。`,
         cascadeNotice,
       };
