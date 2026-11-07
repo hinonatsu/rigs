@@ -487,9 +487,8 @@ export const TackleBuilder: React.FC = () => {
               </div>
 
               {/* =================================================================
-                  2. 上部スペック＆クラス切替コンテナ
+                  2. 上部コアスペック＆仕様比較コンテナ
                      ・3列コアスペック数値
-                     ・縦積み3段ターゲットクラス選択カード
                      ・「タックル仕様を比較する ＞」白ボタン
                  ================================================================= */}
               <div className="rounded-2xl p-5 sm:p-6 space-y-5 bg-[#F4F4F4] text-[#171A20]">
@@ -501,13 +500,6 @@ export const TackleBuilder: React.FC = () => {
                       <span className="text-xs sm:text-sm font-semibold ml-0.5">kg</span>
                     </div>
                     <div className="text-[11px] text-[#5C5E62] mt-0.5">最大ドラグ力</div>
-                    <button
-                      type="button"
-                      onClick={() => setIsCompareModalOpen(true)}
-                      className="text-[11px] text-[#5C5E62] hover:text-[#171A20] underline underline-offset-2 text-left leading-tight mt-0.5"
-                    >
-                      スペック比較を見る
-                    </button>
                   </div>
 
                   <div>
@@ -527,49 +519,6 @@ export const TackleBuilder: React.FC = () => {
                       針込ルアー重量
                     </div>
                   </div>
-                </div>
-
-                {/* 縦積み3段のターゲットクラス選択カード */}
-                <div className="space-y-2.5">
-                  {RIG_PRESETS.map((preset) => {
-                    const isSelectedTarget = route.targetId === preset.id;
-                    const info = CLASS_TITLE_MAP[preset.id];
-
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => handleSelectTarget(preset.id)}
-                        className={`w-full rounded-lg px-4 py-3.5 text-left transition-all flex items-center justify-between gap-3 ${
-                          isSelectedTarget
-                            ? 'bg-white border-2 border-[#171A20] text-[#171A20] shadow-sm'
-                            : 'bg-white/60 hover:bg-white border border-[#B5B6B8] text-[#5C5E62]'
-                        }`}
-                      >
-                        <div className="min-w-0">
-                          <div className="text-xs sm:text-sm font-bold text-[#171A20]">
-                            {info.classNameLabel}{' '}
-                            <span className="font-normal text-[#393C41] ml-1">
-                              {info.roleBadge}
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-[#5C5E62] truncate mt-0.5">
-                            {info.subTitle}
-                          </div>
-                        </div>
-
-                        <div
-                          className={`text-xs tabular-nums shrink-0 ${
-                            isSelectedTarget
-                              ? 'font-bold text-[#171A20]'
-                              : 'font-medium text-[#5C5E62]'
-                          }`}
-                        >
-                          {preset.weightRange}
-                        </div>
-                      </button>
-                    );
-                  })}
                 </div>
 
                 {/* スペック比較モーダル導線 */}

@@ -30,7 +30,7 @@ import {
   TargetFishProfile,
 } from '../data/rigCatalog';
 import { buildShareableSpecUrl } from '../lib/urlRouter';
-import { RigPartShowcase } from './RigPartShowcase';
+import { getFishFocalPosition, RigPartShowcase } from './RigPartShowcase';
 
 interface SpecCheckoutViewProps {
   target: TargetFishProfile;
@@ -115,24 +115,26 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
 
           {/* ターゲットビジュアル ＆ 3大コアスペック */}
           <div className="rounded-2xl overflow-hidden bg-white border border-black/5 shadow-sm">
-            <div className="relative h-28 w-full overflow-hidden">
+            <div className="relative w-full aspect-[16/9] overflow-hidden bg-[#070B12]">
               <img
                 src={target.heroImage}
                 alt={target.fishName}
+                style={{ objectPosition: getFishFocalPosition(target.id, 'banner') }}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
+              <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 via-[36%] to-transparent pointer-events-none" />
               <div className="absolute top-3 left-3.5 right-3.5 flex items-center justify-between gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-white/95 text-[10px] font-oswald font-bold text-[#171A20] tracking-wider flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/95 text-[10px] font-oswald font-bold text-[#171A20] tracking-wider flex items-center gap-1 whitespace-nowrap shadow-xs">
                   {isAllSelectedCompatible ? (
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   ) : (
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   )}
                   <span>{target.badge}</span>
                 </span>
                 <span
-                  className={`text-[10px] px-2.5 py-0.5 rounded-full font-oswald font-bold tracking-wider ${
+                  className={`text-[10px] px-2.5 py-0.5 rounded-full font-oswald font-bold tracking-wider whitespace-nowrap shadow-xs ${
                     isAllSelectedCompatible
                       ? 'bg-emerald-600 text-white'
                       : 'bg-amber-500 text-white'
@@ -141,8 +143,11 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                   {isAllSelectedCompatible ? '100% COMPATIBLE' : 'CHECK BALANCE'}
                 </span>
               </div>
-              <div className="absolute bottom-2.5 left-4 right-4">
-                <div className="text-xs sm:text-sm font-bold text-white truncate">
+              <div className="absolute bottom-3 left-4 right-4 space-y-0.5">
+                <div className="text-[10px] font-oswald tracking-widest text-white/80 uppercase">
+                  {target.weightRange} // {target.field}
+                </div>
+                <div className="text-sm sm:text-base font-bold text-white leading-snug drop-shadow-xs">
                   {target.fishName}
                 </div>
               </div>
@@ -150,20 +155,20 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
 
             <div className="p-4 grid grid-cols-3 gap-2.5 text-center bg-white">
               <div className="bg-[#F4F4F4] rounded-xl p-3">
-                <div className="text-[10px] text-[#5C5E62]">推奨初期ドラグ</div>
-                <div className="font-oswald text-sm sm:text-base font-bold text-[#3E6AE1] tabular-nums mt-0.5">
+                <div className="text-[10px] text-[#5C5E62] whitespace-nowrap">推奨初期ドラグ</div>
+                <div className="font-oswald text-sm sm:text-base font-bold text-[#3E6AE1] tabular-nums mt-0.5 whitespace-nowrap">
                   {recommendedDragText}
                 </div>
               </div>
               <div className="bg-[#F4F4F4] rounded-xl p-3">
-                <div className="text-[10px] text-[#5C5E62]">装備総重量</div>
-                <div className="font-oswald text-sm sm:text-base font-bold text-[#171A20] tabular-nums mt-0.5">
+                <div className="text-[10px] text-[#5C5E62] whitespace-nowrap">装備総重量</div>
+                <div className="font-oswald text-sm sm:text-base font-bold text-[#171A20] tabular-nums mt-0.5 whitespace-nowrap">
                   {totalWeightG}g
                 </div>
               </div>
               <div className="bg-[#F4F4F4] rounded-xl p-3">
-                <div className="text-[10px] text-[#5C5E62]">針込ルアー重量</div>
-                <div className="font-oswald text-sm sm:text-base font-bold text-[#171A20] tabular-nums mt-0.5">
+                <div className="text-[10px] text-[#5C5E62] whitespace-nowrap">針込ルアー重量</div>
+                <div className="font-oswald text-sm sm:text-base font-bold text-[#171A20] tabular-nums mt-0.5 whitespace-nowrap">
                   {rig.lure?.totalWeightG ?? 0}g
                 </div>
               </div>
@@ -172,18 +177,16 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
 
           {/* 参考合計金額 ＆ Primary CTA */}
           <div className="rounded-2xl bg-white border border-black/5 p-5 space-y-5 shadow-sm">
-            <div className="flex items-baseline justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-[#5C5E62]">
-                    選択構成 参考合計（4点）
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-[#F4F4F4] text-[10px] font-semibold text-[#5C5E62]">
-                    Amazon参考価格
-                  </span>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="space-y-1">
+                <span className="inline-block px-2 py-0.5 rounded bg-[#F4F4F4] text-[10px] font-semibold text-[#5C5E62] whitespace-nowrap">
+                  Amazon参考価格
+                </span>
+                <div className="text-xs font-medium text-[#5C5E62] whitespace-nowrap">
+                  選択構成 参考合計（4点）
                 </div>
               </div>
-              <div className="font-oswald text-3xl sm:text-4xl font-bold text-[#171A20] tabular-nums tracking-tight">
+              <div className="font-oswald text-3xl sm:text-4xl font-bold text-[#171A20] tabular-nums tracking-tight whitespace-nowrap">
                 ¥{totalValue.toLocaleString()}
               </div>
             </div>
@@ -341,7 +344,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
           <button
             type="button"
             onClick={onBackToTargetSelect}
-            className="text-xs font-medium text-[#5C5E62] hover:text-[#171A20] underline"
+            className="text-xs font-medium text-[#5C5E62] hover:text-[#171A20] underline whitespace-nowrap shrink-0"
           >
             ターゲット変更
           </button>
@@ -415,13 +418,13 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onBackToGarage(cat)}
-                      className="px-2.5 py-1 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-medium text-[#5C5E62] hover:text-[#171A20] transition-colors inline-flex items-center gap-1.5"
+                      className="px-2.5 py-1 rounded-md bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-medium text-[#5C5E62] hover:text-[#171A20] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
                     >
                       <Pencil className="w-3 h-3" />
                       <span>変更</span>
                     </button>
 
-                    <div className="font-oswald text-2xl font-bold text-[#171A20] tabular-nums leading-none">
+                    <div className="font-oswald text-2xl font-bold text-[#171A20] tabular-nums leading-none whitespace-nowrap">
                       ¥{item.price.toLocaleString()}
                     </div>
 
@@ -432,7 +435,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                       onClick={() =>
                         setCheckedOutSlots((prev) => ({ ...prev, [cat]: true }))
                       }
-                      className="px-4 py-2 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold tracking-wide transition-colors flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold tracking-wide transition-colors flex items-center gap-1.5 whitespace-nowrap"
                     >
                       <span>Amazonで購入</span>
                       <ExternalLink className="w-3.5 h-3.5" />
