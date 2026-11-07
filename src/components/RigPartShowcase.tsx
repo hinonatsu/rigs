@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  MessageSquare,
   Plus,
   ShieldCheck,
 } from 'lucide-react';
@@ -580,11 +579,11 @@ export const TeslaHeroConfiguratorStage: React.FC<TeslaHeroConfiguratorStageProp
         <button
           type="button"
           onClick={() => onOpenFeatureModal(0)}
-          title="タックル機能ハイライト・適合アシストを表示"
-          aria-label="タックル機能ハイライト・適合アシストを表示"
+          title="タックル適合ハイライト・スペック詳細を表示"
+          aria-label="タックル適合ハイライト・スペック詳細を表示"
           className="flex w-10 h-9 rounded-md items-center justify-center transition-colors bg-[#B5B6B8]/75 hover:bg-[#9E9FA2] text-[#171A20]"
         >
-          <MessageSquare className="w-4 h-4 stroke-[2]" />
+          <ShieldCheck className="w-4 h-4 stroke-[2]" />
         </button>
 
         <div className="mx-auto flex items-center gap-3">

@@ -106,10 +106,10 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
           <div className="flex items-center justify-between gap-4 border-b border-black/10 pb-4">
             <div className="space-y-1">
               <div className="text-[11px] font-oswald font-bold tracking-[0.2em] text-[#3E6AE1] uppercase">
-                ORDER SUMMARY &amp; SPEC SHEET
+                TACKLE LOADOUT &amp; SPEC SHEET
               </div>
               <h1 className="text-xl font-bold text-[#171A20]">
-                完成装備仕様書 ＆ ご注文手続き
+                完成装備仕様書 ＆ 購入リスト
               </h1>
             </div>
             <button
@@ -405,7 +405,7 @@ export const SpecCheckoutView: React.FC<SpecCheckoutViewProps> = ({
                               : 'bg-[#F4F4F4] text-[#5C5E62]'
                           }`}
                         >
-                          {isCustomized ? 'CUSTOMIZED' : 'STANDARD'}
+                          {isCustomized ? 'CUSTOM' : 'RECOMMENDED'}
                         </span>
                       </div>
 

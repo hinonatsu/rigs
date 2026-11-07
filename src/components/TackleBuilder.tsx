@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Copy,
   ExternalLink,
-  Globe,
   Link2,
   Lock,
   RotateCcw,
@@ -63,28 +62,28 @@ export type {
   RigState,
 } from '../data/rigCatalog';
 
-const MODEL_TITLE_MAP: Record<
+const CLASS_TITLE_MAP: Record<
   TargetId,
   {
-    modelName: string;
-    trimBadge: string;
+    classNameLabel: string;
+    roleBadge: string;
     subTitle: string;
   }
 > = {
   pe6: {
-    modelName: 'Model PE6',
-    trimBadge: 'Standard',
-    subTitle: '14000番・近海ヒラマサ ＆ キハダ',
+    classNameLabel: 'PE6号クラス',
+    roleBadge: '近海スタンダード',
+    subTitle: '14000番基準 ・ 近海ヒラマサ ＆ キハダ',
   },
   pe8: {
-    modelName: 'Model PE8',
-    trimBadge: 'Long Range',
-    subTitle: '18000番・大型クロマグロ ＆ オオマサ',
+    classNameLabel: 'PE8号クラス',
+    roleBadge: '大型マグロ・オオマサ',
+    subTitle: '18000番基準 ・ 大型クロマグロ ＆ オオマサ',
   },
   pe10: {
-    modelName: 'Model PE10',
-    trimBadge: 'パフォーマンス',
-    subTitle: '20000番・100kg超マグロ ＆ 遠征GT',
+    classNameLabel: 'PE10号クラス',
+    roleBadge: 'モンスター遠征',
+    subTitle: '20000番基準 ・ 100kg超マグロ ＆ 遠征GT',
   },
 };
 
@@ -383,7 +382,7 @@ export const TackleBuilder: React.FC = () => {
         metrics: rod.specs,
       },
       {
-        tag: 'REEL DRAG & POWERTRAIN // リール制動機構',
+        tag: 'REEL DRAG & DRIVE // ドラグ制動・巻上機構',
         title: `${reel.brand} ${reel.shortName}`,
         subtitle: reel.subCode,
         description: reel.description,
@@ -411,18 +410,18 @@ export const TackleBuilder: React.FC = () => {
     ];
   }, [rig]);
 
-  const currentModelInfo = MODEL_TITLE_MAP[route.targetId];
+  const currentClassInfo = CLASS_TITLE_MAP[route.targetId];
 
   return (
     <div className="min-h-dvh bg-white text-[#171A20] font-sans antialiased selection:bg-[#3E6AE1] selection:text-white flex flex-col justify-between">
       {/* =====================================================================
-          上部ヘッダー：Tesla Minimal Navigation
+          上部ヘッダー：Minimal Studio Navigation
           ・左：R I G s ワイドレタースペーシングロゴ（クリックでホームへ）
-          ・右：ホーム時は「メニュー」ピルボタン（添付1枚目）、スタジオ時は「🌐 JP」＋「メニュー」（添付2・3枚目）
+          ・右：ビルダー/仕様書時は「構成URLをコピー」＋「メニュー」、ホーム時は「メニュー」
          ===================================================================== */}
       <header className="sticky top-0 z-30 shrink-0 bg-white/95 backdrop-blur-md border-b border-black/5 px-4 sm:px-8 lg:px-12 py-3.5">
         <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-4">
-          {/* 左：Tesla ワイドレタースペーシング風ブランドロゴ */}
+          {/* 左：ワイドレタースペーシング ブランドロゴ */}
           <button
             type="button"
             onClick={() => navigateTo({ view: 'home' })}
@@ -434,7 +433,7 @@ export const TackleBuilder: React.FC = () => {
             </span>
           </button>
 
-          {/* 右：コンフィギュレーター時は 🌐 JP (添付2・3枚目)、ホーム時は「メニュー」ピルボタン (添付1枚目) */}
+          {/* 右：構成URL共有ボタン ＋ メニューボタン */}
           <div className="flex items-center gap-2.5">
             {route.view !== 'home' && (
               <button
@@ -446,12 +445,12 @@ export const TackleBuilder: React.FC = () => {
                 {headerUrlCopied ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-600 font-semibold">COPIED</span>
+                    <span className="text-emerald-600 font-semibold">コピー完了</span>
                   </>
                 ) : (
                   <>
-                    <Globe className="w-4 h-4" />
-                    <span>JP</span>
+                    <Link2 className="w-3.5 h-3.5 text-[#5C5E62]" />
+                    <span>構成URLをコピー</span>
                   </>
                 )}
               </button>
@@ -514,19 +513,19 @@ export const TackleBuilder: React.FC = () => {
                ----------------------------------------------------------------- */}
             <div className="lg:col-span-4 w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 pb-24">
               {/* =================================================================
-                  1. 【添付3枚目 上部完全再現】モデル大見出し ＆ 支払いモード2タブ切替
+                  1. ターゲットクラス大見出し ＆ 購入点数2タブ切替
                  ================================================================= */}
               <div className="space-y-4 pt-1">
                 <div className="text-center space-y-1">
                   <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#171A20]">
-                    {currentModelInfo.modelName}
+                    {currentClassInfo.classNameLabel}
                   </h1>
                   <div className="text-xs text-[#5C5E62]">
-                    {currentModelInfo.subTitle}
+                    {currentClassInfo.subTitle}
                   </div>
                 </div>
 
-                {/* 添付3枚目の「現金 | ローン」アンダーライン2タブ */}
+                {/* 4点フルセット / リール＋ロッド2点 アンダーライン2タブ */}
                 <div className="grid grid-cols-2 text-center">
                   <button
                     type="button"
@@ -537,7 +536,7 @@ export const TackleBuilder: React.FC = () => {
                         : 'border-b border-black/15 font-medium text-[#5C5E62] hover:text-[#171A20]'
                     }`}
                   >
-                    フルセット一括
+                    4点フルセット
                   </button>
                   <button
                     type="button"
@@ -548,15 +547,15 @@ export const TackleBuilder: React.FC = () => {
                         : 'border-b border-black/15 font-medium text-[#5C5E62] hover:text-[#171A20]'
                     }`}
                   >
-                    メイン機2点（リール＋竿）
+                    リール＋ロッド 2点
                   </button>
                 </div>
               </div>
 
               {/* =================================================================
-                  2. 【添付3枚目 上部コンテナ完全再現】
-                     ・箱なし3列テレメトリー数値（690km / 261km/h / 3.1秒 スタイル）
-                     ・縦積み3段グレード選択カード（Model 3 RWD / AWD / パフォーマンス スタイル）
+                  2. 上部スペック＆クラス切替コンテナ
+                     ・3列コアスペック数値
+                     ・縦積み3段ターゲットクラス選択カード
                      ・「タックル仕様を比較する ＞」白ボタン
                  ================================================================= */}
               <div className="rounded-2xl p-5 sm:p-6 space-y-5 bg-[#F4F4F4] text-[#171A20]">
@@ -573,7 +572,7 @@ export const TackleBuilder: React.FC = () => {
                       onClick={() => setIsCompareModalOpen(true)}
                       className="text-[11px] text-[#5C5E62] hover:text-[#171A20] underline underline-offset-2 text-left leading-tight mt-0.5"
                     >
-                      （物理適合審査値）
+                      スペック比較を見る
                     </button>
                   </div>
 
@@ -596,11 +595,11 @@ export const TackleBuilder: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 縦積み3段のグレード（ターゲットクラス）選択カード */}
+                {/* 縦積み3段のターゲットクラス選択カード */}
                 <div className="space-y-2.5">
                   {RIG_PRESETS.map((preset) => {
                     const isSelectedTarget = route.targetId === preset.id;
-                    const info = MODEL_TITLE_MAP[preset.id];
+                    const info = CLASS_TITLE_MAP[preset.id];
                     const pReel = ALL_PARTS.find((p) => p.id === preset.rigIds.reel);
                     const pRod = ALL_PARTS.find((p) => p.id === preset.rigIds.rod);
                     const pLine = ALL_PARTS.find((p) => p.id === preset.rigIds.line);
@@ -627,15 +626,9 @@ export const TackleBuilder: React.FC = () => {
                       >
                         <div className="min-w-0">
                           <div className="text-xs sm:text-sm font-bold text-[#171A20]">
-                            {info.modelName}{' '}
-                            <span
-                              className={
-                                preset.id === 'pe10'
-                                  ? 'font-normal text-[#393C41]'
-                                  : 'italic font-normal text-[#393C41]'
-                              }
-                            >
-                              {info.trimBadge}
+                            {info.classNameLabel}{' '}
+                            <span className="font-normal text-[#393C41] ml-1">
+                              {info.roleBadge}
                             </span>
                           </div>
                           <div className="text-[11px] text-[#5C5E62] truncate mt-0.5">
@@ -657,7 +650,7 @@ export const TackleBuilder: React.FC = () => {
                   })}
                 </div>
 
-                {/* 添付3枚目の「車両を比較する ＞」と同一デザインの白ボタン行 */}
+                {/* スペック比較モーダル導線 */}
                 <button
                   type="button"
                   onClick={() => setIsCompareModalOpen(true)}
@@ -699,14 +692,14 @@ export const TackleBuilder: React.FC = () => {
                 )}
               </div>
 
-              {/* モバイル専用：「機能を表示する ＞」枠ボックス */}
+              {/* モバイル専用：「各パーツのスペック・適合詳細を見る ＞」枠ボックス */}
               <div className="sm:hidden rounded-xl border-2 border-[#171A20] bg-white p-2.5">
                 <button
                   type="button"
                   onClick={() => setFeatureModalIndex(0)}
                   className="w-full rounded-lg px-4 py-3 flex items-center justify-between text-sm font-medium bg-[#F4F4F4] text-[#171A20] hover:bg-[#E8E8EA] transition-colors"
                 >
-                  <span>機能を表示する</span>
+                  <span>各パーツのスペック・適合詳細を見る</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -781,7 +774,7 @@ export const TackleBuilder: React.FC = () => {
                           </span>
                           {isBase && (
                             <span className="text-[10px] font-medium text-[#5C5E62]">
-                              標準
+                              推奨
                             </span>
                           )}
                         </div>
@@ -1065,10 +1058,10 @@ export const TackleBuilder: React.FC = () => {
               </section>
 
               {/* =================================================================
-                  6. 【添付2枚目 上部完全再現】標準パッケージ枠（「ベーシック オートパイロット 標準」相当）
+                  6. 物理適合・ペアリング案内枠
                  ================================================================= */}
               <section
-                aria-label="標準物理適合パッケージ"
+                aria-label="物理適合・ペア金具計算"
                 className="rounded-2xl p-5 sm:p-6 space-y-5 bg-[#F4F4F4] text-[#171A20]"
               >
                 <div className="rounded-lg border border-[#8E8E93] bg-white/80 p-4 space-y-1.5">
@@ -1076,11 +1069,11 @@ export const TackleBuilder: React.FC = () => {
                     <span className="font-semibold text-[#5C5E62]">
                       物理適合 ＆ ノット結束ペアリング
                     </span>
-                    <span className="font-medium text-[#5C5E62]">標準</span>
+                    <span className="font-medium text-[#5C5E62]">自動計算済</span>
                   </div>
                   <p className="text-[11px] sm:text-xs text-[#5C5E62] leading-relaxed">
                     ショックリーダー（{rig.line?.pairedLeaderLb}lb）および太軸フック（
-                    {rig.lure?.hookSpec}）の実戦重量・強度計算が含まれます。*
+                    {rig.lure?.hookSpec}）の実戦重量・強度バランスを反映しています。
                   </p>
                 </div>
 
@@ -1090,14 +1083,14 @@ export const TackleBuilder: React.FC = () => {
                     onClick={() => setFeatureModalIndex(2)}
                     className="px-7 py-2 rounded-md bg-white hover:bg-[#FAFAFA] text-xs font-semibold text-[#171A20] shadow-sm transition-colors"
                   >
-                    パッケージを見る
+                    適合データを見る
                   </button>
                 </div>
 
                 <p className="text-[11px] text-[#5C5E62] leading-relaxed">
-                  *現在選択されているタックル構成は、リール番手・スプール糸巻量・ロッド許容ルアー重量上限（
-                  {rig.rod?.lureMaxG}g）・最大ドラグ耐荷重（{rig.rod?.dragMaxKg}
-                  kg）の物理計算に基づいています。実釣時の破断強度はアングラー自身のノット結束精度およびドラグ設定に依存します。詳細については
+                  ※スプール糸巻量・ロッド許容ルアー重量（上限
+                  {rig.rod?.lureMaxG}g）・最大ドラグ負荷（{rig.rod?.dragMaxKg}
+                  kg）をフック＆リング込みの実戦重量で検証しています。実釣時はノット結束強度および初期ドラグ設定をご確認のうえご使用ください。全パーツ一覧は
                   <button
                     type="button"
                     onClick={() => navigateTo({ view: 'checkout' })}
@@ -1105,28 +1098,26 @@ export const TackleBuilder: React.FC = () => {
                   >
                     完成装備仕様書
                   </button>
-                  をお読みください。
+                  で確認・出力できます。
                 </p>
               </section>
 
               {/* =================================================================
-                  7. 【添付2枚目 下部完全再現】インライン決済サマリー（「お客様のModel PE6」）
-                     ・デザインを保存
-                     ・お届け予定日
-                     ・価格詳細を表示 ∨
-                     ・購入価格 ＆ 本日必要なお支払い
-                     ・黒太枠・白背景の「Amazonで注文する」ボタン
+                  7. インライン構成サマリー・購入リスト導線
                  ================================================================= */}
               <section
                 ref={inlineCheckoutRef}
-                aria-label="ご注文サマリー"
+                aria-label="タックル構成サマリー"
                 className="pt-8 pb-6 px-1 sm:px-2 bg-white text-[#171A20] space-y-6"
               >
                 {/* 中央揃えヘッダー部 */}
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#171A20]">
-                    お客様の{currentModelInfo.modelName}
+                    選択中のタックル構成
                   </h2>
+                  <div className="text-xs font-medium text-[#5C5E62]">
+                    {currentClassInfo.classNameLabel}（{currentClassInfo.roleBadge}）
+                  </div>
 
                   <div>
                     <button
@@ -1135,13 +1126,13 @@ export const TackleBuilder: React.FC = () => {
                       className="text-xs sm:text-[13px] text-[#5C5E62] hover:text-[#171A20] underline underline-offset-4 transition-colors"
                     >
                       {inlineSavedCopied
-                        ? '✓ デザインURLをクリップボードに保存しました'
-                        : 'デザインを保存'}
+                        ? '✓ 構成URLをクリップボードにコピーしました'
+                        : 'この構成URLをコピー'}
                     </button>
                   </div>
 
                   <div className="text-xs sm:text-[13px] text-[#393C41] pt-0.5">
-                    お届け予定日：最短翌日〜2日以内（Amazon公式配送）
+                    購入先：Amazon.co.jp 公式ストア（在庫・配送目安は各商品ページにて確認）
                   </div>
 
                   <div className="pt-1">
@@ -1187,23 +1178,23 @@ export const TackleBuilder: React.FC = () => {
                     })}
                     <div className="pt-1 flex items-center justify-between text-[11px] text-[#5C5E62]">
                       <span>推奨リーダー（{rig.line?.pairedLeaderLb}lb）＆太軸フック（{rig.lure?.hookSpec}）</span>
-                      <span>注文画面で同時追加可能</span>
+                      <span>購入リストから同時確認可能</span>
                     </div>
                   </div>
                 )}
 
-                {/* 購入価格 行 */}
+                {/* 4点フルセット参考合計 行 */}
                 <div className="space-y-1.5 pt-2">
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="text-base sm:text-lg font-bold text-[#171A20]">
-                      購入価格
+                      4点フルセット参考合計
                     </span>
                     <span className="font-oswald text-lg sm:text-xl font-bold text-[#171A20] tabular-nums">
                       ¥{totalValue.toLocaleString()}
                     </span>
                   </div>
                   <p className="text-[11px] text-[#5C5E62] leading-relaxed">
-                    上記以外に、予備のショックリーダーやスプリットリング等の消耗金具を別途追加可能です。
+                    ※ショックリーダーおよびスプリットリング・フック等の推奨ペア金具も購入リストから個別確認できます。
                   </p>
                   <div>
                     <button
@@ -1214,17 +1205,17 @@ export const TackleBuilder: React.FC = () => {
                       className="text-xs text-[#5C5E62] hover:text-[#171A20] underline underline-offset-4"
                     >
                       {pricingMode === 'cash'
-                        ? 'メイン機2点（リール＋ロッド）先行購入シミュレーションを見る'
-                        : '4点フルセット一括価格に戻す'}
+                        ? 'リール＋ロッドの2点セット価格で試算する'
+                        : '4点フルセット合計に戻す'}
                     </button>
                   </div>
                 </div>
 
-                {/* 本日必要なお支払い 行 */}
+                {/* 選択プラン参考合計 行 */}
                 <div className="space-y-1 pt-2">
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="text-base sm:text-lg font-bold text-[#171A20]">
-                      本日必要なお支払い
+                      選択プラン参考合計
                     </span>
                     <span className="font-oswald text-lg sm:text-xl font-bold text-[#171A20] tabular-nums">
                       ¥
@@ -1236,19 +1227,19 @@ export const TackleBuilder: React.FC = () => {
                   </div>
                   <p className="text-[11px] text-[#5C5E62]">
                     {pricingMode === 'cash'
-                      ? '4点フルセット合計（Amazon公式カートにて1点ずつ個別注文も可能）'
+                      ? '4点フルセット合計（Amazon公式ストアにて1点ずつ個別購入も可能）'
                       : 'リール＋ロッド2点合計（ライン＆ルアーは後から個別追加可能）'}
                   </p>
                 </div>
 
-                {/* 添付2枚目の黒太枠・白背景ボタン「カードで注文する」完全再現 */}
+                {/* Amazon購入リストを開く ボタン */}
                 <div className="space-y-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setIsOrderDispatchModalOpen(true)}
                     className="w-full py-3.5 px-6 rounded-md border-2 border-[#171A20] bg-white hover:bg-[#171A20] text-[#171A20] hover:text-white font-bold text-xs sm:text-sm tracking-wide transition-colors text-center shadow-sm"
                   >
-                    Amazonで注文する
+                    Amazon購入リストを開く
                   </button>
 
                   <div className="text-center">
@@ -1343,14 +1334,14 @@ export const TackleBuilder: React.FC = () => {
           )}
 
           <div className="max-w-[1680px] mx-auto flex items-center justify-between gap-4">
-            {/* 左（PC表示）：添付3枚目左下の「Model 3 パフォーマンス / デュアルモーターAWD...」と同じ構成サマリー */}
+            {/* 左（PC表示）：選択中クラス＆4点構成サマリー */}
             <div className="hidden md:block min-w-0">
               <div className="flex items-baseline gap-2">
                 <span className="text-lg font-bold tracking-tight">
-                  {currentModelInfo.modelName}
+                  {currentClassInfo.classNameLabel}
                 </span>
                 <span className="text-sm font-normal text-[#393C41]">
-                  {currentModelInfo.trimBadge}
+                  {currentClassInfo.roleBadge}
                 </span>
               </div>
               <div className="text-xs truncate mt-0.5 text-[#5C5E62]">
@@ -1359,7 +1350,7 @@ export const TackleBuilder: React.FC = () => {
               </div>
             </div>
 
-            {/* 右（PC・モバイル共通）：合計金額（¥228,090 ∨ 購入価格） ＋ 青い「今すぐ注文」ボタン */}
+            {/* 右（PC・モバイル共通）：参考合計金額 ＋ 購入リストへ進むボタン */}
             <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-6 sm:gap-8">
               <button
                 type="button"
@@ -1383,8 +1374,8 @@ export const TackleBuilder: React.FC = () => {
                 </div>
                 <div className="text-[11px] text-[#5C5E62]">
                   {pricingMode === 'cash'
-                    ? '購入価格（4点合計）'
-                    : 'メイン機2点価格（リール＋竿）'}
+                    ? '4点フルセット参考合計'
+                    : 'リール＋ロッド 2点参考合計'}
                 </div>
               </button>
 
@@ -1393,7 +1384,7 @@ export const TackleBuilder: React.FC = () => {
                 onClick={handleStickyOrderClick}
                 className="px-7 sm:px-9 py-3 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs sm:text-sm font-semibold tracking-wide transition-colors shadow-sm shrink-0"
               >
-                今すぐ注文
+                購入リストへ進む
               </button>
             </div>
           </div>
@@ -1401,7 +1392,7 @@ export const TackleBuilder: React.FC = () => {
       )}
 
       {/* =================================================================
-          ドロワー：Tesla風「メニュー」スライドオーバー（添付1枚目右上の「メニュー」ボタン連動）
+          ドロワー：「メニュー」スライドオーバー
          ================================================================= */}
       {isMenuDrawerOpen && (
         <div
@@ -1429,10 +1420,10 @@ export const TackleBuilder: React.FC = () => {
 
               <div className="space-y-1">
                 <div className="text-[11px] font-oswald tracking-widest text-[#5C5E62] uppercase px-3 pb-1">
-                  MODELS // ターゲットクラス
+                  TARGET CLASSES // ターゲットクラス
                 </div>
                 {RIG_PRESETS.map((preset) => {
-                  const info = MODEL_TITLE_MAP[preset.id];
+                  const info = CLASS_TITLE_MAP[preset.id];
                   const isCurrent =
                     route.view === 'garage' && route.targetId === preset.id;
                   return (
@@ -1449,7 +1440,7 @@ export const TackleBuilder: React.FC = () => {
                     >
                       <div>
                         <div className="text-sm font-semibold text-[#171A20]">
-                          {info.modelName}
+                          {info.classNameLabel}
                         </div>
                         <div className="text-xs text-[#5C5E62]">{info.subTitle}</div>
                       </div>
@@ -1477,7 +1468,7 @@ export const TackleBuilder: React.FC = () => {
                       : 'hover:bg-[#F4F4F4]/60'
                   }`}
                 >
-                  ホーム（モデル一覧）
+                  ホーム（ターゲットクラス一覧）
                 </button>
                 <button
                   type="button"
@@ -1491,7 +1482,7 @@ export const TackleBuilder: React.FC = () => {
                       : 'hover:bg-[#F4F4F4]/60'
                   }`}
                 >
-                  コンフィギュレーター（カスタム注文）
+                  タックルビルダー（装備カスタム）
                 </button>
                 <button
                   type="button"
@@ -1527,11 +1518,11 @@ export const TackleBuilder: React.FC = () => {
                 className="w-full py-2.5 px-4 rounded-lg bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-semibold text-[#171A20] flex items-center justify-between"
               >
                 <span className="flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  <span>日本 (日本語) // 構成URLをコピー</span>
+                  <Link2 className="w-4 h-4 text-[#5C5E62]" />
+                  <span>現在の構成URLをコピー</span>
                 </span>
                 {headerUrlCopied && (
-                  <span className="text-emerald-600 font-bold">COPIED</span>
+                  <span className="text-emerald-600 font-bold">コピー完了</span>
                 )}
               </button>
             </div>
@@ -1607,7 +1598,7 @@ export const TackleBuilder: React.FC = () => {
                 className="px-4 py-2 rounded-lg bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-medium flex items-center gap-1.5"
               >
                 <ChevronLeft className="w-4 h-4" />
-                <span>前の機能</span>
+                <span>前の項目</span>
               </button>
 
               <div className="flex items-center gap-2">
@@ -1632,7 +1623,7 @@ export const TackleBuilder: React.FC = () => {
                 }
                 className="px-4 py-2 rounded-lg bg-[#F4F4F4] hover:bg-[#E5E5E5] text-xs font-medium flex items-center gap-1.5"
               >
-                <span>次の機能</span>
+                <span>次の項目</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -1761,7 +1752,7 @@ export const TackleBuilder: React.FC = () => {
                 }}
                 className="px-6 py-2.5 rounded-md bg-[#3E6AE1] hover:bg-[#3457B1] text-white text-xs font-semibold flex items-center gap-2"
               >
-                <span>この構成で注文手続きへ</span>
+                <span>この構成で購入リストを開く</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -1770,7 +1761,7 @@ export const TackleBuilder: React.FC = () => {
       )}
 
       {/* =================================================================
-          モーダル3：インライン決済「Amazonで注文する」から直接開く購入ディスパッチモーダル
+          モーダル3：インラインサマリー「Amazon購入リストを開く」から直接開く購入ディスパッチモーダル
          ================================================================= */}
       {isOrderDispatchModalOpen && (
         <div
@@ -1789,14 +1780,14 @@ export const TackleBuilder: React.FC = () => {
                 <ShieldCheck className="w-5 h-5 text-[#3E6AE1]" />
                 <div>
                   <div className="text-[10px] font-oswald font-bold tracking-[0.18em] text-[#3E6AE1]">
-                    ORDER YOUR {currentModelInfo.modelName.toUpperCase()}
+                    TACKLE PURCHASE LIST
                   </div>
                   <h3
                     id="inline-order-modal-title"
                     className="text-base font-bold text-[#171A20]"
                   >
-                    お客様の{currentModelInfo.modelName}（合計 ¥
-                    {totalValue.toLocaleString()}）— Amazon公式注文リスト
+                    {currentClassInfo.classNameLabel} 選択構成（参考合計 ¥
+                    {totalValue.toLocaleString()}）— Amazon購入リスト
                   </h3>
                 </div>
               </div>
@@ -1818,7 +1809,7 @@ export const TackleBuilder: React.FC = () => {
                 </span>
                 <span className="flex items-center gap-1.5 font-medium">
                   <Truck className="w-3.5 h-3.5 text-[#3E6AE1]" />
-                  <span>全国送料無料対象</span>
+                  <span>Amazon.co.jp 公式ストア</span>
                 </span>
                 <span className="flex items-center gap-1.5 font-medium">
                   <Award className="w-3.5 h-3.5 text-[#3E6AE1]" />
@@ -1828,7 +1819,7 @@ export const TackleBuilder: React.FC = () => {
 
               <div className="space-y-3">
                 <div className="text-xs text-[#5C5E62]">
-                  各アイテムの「Amazonで注文」ボタンから公式ストアのカートへ追加してください：
+                  各アイテムの「Amazonで購入」ボタンから公式ストアの商品ページを開いてカートへ追加してください：
                 </div>
                 {CATEGORY_ORDER.map((cat) => {
                   const meta = STEP_META[cat];
@@ -1885,7 +1876,7 @@ export const TackleBuilder: React.FC = () => {
                             </>
                           ) : (
                             <>
-                              <span>Amazonで注文</span>
+                              <span>Amazonで購入</span>
                               <ExternalLink className="w-3.5 h-3.5" />
                             </>
                           )}
@@ -1941,19 +1932,19 @@ export const TackleBuilder: React.FC = () => {
                       <Link2 className="w-4 h-4" />
                     )}
                     <span>
-                      {inlineSavedCopied ? '共有URLをコピーしました' : 'デザインURLを保存'}
+                      {inlineSavedCopied ? '共有URLをコピーしました' : '構成URLをコピー'}
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       const lines = [
-                        `【RIGs — お客様の${currentModelInfo.modelName} 仕様書】`,
+                        `【RIGs — ${currentClassInfo.classNameLabel} タックル構成仕様書】`,
                         `■ 01 REEL: ${rig.reel?.name ?? ''}`,
                         `■ 02 ROD: ${rig.rod?.name ?? ''}`,
                         `■ 03 LINE: ${rig.line?.name ?? ''}`,
                         `■ 04 LURE: ${rig.lure?.name ?? ''} (針込 ${rig.lure?.totalWeightG ?? 0}g)`,
-                        `■ 合計金額: ¥${totalValue.toLocaleString()}`,
+                        `■ 4点参考合計: ¥${totalValue.toLocaleString()}`,
                         shareUrl,
                       ];
                       navigator.clipboard.writeText(lines.join('\n'));
